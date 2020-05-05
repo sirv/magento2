@@ -1,0 +1,27 @@
+<?php
+/**
+ * Html page title template
+ *
+ * @author    Magic Toolbox <support@magictoolbox.com>
+ * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
+ * @license   http://www.magictoolbox.com/license/
+ * @link      http://www.magictoolbox.com/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+/**
+ * @var $block \Magento\Theme\Block\Html\Title
+ */
+
+$titleId = ($block->getTitleId()) ? ' id="' . $block->getTitleId() . '"' : '';
+$titleClass = ($block->getTitleClass()) ? ' ' . $block->getTitleClass() : '';
+$title = $block->escapeHtml($block->getPageTitle());
+?>
+
+<div class="page-title-wrapper<?= /* @escapeNotVerified */ $titleClass ?>">
+    <h1 class="page-title"<?= /* @escapeNotVerified */ $titleId ?>>
+        <img src="//sirv.sirv.com/website/sirv-logo-dark-blue.png?h=33&canvas.height=33&canvas.color=%23ffffff00" alt="<?= $title ?>" />
+    </h1>
+    <?= $block->getChildHtml() ?>
+</div>

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * ACL rules
+ *
+ * @author    Magic Toolbox <support@magictoolbox.com>
+ * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
+ * @license   http://www.magictoolbox.com/license/
+ * @link      http://www.magictoolbox.com/
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="MagicToolbox_MagicToolbox::magictoolbox" title="Magic Toolbox" sortOrder="75">
+                    <resource id="MagicToolbox_Sirv::sirv_settings_edit" title="Sirv" sortOrder="30"/>
+                </resource>
+            </resource>
+        </resources>
+    </acl>
+</config>

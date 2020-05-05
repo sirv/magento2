@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Default backend layout config
+ *
+ * @author    Magic Toolbox <support@magictoolbox.com>
+ * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
+ * @license   http://www.magictoolbox.com/license/
+ * @link      http://www.magictoolbox.com/
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="MagicToolbox_Sirv::css/menu.css"/>
+    </head>
+</page>

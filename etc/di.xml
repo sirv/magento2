@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Global module configuration
+ *
+ * @author    Magic Toolbox <support@magictoolbox.com>
+ * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
+ * @license   http://www.magictoolbox.com/license/
+ * @link      http://www.magictoolbox.com/
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="MagicToolbox\Sirv\Model\Logger\Handler\Info">
+        <arguments>
+            <argument name="fileName" xsi:type="string">var/log/sirv.log</argument>
+        </arguments>
+    </type>
+    <type name="MagicToolbox\Sirv\Model\Logger\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">sirv</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="sirv" xsi:type="object">MagicToolbox\Sirv\Model\Logger\Handler\Info</item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="MagicToolbox\Sirv\Helper\Sync\Context" type="Magento\Framework\App\Helper\Context" shared="false">
+        <arguments>
+            <argument name="logger" xsi:type="object">MagicToolbox\Sirv\Model\Logger\Logger</argument>
+        </arguments>
+    </virtualType>
+    <type name="MagicToolbox\Sirv\Helper\Sync">
+        <arguments>
+            <argument name="context" xsi:type="object">MagicToolbox\Sirv\Helper\Sync\Context</argument>
+        </arguments>
+    </type>
+</config>

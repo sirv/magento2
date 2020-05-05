@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @var $block \MagicToolbox\Sirv\Block\Html\Head
+ */
+
+if (!$block->isVisibile()) {
+    return;
+}
+
+$sirvUrl = $block->getSirvUrl();
+?>
+
+<link rel="preconnect" href="<?= /* @escapeNotVerified */ $sirvUrl ?>" crossorigin/>
+<link rel="dns-prefetch" href="<?= /* @escapeNotVerified */ $sirvUrl ?>"/>

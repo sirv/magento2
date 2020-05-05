@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<settings>
+    <notice><![CDATA[Accelerate your website with faster loading images. <a href="https://sirv.com/" target="_blank">About Sirv CDN</a> | <a href="https://my.sirv.com/#/contact" target="_blank">Get support</a><br/>Sirv will serve your entire media gallery. <a href="https://sirv.com/help/resources/magento-cdn-sirv-extension/#CSS_JS_media_and_skin_files" target="_blank">Follow these steps</a> to also serve CSS, JS and skin files.]]></notice>
+    <group id="user">
+        <label>Sirv account</label>
+        <fields>
+            <field>
+                <name>email</name>
+                <label>Email</label>
+                <type>email</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Email</type_class>
+                <placeholder>Sirv account email</placeholder>
+                <autocomplete>off</autocomplete>
+                <required>true</required>
+                <autofocus/>
+            </field>
+            <field>
+                <name>password</name>
+                <label>Password</label>
+                <type>password</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Password</type_class>
+                <placeholder>Sirv account password</placeholder>
+                <autocomplete>new-password</autocomplete>
+                <required>true</required>
+            </field>
+            <field>
+                <name>account</name>
+                <label>Account</label>
+                <type>select</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Account</type_class>
+                <options></options>
+                <value></value>
+                <placeholder>Select Sirv account</placeholder>
+                <required>true</required>
+            </field>
+            <field>
+                <name>connect</name>
+                <label></label>
+                <type>button</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Connect</type_class>
+                <value>Connect account</value>
+                <title>Connect account</title>
+            </field>
+        </fields>
+    </group>
+    <group id="general">
+        <label>General Settings</label>
+        <fields>
+            <field>
+                <name>enabled</name>
+                <label>Enable Sirv</label>
+                <notice><![CDATA[<b>Yes</b>: images will be served from your Sirv account. <a href="https://my.sirv.com/#/signup" target="_blank">Create an account (free)</a><br/><b>No</b>: images will be served from your server.]]></notice>
+                <type>select</type>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>false</value>
+                <install/>
+            </field>
+            <field>
+                <name>network</name>
+                <label>Network</label>
+                <notice><![CDATA[<b>Sirv CDN</b>: files delivered from global network.<br/><b>Sirv direct</b>: files delivered from primary datacentre.<br/><a target="_blank" href="https://my.sirv.com/#/account/settings">Learn more</a>]]></notice>
+                <type>select</type>
+                <options>
+                    <option>
+                        <label>Sirv CDN (recommended when live)</label>
+                        <value>cdn</value>
+                    </option>
+                    <option>
+                        <label>Sirv Direct (recommended when testing)</label>
+                        <value>direct</value>
+                    </option>
+                </options>
+                <value>cdn</value>
+                <install/>
+            </field>
+            <field>
+                <name>image_folder</name>
+                <label>Folder name on Sirv</label>
+                <notice><![CDATA[Images will be copied here in <a target="_blank" href="https://my.sirv.com/#/browse">your Sirv account</a>.<br/>The folder will be automatically created by Sirv.]]></notice>
+                <type>text</type>
+                <value>magento</value>
+                <install/>
+            </field>
+            <field>
+                <name>profile</name>
+                <label>Image profile</label>
+                <notice><![CDATA[Choose one of your profiles if you wish to apply some settings to all images (e.g. watermarks, text overlays, effects).]]></notice>
+                <type>select</type>
+                <options>
+                    <option>
+                        <label>Default</label>
+                        <value>Default</value>
+                    </option>
+                </options>
+                <value>Default</value>
+                <install/>
+            </field>
+            <field>
+                <name>magento_watermark</name>
+                <label>Use Magento watermark</label>
+                <type>select</type>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>true</value>
+                <install/>
+            </field>
+        </fields>
+    </group>
+    <group id="synchronization">
+        <label>Synchronization</label>
+        <fields>
+            <field>
+                <name>synchronizer</name>
+                <type>synchronizer</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Synchronizer</type_class>
+            </field>            
+        </fields>
+    </group>
+    <group id="account_info">
+        <label>Your account</label>
+        <fields>
+            <field>
+                <name>account</name>
+                <label>Account</label>
+                <type>note</type>
+                <value></value>
+            </field>
+            <field>
+                <name>plan</name>
+                <label>Plan</label>
+                <type>note</type>
+                <value></value>
+                <text><![CDATA[{{name}} <a target="_blank" href="https://my.sirv.com/#/account/billing/plan">Upgrade plan</a>]]></text>
+            </field>
+            <field>
+                <name>allowance</name>
+                <label>Allowance</label>
+                <type>note</type>
+                <value></value>
+                <text><![CDATA[{{storage_limit}}, {{data_transfer_limit}} monthly transfer]]></text>
+            </field>
+            <field>
+                <name>user</name>
+                <label>User</label>
+                <type>note</type>
+                <value></value>
+                <text><![CDATA[{{user}} <a href="{{url}}">Disconnect</a>]]></text>
+            </field>
+        </fields>
+    </group>
+    <group id="account_stats">
+        <label>Stats</label>
+        <fields>
+            <field>
+                <name>stats</name>
+                <type>stats</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Stats</type_class>
+            </field>
+        </fields>
+    </group>
+</settings>
