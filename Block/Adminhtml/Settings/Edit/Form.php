@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit;
 /**
  * Adminhtml settings form
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Form extends \Magento\Backend\Block\Widget\Form\Generic
 {
@@ -34,13 +34,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
     protected $syncHelperFactory = null;
 
     /**
-     * Component registrar
-     *
-     * @var \Magento\Framework\Component\ComponentRegistrar
-     */
-    protected $componentRegistrar = null;
-
-    /**
      * Object manager
      *
      * @var \Magento\Framework\ObjectManagerInterface
@@ -53,7 +46,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
      * @param \Magento\Framework\Data\FormFactory $formFactory
      * @param \Magento\Framework\Module\Dir\Reader $modulesReader
      * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
-     * @param \Magento\Framework\Component\ComponentRegistrar $componentRegistrar
      * @param \Magento\Framework\ObjectManagerInterface $objectManager
      * @param array $data
      * @return void
@@ -65,14 +57,12 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         \Magento\Framework\Module\Dir\Reader $modulesReader,
         \MagicToolbox\Sirv\Helper\Data $dataHelper,
         \MagicToolbox\Sirv\Helper\SyncFactory $syncHelperFactory,
-        \Magento\Framework\Component\ComponentRegistrar $componentRegistrar,
         \Magento\Framework\ObjectManagerInterface $objectManager,
         array $data = []
     ) {
         $this->moduleDirReader = $modulesReader;
         $this->dataHelper = $dataHelper;
         $this->syncHelperFactory = $syncHelperFactory;
-        $this->componentRegistrar = $componentRegistrar;
         $this->objectManager = $objectManager;
         parent::__construct($context, $registry, $formFactory, $data);
     }
@@ -122,7 +112,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             ]);
         }
 
-        $version = $this->getModuleVersion('MagicToolbox_Sirv');
+        $version = $this->dataHelper->getModuleVersion('MagicToolbox_Sirv');
         if ($version) {
             $afterElementHtml = 'Version: ' . $version;
 
@@ -159,6 +149,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         $email = isset($config['email']) ? $config['email'] : '';
         $password = isset($config['password']) ? $config['password'] : '';
         $account = isset($config['account']) ? $config['account'] : '';
+        $isNewAccount = isset($config['account_exists']) ? ($config['account_exists'] == 'no') : false;
 
         $xpaths = [];//NOTE: do not display these fields
 
@@ -168,7 +159,16 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             if (empty($email) || empty($password)) {
                 $xpaths[] = '/settings/group[@id="user"]/fields/field[name="account"]';
             } else {
-                $xpaths[] = '/settings/group[@id="user"]/fields/field[name="email" or name="password"]';
+                $fieldNames = [
+                    'email',
+                    'password',
+                    'account_exists',
+                    'first_and_last_name',
+                    'alias',
+                    'register',
+                ];
+                $fieldNames = 'name="' . implode('" or name="', $fieldNames) . '"';
+                $xpaths[] = '/settings/group[@id="user"]/fields/field[' . $fieldNames . ']';
             }
         } else {
             $xpaths[] = '/settings/group[@id="user"]';
@@ -237,7 +237,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     $fieldset->addType($type, $typeClass);
                 }
 
-                if ($type == 'select') {
+                if ($type == 'select' || $type == 'radios') {
                     $fieldConfig['values'] = [];
                     foreach ($field->options->option as $option) {
                         $fieldConfig['values'][] = [
@@ -247,11 +247,24 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     }
                 }
 
+                if ($type == 'radios') {
+                    $fieldConfig['in_a_row'] = isset($field->in_a_row) ? true : false;
+                }
+
                 if ($type == 'note') {
                     $fieldConfig['text'] = isset($field->text) ? (string)$field->text : ($value === null ? '' : $value);
                 }
 
                 switch ($name) {
+                    case 'first_and_last_name':
+                    case 'alias':
+                        $fieldConfig['disabled'] = !$isNewAccount;
+                    case 'register':
+                        $fieldConfig['hidden'] = !$isNewAccount;
+                        break;
+                    case 'connect':
+                        $fieldConfig['hidden'] = $isNewAccount;
+                        break;
                     case 'account':
                         $accounts = $this->dataHelper->getSirvUsersList();
                         foreach ($accounts as $account) {
@@ -310,27 +323,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         $this->setForm($form);
 
         return parent::_prepareForm();
-    }
-
-    /**
-     * Get module version
-     *
-     * @param string $name
-     * @return string | bool
-     */
-    protected function getModuleVersion($name)
-    {
-        $version = false;
-        $moduleDir = $this->componentRegistrar->getPath(
-            \Magento\Framework\Component\ComponentRegistrar::MODULE,
-            $name
-        );
-        $moduleInfo = json_decode(file_get_contents($moduleDir . '/composer.json'));
-        if (is_object($moduleInfo) && isset($moduleInfo->version)) {
-            $version = $moduleInfo->version;
-        }
-
-        return $version;
     }
 
     /**
@@ -408,7 +400,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
         foreach ($mtModules as $name) {
             if (in_array($name, $enabledModules)) {
-                $data[$name] = $this->getModuleVersion($name);
+                $data[$name] = $this->dataHelper->getModuleVersion($name);
             }
         }
 

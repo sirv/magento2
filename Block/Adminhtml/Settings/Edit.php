@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Block\Adminhtml\Settings;
 /**
  * Adminhtml settings form container
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Edit extends \Magento\Backend\Block\Widget\Form\Container
 {
@@ -38,11 +38,32 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
         );
 
         $buttonsConfig = [
-            'sirv-flush' => [
-                'label' => __('Flush Cache'),
-                'title' => __('Flush Cache'),
+            'sirv-flush-asset' => [
+                'label' => __('Flush assets info cache'),
+                'title' => __('Flush assets info cache'),
                 'class_name' => \Magento\Backend\Block\Widget\Button\SplitButton::class,
-                'button_class' => 'sirv-button sirv-flush-cache-button',
+                'button_class' => 'sirv-button sirv-flush-asset-cache-button',
+                'class' => 'secondary',
+                'options' => [
+                    'empty' => [
+                        'label' => __('For products without assets'),
+                        'title' => __('Clear data without assets from the Sirv extension database cache'),
+                        'onclick' => 'setLocation(\'' . $this->getUrl('*/*/flush', ['flush-action' => 'empty']) . '\')',
+                        'default' => true
+                    ],
+                    'all' => [
+                        'label' => __('For all products'),
+                        'title' => __('Clear all asset\'s data from the Sirv extension database cache'),
+                        'onclick' => 'setLocation(\'' . $this->getUrl('*/*/flush', ['flush-action' => 'all']) . '\')',
+                        'default' => false
+                    ],
+                ]
+            ],
+            'sirv-flush-url' => [
+                'label' => __('Flush image cache'),
+                'title' => __('Flush image cache'),
+                'class_name' => \Magento\Backend\Block\Widget\Button\SplitButton::class,
+                'button_class' => 'sirv-button sirv-flush-url-cache-button',
                 'class' => 'secondary',
                 'options' => [
                     'failed' => [
@@ -131,15 +152,24 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
         ];
 
         if ($disabled) {
-            $buttonsConfig['sirv-flush']['disabled'] = 'disabled';
-            $buttonsConfig['sirv-flush']['button_class'] .= ' disabled';
+            $buttonsConfig['sirv-flush-asset']['disabled'] = 'disabled';
+            $buttonsConfig['sirv-flush-asset']['button_class'] .= ' disabled';
+            $buttonsConfig['sirv-flush-url']['disabled'] = 'disabled';
+            $buttonsConfig['sirv-flush-url']['button_class'] .= ' disabled';
             $buttonsConfig['sirv-sync']['disabled'] = 'disabled';
             $buttonsConfig['sirv-save']['disabled'] = 'disabled';
         }
 
         $this->addButton(
-            'sirv-flush',
-            $buttonsConfig['sirv-flush'],
+            'sirv-flush-asset',
+            $buttonsConfig['sirv-flush-asset'],
+            0,
+            4
+        );
+
+        $this->addButton(
+            'sirv-flush-url',
+            $buttonsConfig['sirv-flush-url'],
             0,
             3
         );

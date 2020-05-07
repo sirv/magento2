@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Controller\Adminhtml\Settings;
 /**
  * Settings backend controller
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 {
@@ -66,6 +66,61 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         $email = isset($config['email']) ? $config['email'] : null;
         $password = isset($config['password']) ? $config['password'] : null;
         $account = isset($config['account']) ? $config['account'] : null;
+        $isNewAccount = isset($config['account_exists']) ? ($config['account_exists'] == 'no') : false;
+
+        if ($isNewAccount) {
+            $valid = true;
+            $words = isset($config['first_and_last_name']) ? $config['first_and_last_name'] : '';
+            $words = preg_replace('#\s{2,}#', ' ', trim($words));
+            $words = explode(' ', $words);
+            if (count($words) < 2) {
+                $this->messageManager->addWarningMessage(
+                    __('Please specify first and last name separated by a space.')
+                );
+                $valid = false;
+            } else {
+                $lastName = array_pop($words);
+                $firstName = implode(' ', $words);
+            }
+
+            $alias = isset($config['alias']) ? trim($config['alias']) : '';
+            if (!preg_match('#^[a-z0-9_]{6,32}$#i', $alias)) {
+                $this->messageManager->addWarningMessage(
+                    __('Wrong account name. Account name must be 6-32 characters. It can contain letters, numbers and hyphens (no spaces).')
+                );
+                $valid = false;
+            }
+
+            if ($valid) {
+                /** @var MagicToolbox_Sirv_Model_Api_Sirv $apiClient */
+                $apiClient = $this->dataHelper->getSirvClient();
+                $registered = $apiClient->registerAccount($email, $password, $firstName, $lastName, $alias);
+                if ($registered) {
+                    $account = $alias;
+                    $this->dataHelper->saveConfig('account', $account);
+                    $this->dataHelper->deleteConfig('account_exists');
+                    $this->dataHelper->deleteConfig('alias');
+                    $this->dataHelper->deleteConfig('first_and_last_name');
+                    $apiClient->init(['account' => $account]);
+                } else {
+                    $errorMsg = $apiClient->getErrorMsg();
+                    if (preg_match('#must be a valid email#', $errorMsg)) {
+                        $errorMsg  = 'Wrong email address. Please check it and try again.';
+                    }
+                    if (preg_match('#Duplicate entry#', $errorMsg)) {
+                        $errorMsg  = 'Specified email address is already registered or account name is already taken.';
+                    }
+                    $this->messageManager->addWarningMessage(__($errorMsg));
+                    $valid = false;
+                }
+            }
+
+            if (!$valid) {
+                $this->dataHelper->saveConfig('password', '');
+                $password = null;
+                $success = false;
+            }
+        }
 
         //NOTE: check email and password
         if ($email && $password) {
@@ -128,7 +183,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         }
 
         if ($success) {
-            $this->messageManager->addSuccess(__('You saved the settings.'));
+            $this->messageManager->addSuccess(__('The settings have been saved.'));
         }
 
         $resultRedirect->setPath('sirv/*/edit');

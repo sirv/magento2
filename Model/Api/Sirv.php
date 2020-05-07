@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Model\Api;
 /**
  * Sirv api
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Sirv
 {
@@ -22,13 +22,13 @@ class Sirv
      * Default client id
      *
      */
-    const CLIENT_ID = '3LMcwKa0TrLsUJmxMQAxNVMdLLe';
+    const CLIENT_ID = 'LZswKxl7FAkG2VWWMJmndHzbNmR';
 
     /**
      * Default client secret
      *
      */
-    const CLIENT_SECRET = 'PkFTQ/mQGYAgWeBFegJHKeevaKYQtiyI9o0TvEnMLNWu5f4ySk7Ho430mYNpt7PyyflQl4PcC1U01e+eGwJdLQ==';
+    const CLIENT_SECRET = 'uN/l/RbDzL+xLS68e7QdeX3XnC98zGgFVzbIBvJ5RVtzfnN5YXNPwRWpJtNd6sglGp98VtOC3mHBMdz2Z8TnHA==';
 
     /**
      * User client id
@@ -192,6 +192,13 @@ class Sirv
     ];
 
     /**
+     * Module version
+     *
+     * @var string
+     */
+    protected $moduleVersion = '';
+
+    /**
      * Constructor
      *
      * @return void
@@ -227,7 +234,7 @@ class Sirv
      */
     public function getToken()
     {
-        return (empty($this->token) || ($this->tokenExpireTime < time())) ? $this->getNewToken() : $this->token;
+        return (empty($this->token) || ($this->tokenExpireTime <= time())) ? $this->getNewToken() : $this->token;
     }
 
     /**
@@ -498,6 +505,41 @@ class Sirv
     }
 
     /**
+     * Register new account
+     *
+     * @param string $email
+     * @param string $password
+     * @param string $firstName
+     * @param string $lastName
+     * @param string $alias
+     * @return bool
+     */
+    public function registerAccount($email, $password, $firstName, $lastName, $alias)
+    {
+        $registered = false;
+
+        if ($this->getToken()) {
+            $this->sendRequest(
+                'v2/account',
+                'PUT',
+                [
+                    'email' => $email,
+                    'password' => $password,
+                    'firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'alias' => $alias
+                ]
+            );
+
+            if ($this->responseCode == 200) {
+                $registered = true;
+            }
+        }
+
+        return $registered;
+    }
+
+    /**
      * Get stats
      *
      * @return array|bool
@@ -733,6 +775,50 @@ class Sirv
     }
 
     /**
+     * Upload file
+     *
+     * @param string $filename
+     * @param string $fsPath
+     * @param string $contents
+     * @return bool
+     */
+    public function uploadFile($filename, $fsPath, $contents = null)
+    {
+        if ($this->getToken()) {
+            $filename = '/' . str_replace('%2F', '/', rawurlencode(ltrim($filename, '/')));
+            if ($contents === null) {
+                $contents = file_get_contents($fsPath);
+            }
+            $this->sendRequest(
+                'v2/files/upload?filename=' . $filename,
+                'POST',
+                ['upload' => $contents]
+            );
+        }
+
+        return $this->responseCode == 200;
+    }
+
+    /**
+     * Delete a single file or an empty directory
+     *
+     * @param string $filename
+     * @return bool
+     */
+    public function deleteFile($filename)
+    {
+        if ($this->getToken()) {
+            $filename = '/' . str_replace('%2F', '/', rawurlencode(ltrim($filename, '/')));
+            $this->sendRequest(
+                'v2/files/delete?filename=' . $filename,
+                'POST'
+            );
+        }
+
+        return $this->responseCode == 200;
+    }
+
+    /**
      * Config account HTTP/S3 fetching
      *
      * @param strin $url
@@ -954,7 +1040,13 @@ class Sirv
             $headers[] = 'authorization: Bearer ' . $token;
         }
 
-        $headers[] = 'content-type: application/json';
+        if (isset($data['upload'])) {
+            $headers[] = 'content-type: application/octet-stream';
+            $data = $data['upload'];
+        } else {
+            $headers[] = 'content-type: application/json';
+            $data = json_encode($data);
+        }
 
         curl_setopt_array(
             self::$curlHandle,
@@ -963,8 +1055,9 @@ class Sirv
                 CURLOPT_CUSTOMREQUEST => $method,
                 CURLOPT_HTTPHEADER => $headers,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POSTFIELDS => json_encode($data),
+                CURLOPT_POSTFIELDS => $data,
                 CURLOPT_HEADERFUNCTION => [$this, 'headerDataHandler'],
+                CURLOPT_USERAGENT => 'Sirv/Magento 2/' . $this->moduleVersion,
             ]
         );
 

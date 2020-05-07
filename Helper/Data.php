@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Helper;
 /**
  * Data helper
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -39,6 +39,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var bool
      */
     protected $isSirvEnabled = false;
+
+    /**
+     * Whether to use Sirv Media Viewer
+     *
+     * @var bool
+     */
+    protected $useSirvMediaViewer = false;
 
     /**
      * Sirv client factory
@@ -92,6 +99,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $this->sirvConfig[$data['name']] = $data['value'];
         }
         $this->isSirvEnabled = isset($this->sirvConfig['enabled']) ? $this->sirvConfig['enabled'] == 'true' : false;
+        $this->useSirvMediaViewer = isset($this->sirvConfig['product_gallery_view']) ? $this->sirvConfig['product_gallery_view'] == 'smv' : false;
     }
 
     /**
@@ -136,6 +144,25 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Delete config
+     *
+     * @param string $name
+     * @return void
+     */
+    public function deleteConfig($name)
+    {
+        $model = $this->getConfigModel();
+        $model->load($name, 'name');
+        $id = $model->getId();
+        if ($id !== null) {
+            $model->delete();
+        }
+        if (isset($this->sirvConfig[$name])) {
+            unset($this->sirvConfig[$name]);
+        }
+    }
+
+    /**
      * Check for backend area
      *
      * @return bool
@@ -153,6 +180,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function isSirvEnabled()
     {
         return $this->isSirvEnabled;
+    }
+
+    /**
+     * Whether to use Sirv Media Viewer
+     *
+     * @return bool
+     */
+    public function useSirvMediaViewer()
+    {
+        return $this->useSirvMediaViewer;
     }
 
     /**
@@ -202,6 +239,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
             $data['rateLimitExceededCallback'] = [$this, 'onSirvRateLimitExceeded'];
 
+            $data['moduleVersion'] = $this->getModuleVersion('MagicToolbox_Sirv') ?: 'unknown';
+
             $sirvClient->init($data);
         }
 
@@ -236,6 +275,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 if ($rateLimitData) {
                     $data['rateLimitData'] = $this->getUnserializer()->unserialize($rateLimitData);
                 }
+
+                $data['moduleVersion'] = $this->getModuleVersion('MagicToolbox_Sirv') ?: 'unknown';
 
                 $s3Client = $this->s3ClientFactory->create(['params' => $data]);
             }
@@ -404,18 +445,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $disableSpinScanning = (!isset($options->scanSpins) || $options->scanSpins) ? true : false;
         } else {
             $disableSpinScanning = true;
-
-            $tmpFilePath = tempnam(sys_get_temp_dir(), 'sirv_');
-            $handle = fopen($tmpFilePath, 'w');
-            fwrite($handle, "\n");
-            fclose($handle);
-
-            /** @var \MagicToolbox\Sirv\Model\Api\S3 $s3Client */
-            $s3Client = $this->getS3Client();
-            $result = $s3Client->uploadFile($imageFolder . '/sirv_tmp.txt', $tmpFilePath, true);
-
-            unlink($tmpFilePath);
-            $s3Client->deleteObject($imageFolder . '/sirv_tmp.txt');
+            $apiClient->uploadFile($imageFolder . '/sirv_tmp.txt', '', "\n");
+            $apiClient->deleteFile($imageFolder . '/sirv_tmp.txt');
         }
 
         if ($disableSpinScanning) {
@@ -552,5 +583,33 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return $serializer;
+    }
+
+    /**
+     * Get module version
+     *
+     * @param string $name
+     * @return string | bool
+     */
+    public function getModuleVersion($name)
+    {
+        static $versions = [];
+
+        if (!isset($versions[$name])) {
+            $versions[$name] = false;
+            $componentRegistrar = \Magento\Framework\App\ObjectManager::getInstance()->get(
+                \Magento\Framework\Component\ComponentRegistrar::class
+            );
+            $moduleDir = $componentRegistrar->getPath(
+                \Magento\Framework\Component\ComponentRegistrar::MODULE,
+                $name
+            );
+            $moduleInfo = json_decode(file_get_contents($moduleDir . '/composer.json'));
+            if (is_object($moduleInfo) && isset($moduleInfo->version)) {
+                $versions[$name] = $moduleInfo->version;
+            }
+        }
+
+        return $versions[$name];
     }
 }

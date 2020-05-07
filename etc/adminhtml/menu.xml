@@ -3,24 +3,25 @@
 /**
  * Module menu config
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
-        <update id="MagicToolbox_MagicToolbox::magictoolbox"
-            title="Magic Toolbox"
+        <add id="MagicToolbox_Sirv::sirv_settings"
+            title="Sirv CDN"
             module="MagicToolbox_Sirv"
-            sortOrder="75"
-            resource="MagicToolbox_MagicToolbox::magictoolbox"/>
+            sortOrder="90"
+            parent="Magento_Backend::system"
+            resource="MagicToolbox_Sirv::sirv_settings"/>
         <add id="MagicToolbox_Sirv::sirv_settings_edit"
-            title="Sirv"
+            title="Configuration"
             module="MagicToolbox_Sirv"
-            sortOrder="30"
-            parent="MagicToolbox_MagicToolbox::magictoolbox"
+            sortOrder="10"
+            parent="MagicToolbox_Sirv::sirv_settings"
             action="sirv/settings/edit"
             resource="MagicToolbox_Sirv::sirv_settings_edit"/>
     </menu>

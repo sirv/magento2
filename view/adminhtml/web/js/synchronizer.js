@@ -1,10 +1,10 @@
 /**
  * Synchronizer widget
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 
 define([
@@ -15,6 +15,8 @@ define([
     'mage/translate'
 ], function ($, mageTemplate, uiAlert) {
     'use strict';
+
+    var simulator = null;
 
     $.widget('sirv.synchronizer', {
 
@@ -33,7 +35,8 @@ define([
             buttons: {
                 save: '.sirv-save-config-button',
                 sync: '.sirv-sync-media-button',
-                flush: '.sirv-flush-cache-button, .sirv-flush-cache-button button'
+                flushUrl: '.sirv-flush-url-cache-button, .sirv-flush-url-cache-button button',
+                flushAsset: '.sirv-flush-asset-cache-button, .sirv-flush-asset-cache-button button'
             },
             bars: {
                 timer: '.sirv-sync-wraper .progress-bar-timer',
@@ -232,8 +235,9 @@ define([
 
             this.modalWindow.modal('closeModal');
 
+            this._removeStripes();
+            this._getSimulator().stop();
             if (!this.isSyncInProgress) {
-                this._removeStripes();
                 if (!this.isSyncFailed) {
                     this._enableButtons();
                 }
@@ -244,7 +248,6 @@ define([
          * Get modal window
          */
         _getModalWindow: function () {
-
             if (this.modalWindow) {
                 return this.modalWindow;
             }
@@ -309,6 +312,10 @@ define([
                 return;
             }
 
+            if (this.syncStage == 1 || this.syncStage == 2) {
+                this._getSimulator().start();
+            }
+
             this._doRequest('synchronize', {'syncStage': this.syncStage}, this._syncSuccessed, this._syncFailed);
         },
 
@@ -357,18 +364,14 @@ define([
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     var message = null;
-                    switch (textStatus) {
-                        case 'parsererror':
-                        case 'error':
-                        case 'abort':
-                        case 'timeout':
-                        default:
-                            message = (typeof errorThrown == 'string' ? errorThrown : null);
-                            message = (typeof errorThrown == 'object' ? errorThrown.message : message);
-                            if (console && console.error) console.error(errorThrown);
+                    /* textStatus: 'parsererror'|'error'|'abort'|'timeout' */
+                    if (typeof errorThrown == 'string') {
+                        message = errorThrown;
+                    } else if (typeof errorThrown == 'object') {
+                        message = errorThrown.message;
                     }
+                    if (console && console.error && errorThrown) console.error(errorThrown);
                     message = message || self.errorMessage;
-
                     failureCallback(message);
                 }
             });
@@ -379,6 +382,8 @@ define([
          */
         _syncSuccessed: function (data) {
             var counters = this.counters;
+
+            this._getSimulator().stop();
 
             switch (this.syncStage) {
                 case 0:
@@ -505,6 +510,101 @@ define([
         },
 
         /**
+         * Get simulator
+         */
+        _getSimulator: function () {
+            if (simulator) {
+                return simulator;
+            }
+
+            var selectors = this.selectors,
+                counters = this.counters,
+                percents = this.percents,
+                synced = 0,
+                queued = 0,
+                cached = 0,
+                isNew = true,
+                simulate = null,
+                interval = 0,
+                timerId = null;
+
+            simulate = function () {
+                var syncedPercents, queuedPercents, cachedPercents;
+
+                if (isNew) {
+                    if (cached == counters.total) {
+                        return;
+                    }
+                    synced++;
+                    cached++;
+                } else {
+                    if (queued == 0) {
+                        return;
+                    }
+                    synced++;
+                    queued--;
+                }
+
+                syncedPercents = Math.floor(synced * 100 * 100 / counters.total) / 100;
+                queuedPercents = Math.floor(queued * 100 * 100 / counters.total) / 100;
+                cachedPercents = Math.floor(cached * 100 * 100 / counters.total) / 100;
+
+                $(selectors.bars.synced).attr('data-count', synced).css('width', syncedPercents + '%');
+                $(selectors.bars.queued).attr('data-count', queued).css('width', queuedPercents + '%');
+                $(selectors.texts.synced).html(synced);
+                $(selectors.texts.queued).html(queued);
+                $(selectors.texts.completed).html(cached);
+                $(selectors.texts.progressPercent).html(cachedPercents);
+
+                timerId = setTimeout(simulate, interval);
+            };
+            simulate = $.proxy(simulate, this);
+
+            simulator = {};
+            simulator.start = function () {
+                if (timerId !== null) {
+                    clearTimeout(timerId);
+                    timerId = null;
+                }
+
+                var rest;
+
+                rest = counters.total - counters.cached;
+                if (rest < 1) {
+                    if (counters.queued < 1) {
+                        return;
+                    }
+                    rest = counters.queued;
+                    isNew = false;
+                }
+                interval = rest < 60 ? Math.floor(60 * 1000 / rest) : 1000;
+                synced = counters.synced;
+                queued = counters.queued;
+                cached = counters.cached;
+
+                timerId = setTimeout(simulate, interval);
+            };
+
+            simulator.stop = function (reset) {
+                if (timerId !== null) {
+                    clearTimeout(timerId);
+                    timerId = null;
+                }
+
+                if (reset) {
+                    $(selectors.bars.synced).attr('data-count', counters.synced).css('width', percents.synced + '%');
+                    $(selectors.bars.queued).attr('data-count', counters.queued).css('width', percents.queued + '%');
+                    $(selectors.texts.synced).html(counters.synced);
+                    $(selectors.texts.queued).html(counters.queued);
+                    $(selectors.texts.completed).html(counters.cached);
+                    $(selectors.texts.progressPercent).html(percents.cached);
+                }
+            };
+
+            return simulator;
+        },
+
+        /**
          * Rate limit exceeded
          */
         _rateLimitExceeded: function (data) {
@@ -613,6 +713,8 @@ define([
         _syncFailed: function (message) {
             this.isSyncFailed = true;
 
+            this._getSimulator().stop(true);
+
             $(this.selectors.bars.holder).addClass('error-on');
 
             $('.sirv-sync-wraper .progress-list-group').addClass('progress-list-group-faded');
@@ -634,7 +736,7 @@ define([
          * Flush cache
          */
         _flushCache: function (flushMethod) {
-            $('#sirv-flush [data-toggle=dropdown].active').trigger('close.dropdown');
+            $('#sirv-flush-url [data-toggle=dropdown].active').trigger('close.dropdown');
             $('#sirv_group_fieldset_synchronization').get(0).scrollIntoView();
 
             this._disableButtons();

@@ -11,10 +11,10 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
 /**
  * DB schema installs
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  *
  * @codeCoverageIgnore
  */
@@ -29,6 +29,11 @@ class InstallSchema implements InstallSchemaInterface
      * Cache table name
      */
     const SIRV_CACHE_TABLE = 'sirv_cache';
+
+    /**
+     * Assets table name
+     */
+    const SIRV_ASSETS_TABLE = 'sirv_assets';
 
     /**
      * Installs DB schema
@@ -138,6 +143,40 @@ class InstallSchema implements InstallSchemaInterface
         $connection->query(
             "ALTER TABLE `{$tableName}` MODIFY `path` varchar(255) BINARY NOT NULL DEFAULT '' COMMENT 'Relative file path'"
         );
+
+        $tableName = $setup->getTable(self::SIRV_ASSETS_TABLE);
+
+        if ($setup->tableExists(self::SIRV_ASSETS_TABLE)) {
+            $connection->dropTable($tableName);
+        }
+
+        $table = $connection->newTable(
+            $tableName
+        )->addColumn(
+            'product_id',
+            Table::TYPE_INTEGER,
+            null,
+            ['unsigned' => true, 'nullable' => false, 'primary' => true],
+            'Product ID'
+        )->addColumn(
+            'contents',
+            Table::TYPE_TEXT,
+            null,
+            ['nullable'  => false],
+            'Contents'
+        )->addIndex(
+            $setup->getIdxName(
+                $tableName,
+                ['product_id'],
+                AdapterInterface::INDEX_TYPE_UNIQUE
+            ),
+            ['product_id'],
+            ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
+        )->setComment(
+            'Sirv assets'
+        );
+
+        $connection->createTable($table);
 
         $setup->endSetup();
     }

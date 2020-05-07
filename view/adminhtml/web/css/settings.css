@@ -1,10 +1,10 @@
 /**
  * Settings page styles
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 
 .sirv-settings-edit .page-title img {
@@ -15,154 +15,102 @@
   vertical-align: middle;
 }
 
-form.magictoolbox-config .fieldset .field.no-label .control {
+.magictoolbox-config .fieldset .admin__legend {
+  margin-bottom: 1.9rem;
+  padding: 1.9rem 0 1.9rem 0;
+  border-bottom: 1px solid #ccc;
+}
+.magictoolbox-config .fieldset .field.no-label .control {
   width: 100%;
 }
-form.magictoolbox-config .fieldset .field-mt-config-notice .mt-config-error-notice {
+.magictoolbox-config .fieldset .field-mt-config-notice .mt-config-error-notice {
   color: red;
 }
-form.magictoolbox-config .fieldset .field-mt-outdated-notice .mt-outdated-error-notice {
+.magictoolbox-config .fieldset .field-mt-outdated-notice .mt-outdated-error-notice {
   color: red;
 }
-form.magictoolbox-config .fieldset .field-mt-config-notice.no-label .control {
+.magictoolbox-config .fieldset .field-mt-config-notice.no-label .control {
   font-size: 1.8rem;
 }
 
-form.magictoolbox-config .field .mt-option {
+.magictoolbox-config .field .mt-option {
   width: 320px;
 }
-form.magictoolbox-config #sirv_group_fieldset_account_info .admin__field {
-  margin-bottom: 1.0rem;
-}
-form.magictoolbox-config #sirv_group_fieldset_account_info .admin__field + .admin__field {
-  margin-top: 1.0rem;
-}
 
-.page-actions div.sirv-flush-cache-button {
+.page-actions div.sirv-flush-asset-cache-button {
   -ms-flex-order: 1;
   -webkit-order: 1;
   order: 1;
 }
-.page-actions div.sirv-flush-cache-button.active .action-toggle.primary {
+.page-actions div.sirv-flush-asset-cache-button.active .action-toggle.primary {
   background-color: #35302c;
   border-color: #35302c;
 }
-.page-actions div.sirv-flush-cache-button.disabled:hover {
+.page-actions div.sirv-flush-asset-cache-button.disabled:hover {
   box-shadow: inherit;
 }
-.page-actions button.sirv-sync-media-button {
+.page-actions div.sirv-flush-url-cache-button {
   -ms-flex-order: 2;
   -webkit-order: 2;
   order: 2;
 }
-.page-actions button.primary.sirv-save-config-button {
+.page-actions div.sirv-flush-url-cache-button.active .action-toggle.primary {
+  background-color: #35302c;
+  border-color: #35302c;
+}
+.page-actions div.sirv-flush-url-cache-button.disabled:hover {
+  box-shadow: inherit;
+}
+.page-actions button.sirv-sync-media-button {
   -ms-flex-order: 3;
   -webkit-order: 3;
   order: 3;
 }
+.page-actions button.primary.sirv-save-config-button {
+  -ms-flex-order: 4;
+  -webkit-order: 4;
+  order: 4;
+}
 
-form.magictoolbox-config .field .admin__control-select.mt-option.select-with-placeholder:invalid {
+.magictoolbox-config .field .admin__control-select.mt-option.select-with-placeholder:invalid {
   color: #757575;
 }
-form.magictoolbox-config .field .admin__control-select.mt-option.select-with-placeholder option {
+.magictoolbox-config .field .admin__control-select.mt-option.select-with-placeholder option {
   color: #303030;
 }
-form.magictoolbox-config .fieldset .field.no-label .control {
+.magictoolbox-config .fieldset .field.no-label .control {
   width: calc( (100%) - 30px );
 }
 
-.sirv-stats-wraper {
-  width: 100%;
-}
-.sirv-stats-wraper .row:after,
-.sirv-stats-wraper .row:before {
-  content: " ";
-  display: table;
-}
-.sirv-stats-wraper .row:after {
-  clear: both;
-}
-
-.sirv-stats-wraper .col-sm-1,
-.sirv-stats-wraper .col-sm-3,
-.sirv-stats-wraper .col-sm-6,
-.sirv-stats-wraper .col-sm-9,
-.sirv-stats-wraper .col-sm-11,
-.sirv-stats-wraper .col-lg-12 {
-  position: relative;
-  min-height: 1px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-@media (min-width: 768px) {
-  .sirv-stats-wraper .col-sm-1 {
-    width: 8.33333%;
-    float: left;
-  }
-  .sirv-stats-wraper .col-sm-3 {
-    width: 25%;
-    float: left;
-  }
-  .sirv-stats-wraper .col-sm-6 {
-    width: 50%;
-    float: left;
-  }
-  .sirv-stats-wraper .col-sm-9 {
-    width: 75%;
-    float: left;
-  }
-  .sirv-stats-wraper .col-sm-11 {
-    width: 91.66667%;
-    float: left;
-  }
-}
-@media (min-width: 1200px) {
-  .sirv-stats-wraper .col-lg-12 {
-    width: 100%;
-    float: left;
-  }
-}
-
-.sirv-stats-wraper h3 {
-  margin-top: 8.5px;
-  margin-bottom: 8.5px;
-  font-family: Ubuntu Condensed,Helvetica,Arial,sans-serif;
-  font-weight: 400;
-  line-height: 1.1;
-  color: inherit;
-}
-.sirv-stats-wraper label {
+.admin__field-control > .admin__field-option.admin__field-option-inline {
   display: inline-block;
-  max-width: 100%;
-  margin-bottom: 5px;
-  font-weight: 700;
 }
-
-.sirv-stats-wraper .sirv-progress-bar-holder {
-  position: relative;
+.admin__field-control > .admin__field-option.admin__field-option-inline:not(:first-child) {
+  margin-left: 41px;
+  margin-top: 0;
 }
-.sirv-stats-wraper .sirv-progress-bar {
-  border: 1px solid #ddd;
-  height: 100%;
-  width: 100%;
+.admin__field-control > .admin__field-option.admin__field-option-inline:not(:first-child):before {
+  background: #cacaca;
+  content: '';
+  display: inline-block;
+  height: 20px;
+  margin-left: -20px;
   position: absolute;
-  min-height: 18px;
+  width: 1px;
 }
-.sirv-stats-wraper .sirv-progress-bar > div {
-  width: 100%;
-  height: 100%;
-  background: #2ce02c;
-  background: -moz-linear-gradient(left, #2ce02c 0%, #ff0000 100%);
-  background: -webkit-linear-gradient(left, #2ce02c 0%,#ff0000 100%);
-  background: linear-gradient(to right, #2ce02c 0%,#ff0000 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2ce02c', endColorstr='#ff0000', GradientType=1 );
+.admin__field-control > .admin__field-option.admin__field-option-not-inline:nth-child(1):nth-last-child(2),
+.admin__field-control > .admin__field-option.admin__field-option-not-inline:nth-child(2):nth-last-child(1) {
+  display: block;
 }
-.sirv-stats-wraper .sirv-progress-bar > div > div {
-  position: absolute;
-  height: 100%;
-  max-width: calc(100% - 3px);
-  right: 0;
-  background: #fff;
+.admin__field-control > .admin__field-option.admin__field-option-not-inline:nth-child(1):nth-last-child(2) + .admin__field-option,
+.admin__field-control > .admin__field-option.admin__field-option-not-inline:nth-child(2):nth-last-child(1) + .admin__field-option {
+  display: block;
+  margin-left: 0;
+  margin-top: .9rem;
+}
+.admin__field-control > .admin__field-option.admin__field-option-not-inline:nth-child(1):nth-last-child(2) + .admin__field-option:before,
+.admin__field-control > .admin__field-option.admin__field-option-not-inline:nth-child(2):nth-last-child(1) + .admin__field-option:before {
+  display: none;
 }
 
 .sirv-sync-wraper *,
@@ -364,14 +312,8 @@ form.magictoolbox-config .fieldset .field.no-label .control {
   border: 1px solid rgba(0, 0, 0, .125);
   width: 100%;
 }
-.sirv-sync-wraper .progress-list-group .progress-list-group-item:first-child {
-  border-top-left-radius: .25rem;
-  border-top-right-radius: .25rem;
-}
 .sirv-sync-wraper .progress-list-group .progress-list-group-item:last-child {
   margin-bottom: 0;
-  border-bottom-right-radius: .25rem;
-  border-bottom-left-radius: .25rem;
 }
 .sirv-sync-wraper .progress-list-group .progress-list-group-item-synced {
   background-color: #79a22e;
@@ -404,6 +346,125 @@ form.magictoolbox-config .fieldset .field.no-label .control {
   color: #000000;
   float: right;
   width: 30%;
+}
+
+.sirv-stats-wraper {
+  width: 100%;
+}
+.sirv-stats-wraper .row:after,
+.sirv-stats-wraper .row:before {
+  content: " ";
+  display: table;
+}
+.sirv-stats-wraper .row:after {
+  clear: both;
+}
+
+.sirv-stats-wraper .col-sm-1,
+.sirv-stats-wraper .col-sm-3,
+.sirv-stats-wraper .col-sm-6,
+.sirv-stats-wraper .col-sm-9,
+.sirv-stats-wraper .col-sm-11,
+.sirv-stats-wraper .col-lg-12 {
+  position: relative;
+  min-height: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+@media (min-width: 768px) {
+  .sirv-stats-wraper .col-sm-1 {
+    width: 8.33333%;
+    float: left;
+  }
+  .sirv-stats-wraper .col-sm-3 {
+    width: 25%;
+    float: left;
+  }
+  .sirv-stats-wraper .col-sm-6 {
+    width: 50%;
+    float: left;
+  }
+  .sirv-stats-wraper .col-sm-9 {
+    width: 75%;
+    float: left;
+  }
+  .sirv-stats-wraper .col-sm-11 {
+    width: 91.66667%;
+    float: left;
+  }
+}
+@media (min-width: 1200px) {
+  .sirv-stats-wraper .col-lg-12 {
+    width: 100%;
+    float: left;
+  }
+}
+
+.sirv-stats-wraper h3 {
+  margin-bottom: 1rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: inherit;
+}
+.sirv-stats-wraper label {
+  display: inline-block;
+  max-width: 100%;
+  margin-bottom: 5px;
+  font-weight: 600;
+  margin-left: -5px;
+}
+
+.sirv-stats-wraper .sirv-progress-bar-holder {
+  position: relative;
+}
+.sirv-stats-wraper .sirv-progress-bar {
+  border: 1px solid #ddd;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  min-height: 18px;
+}
+.sirv-stats-wraper .sirv-progress-bar > div {
+  width: 100%;
+  height: 100%;
+  background: #2ce02c;
+  background: -moz-linear-gradient(left, #2ce02c 0%, #ff0000 100%);
+  background: -webkit-linear-gradient(left, #2ce02c 0%,#ff0000 100%);
+  background: linear-gradient(to right, #2ce02c 0%,#ff0000 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2ce02c', endColorstr='#ff0000', GradientType=1 );
+}
+.sirv-stats-wraper .sirv-progress-bar > div > div {
+  position: absolute;
+  height: 100%;
+  max-width: calc(100% - 3px);
+  right: 0;
+  background: #fff;
+}
+
+.sirv-stats-wraper > .row > div {
+  margin-left: -5px;
+}
+
+#sirv_group_fieldset_account_info {
+  margin-bottom: 3rem;
+}
+#sirv_group_fieldset_account_info .admin__field {
+  margin: 0.5rem 0;
+}
+#sirv_group_fieldset_account_info .admin__field + .admin__field {
+  margin-top: 0rem;
+}
+#sirv_group_fieldset_account_info .admin__field .admin__field-label {
+  text-align: left;
+  width: calc( (50%) * 0.25 - 40px );
+  line-height: 2rem;
+  margin-left: 0;
+}
+#sirv_group_fieldset_account_info .admin__field .admin__field-label:before {  
+  content: none;
+}
+#sirv_group_fieldset_account_info .admin__field-value {
+  padding-top: 0;
 }
 
 #sirv-messages .list-message:before {

@@ -5,13 +5,20 @@ namespace MagicToolbox\Sirv\Block\Html;
 /**
  * Head block
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Head extends \Magento\Framework\View\Element\Template
 {
+    /**
+     * Data helper
+     *
+     * @var \MagicToolbox\Sirv\Helper\Data
+     */
+    protected $dataHelper = null;
+
     /**
      * Sync helper
      *
@@ -28,15 +35,18 @@ class Head extends \Magento\Framework\View\Element\Template
 
     /**
      * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
      * @param \MagicToolbox\Sirv\Helper\Sync $syncHelper
      * @param array $data
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
+        \MagicToolbox\Sirv\Helper\Data $dataHelper,
         \MagicToolbox\Sirv\Helper\Sync $syncHelper,
         array $data = []
     ) {
         parent::__construct($context, $data);
+        $this->dataHelper = $dataHelper;
         $this->syncHelper = $syncHelper;
     }
 
@@ -59,6 +69,16 @@ class Head extends \Magento\Framework\View\Element\Template
     public function getSirvUrl()
     {
         return $this->syncHelper->getBaseUrl();
+    }
+
+    /**
+     * Whether to use Sirv Media Viewer
+     *
+     * @return bool
+     */
+    public function useSirvMediaViewer()
+    {
+        return $this->dataHelper->useSirvMediaViewer();
     }
 
     /**

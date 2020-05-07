@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Controller\Adminhtml\Settings;
 /**
  * Settings backend controller
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 {
@@ -21,10 +21,10 @@ class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     {
         /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
         $resultPage = $this->resultPageFactory->create();
-        $resultPage->setActiveMenu('MagicToolbox_MagicToolbox::magictoolbox');
+        $resultPage->setActiveMenu('Magento_Backend::system');
         $title = $resultPage->getConfig()->getTitle();
-        $title->prepend('Magic Toolbox');
-        $title->prepend('Sirv');
+        $title->prepend('Sirv CDN');
+        $title->prepend('Configuration');
 
         return $resultPage;
     }

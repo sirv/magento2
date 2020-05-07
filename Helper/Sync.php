@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Helper;
 /**
  * Sync helper
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Sync extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -54,18 +54,11 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     protected $sirvClient = null;
 
     /**
-     * S3 client
-     *
-     * @var \MagicToolbox\Sirv\Model\Api\S3
-     */
-    protected $s3Client = null;
-
-    /**
-     * Use S3 to upload files or not
+     * Whether the host is local
      *
      * @var bool
      */
-    protected $useS3upload = false;
+    protected $isLocalHost = false;
 
     /**
      * Authentication flag
@@ -173,7 +166,6 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Catalog\Model\Product\Media\Config $catalogProductMediaConfig
      * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
      * @param \MagicToolbox\Sirv\Model\CacheFactory $cacheModelFactory
-     * @param \Magento\Framework\App\RequestInterface $request
      * @return void
      */
     public function __construct(
@@ -181,8 +173,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\Filesystem $filesystem,
         \Magento\Catalog\Model\Product\Media\Config $catalogProductMediaConfig,
         \MagicToolbox\Sirv\Helper\Data $dataHelper,
-        \MagicToolbox\Sirv\Model\CacheFactory $cacheModelFactory,
-        \Magento\Framework\App\RequestInterface $request
+        \MagicToolbox\Sirv\Model\CacheFactory $cacheModelFactory
     ) {
         parent::__construct($context);
 
@@ -228,6 +219,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
 
+        $request = $context->getRequest();
+
         $this->rootDirAbsPath = $request->getServer('DOCUMENT_ROOT');
         // phpcs:ignore Magento2.Functions.DiscouragedFunction
         $this->rootDirAbsPath = realpath($this->rootDirAbsPath);
@@ -268,7 +261,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         $httpHost = $request->getServer('HTTP_HOST') ?: '';
-        $this->useS3upload = preg_match('#localhost|127\.\d+\.\d+\.\d+#i', $httpHost);
+        $this->isLocalHost = preg_match('#localhost|127\.\d+\.\d+\.\d+#i', $httpHost);
 
         if ($dataHelper->isSirvEnabled() || $dataHelper->isBackend()) {
             $this->isAuth = (
@@ -276,8 +269,6 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 $dataHelper->getConfig('client_id') &&
                 $dataHelper->getConfig('client_secret')
             );
-
-            $this->s3Client = $dataHelper->getS3Client();
         }
     }
 
@@ -411,9 +402,9 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
 
         $relPath = $this->getRelativePath($absPath, $pathType);
 
-        if ($this->useS3upload) {
+        if ($this->isLocalHost) {
             try {
-                $result = $this->s3Client->uploadFile($this->imageFolder . $relPath, $absPath, true);
+                $result = $this->sirvClient->uploadFile($this->imageFolder . $relPath, $absPath);
             } catch (\Exception $e) {
                 $result = false;
                 $this->updateCacheData($relPath, $pathType, self::IS_FAILED, 0);
@@ -447,7 +438,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         try {
-            $result = $this->s3Client->deleteObject($this->imageFolder . $path);
+            $result = $this->sirvClient->deleteFile($this->imageFolder . $path);
         } catch (\Exception $e) {
             $this->logger->critical($e);
             $result = false;
@@ -566,7 +557,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function isS3UploadUsed()
     {
-        return $this->useS3upload;
+        return $this->isLocalHost;
     }
 
     /**
@@ -790,6 +781,76 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
 
         /** @var array $result */
         $result = $connection->fetchCol($mtSelect, $bind);
+
+        return $result;
+    }
+
+    /**
+     * Method to get media pathes that are not cached (alternative method using a temporary table)
+     *
+     * @param int $limit
+     * @return array
+     */
+    public function getNotCachedPathesAlt($limit = 0)
+    {
+        /** @var \MagicToolbox\Sirv\Model\ResourceModel\Cache $resource */
+        $resource = $this->cacheModel->getResource();
+        /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+        $connection = $resource->getConnection();
+        $mediaTable = $resource->getTable(\Magento\Catalog\Model\ResourceModel\Product\Gallery::GALLERY_TABLE);
+        /** @var \Magento\Framework\DB\Select $mtSelect */
+        $mtSelect = clone $connection->select();
+        $cacheTable = $resource->getMainTable();
+        /** @var \Magento\Framework\DB\Select $ctSelect */
+        $ctSelect = clone $connection->select();
+
+        $cacheTableTemp = "{$cacheTable}_temp";
+
+        $table = $connection->createTableByDdl($cacheTable, $cacheTableTemp);
+        $connection->createTable($table);
+
+        $connection->truncateTable($cacheTableTemp);
+
+        $ctSelect->reset()
+            ->from(
+                ['ct' => $cacheTable],
+                ['path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
+            )
+            ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)')
+            ->where('`ct`.`status` != ?', self::IS_UNDEFINED);
+
+        $query = $ctSelect->insertIgnoreFromSelect($cacheTableTemp, ['path']);
+
+        $bind = [
+            ':mmp_type' => self::MAGENTO_MEDIA_PATH,
+            ':mpmp_type' => self::MAGENTO_PRODUCT_MEDIA_PATH,
+            ':pm_rel_path' => $this->productMediaRelPath,
+            ':pm_rel_path_regexp' => '^' . $this->productMediaRelPath,
+        ];
+
+        $connection->query($query, $bind);
+
+        $mtSelect->reset()
+            ->distinct()
+            ->from(
+                ['mt' => $mediaTable],
+                ['unique_value' => 'BINARY(`mt`.`value`)']
+            )
+            ->joinLeft(
+                ['tt' => "{$cacheTableTemp}"],
+                '`tt`.`path` = `mt`.`value`',
+                []
+            )
+            ->where('`tt`.`path` IS NULL')
+            ->where('`mt`.`value` IS NOT NULL')
+            ->where('`mt`.`value` != ?', '');
+
+        if ($limit) {
+            $mtSelect->limit($limit);
+        }
+
+        /** @var array $result */
+        $result = $connection->fetchCol($mtSelect, []);
 
         return $result;
     }
@@ -1091,10 +1152,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             return $data;
         }
 
-        if ($this->useS3upload) {
-            $result = $this->syncWithS3Api($images, $breakTime);
+        if ($this->isLocalHost) {
+            $result = $this->syncWithUploading($images, $breakTime);
         } else {
-            $result = $this->syncWithSirvApi($images, $breakTime);
+            $result = $this->syncWithFetching($images, $breakTime);
         }
 
         $data = array_merge($data, $result);
@@ -1107,13 +1168,13 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Method to synchronize with S3 API
+     * Synchronize images using uploading method
      *
      * @param array $images
      * @param int $breakTime
      * @return array
      */
-    protected function syncWithS3Api($images, $breakTime)
+    protected function syncWithUploading($images, $breakTime)
     {
         $synced = 0;
         $failed = 0;
@@ -1126,18 +1187,27 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
 
             if (is_file($absPath)) {
                 try {
-                    $result = $this->s3Client->uploadFile($this->imageFolder . $relPath, $absPath, true);
-                    if (!$result && ($expireTime = $this->s3Client->getRateLimitExpireTime('uploadFile'))) {
-                        $rateLimit = [
-                            'expireTime' => $expireTime,
-                            'currentTime' => time(),
-                            'message' => $this->s3Client->getErrorMsg(),
-                        ];
-                        $aborted = true;
-                        break;
+                    $result = $this->sirvClient->uploadFile($this->imageFolder . $relPath, $absPath);
+                    if (!$result) {
+                        $errorMsg = $this->sirvClient->getErrorMsg();
+                        if (empty($errorMsg)) {
+                            $this->logger->info(sprintf('Uploading "%s" file failed.', $absPath));
+                        } else {
+                            $this->logger->info(sprintf('Uploading "%s" file failed. %s.', $absPath, $errorMsg));
+                        }
+                        $expireTime = $this->sirvClient->getRateLimitExpireTime('POST', 'v2/files/upload');
+                        if ($expireTime) {
+                            $rateLimit = [
+                                'expireTime' => $expireTime,
+                                'currentTime' => time(),
+                                'message' => $errorMsg,
+                            ];
+                            $aborted = true;
+                            break;
+                        }
                     }
                 } catch (\Exception $e) {
-                    $this->logger->critical('Exception on S3 API upload:', ['exception' => $e]);
+                    $this->logger->critical('Exception on API upload:', ['exception' => $e]);
                     $result = false;
                 }
             } else {
@@ -1173,13 +1243,13 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Method to synchronize with Sirv API
+     * Synchronize images using fetching method
      *
      * @param array $images
      * @param int $breakTime
      * @return array
      */
-    protected function syncWithSirvApi($images, $breakTime)
+    protected function syncWithFetching($images, $breakTime)
     {
         $synced = 0;
         $failed = 0;

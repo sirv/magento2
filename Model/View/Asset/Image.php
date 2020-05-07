@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Model\View\Asset;
 /**
  * Image file asset
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Image implements \Magento\Framework\View\Asset\LocalInterface
 {
@@ -214,14 +214,15 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
             $isFileSynced = static::$syncHelper->isSynced($relPath);
         } else {
             $isFileSynced = static::$syncHelper->save($absPath, $pathType);
-            //NOTE: to sync watermark file with product image
-            if (isset($this->miscParams['watermark_file'])) {
-                $watermarkAbsPath = $this->getWatermarkFilePath($this->miscParams['watermark_file']);
-                if ($watermarkAbsPath) {
-                    $watermarkRelPath = static::$syncHelper->getRelativePath($watermarkAbsPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
-                    if (!static::$syncHelper->isCached($watermarkRelPath)) {
-                        static::$syncHelper->save($watermarkAbsPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
-                    }
+        }
+
+        //NOTE: to sync watermark file with product image
+        if (isset($this->miscParams['watermark_file'])) {
+            $watermarkAbsPath = $this->getWatermarkFilePath($this->miscParams['watermark_file']);
+            if ($watermarkAbsPath) {
+                $watermarkRelPath = static::$syncHelper->getRelativePath($watermarkAbsPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
+                if (!static::$syncHelper->isCached($watermarkRelPath)) {
+                    static::$syncHelper->save($watermarkAbsPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
                 }
             }
         }
@@ -355,15 +356,15 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
             return $params;
         }
 
-        $params['image_height'] = 'h:' . (isset($params['image_height']) ? $params['image_height'] : 'empty');
-        $params['image_width'] = 'w:' . (isset($params['image_width']) ? $params['image_width'] :  'empty');
-        $params['quality'] = 'q:' . (isset($params['quality']) ? $params['quality'] : 'empty');
-        $params['angle'] = 'r:' . (isset($params['angle']) ? $params['angle'] : 'empty');
-        $params['keep_aspect_ratio'] = (isset($params['keep_aspect_ratio']) ? '' : 'non') . 'proportional';
-        $params['keep_frame'] = (isset($params['keep_frame']) ? '' : 'no') . 'frame';
-        $params['keep_transparency'] = (isset($params['keep_transparency']) ? '' : 'no') . 'transparency';
-        $params['constrain_only'] = (isset($params['constrain_only']) ? 'do' : 'not') . 'constrainonly';
-        if (isset($params['background'])) {
+        $params['image_height'] = 'h:' . ($params['image_height'] ?? 'empty');
+        $params['image_width'] = 'w:' . ($params['image_width'] ?? 'empty');
+        $params['quality'] = 'q:' . ($params['quality'] ?? 'empty');
+        $params['angle'] = 'r:' . ($params['angle'] ?? 'empty');
+        $params['keep_aspect_ratio'] = (!empty($params['keep_aspect_ratio']) ? '' : 'non') . 'proportional';
+        $params['keep_frame'] = (!empty($params['keep_frame']) ? '' : 'no') . 'frame';
+        $params['keep_transparency'] = (!empty($params['keep_transparency']) ? '' : 'no') . 'transparency';
+        $params['constrain_only'] = (!empty($params['constrain_only']) ? 'do' : 'not') . 'constrainonly';
+        if (!empty($params['background'])) {
             $params['background'] = 'rgb' . (is_array($params['background']) ? implode(',', $params['background']) : $params['background']);
         } else {
             $params['background'] = 'nobackground';

@@ -5,6 +5,23 @@
         <label>Sirv account</label>
         <fields>
             <field>
+                <name>account_exists</name>
+                <label>I already have Sirv account</label>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\NewAccount</type_class>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>yes</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>no</value>
+                    </option>
+                </options>
+                <value>yes</value>
+            </field>
+            <field>
                 <name>email</name>
                 <label>Email</label>
                 <type>email</type>
@@ -24,6 +41,25 @@
                 <required>true</required>
             </field>
             <field>
+                <name>first_and_last_name</name>
+                <label>First and last name</label>
+                <type>text</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Text</type_class>
+                <placeholder>Your first and last name</placeholder>
+                <value></value>
+                <required>true</required>
+            </field>
+            <field>
+                <name>alias</name>
+                <label>Account name</label>
+                <notice><![CDATA[Choose a name that suits your business. At least 6 letters (or numbers), no spaces.]]></notice>
+                <type>text</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Text</type_class>
+                <placeholder>Sirv alias</placeholder>
+                <value></value>
+                <required>true</required>
+            </field>
+            <field>
                 <name>account</name>
                 <label>Account</label>
                 <type>select</type>
@@ -37,27 +73,36 @@
                 <name>connect</name>
                 <label></label>
                 <type>button</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Connect</type_class>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Button</type_class>
                 <value>Connect account</value>
                 <title>Connect account</title>
+            </field>
+            <field>
+                <name>register</name>
+                <label></label>
+                <notice><![CDATA[No credit card needed.<br/>Enjoy free 5GB storage & 20GB transfer for 30 days. Then choose a <a href="https://sirv.com/pricing/" target="_blank">free or paid plan</a>.<br/>By signing up, you agree to our <a href="https://sirv.com/terms/" target="_blank">Terms of Service</a>.<br/>]]></notice>
+                <type>button</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Button</type_class>
+                <value>Get started</value>
+                <title>Get started</title>
             </field>
         </fields>
     </group>
     <group id="general">
-        <label>General Settings</label>
+        <label>General settings</label>
         <fields>
             <field>
                 <name>enabled</name>
                 <label>Enable Sirv</label>
-                <notice><![CDATA[<b>Yes</b>: images will be served from your Sirv account. <a href="https://my.sirv.com/#/signup" target="_blank">Create an account (free)</a><br/><b>No</b>: images will be served from your server.]]></notice>
-                <type>select</type>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>
                     <option>
-                        <label>Yes</label>
+                        <label>Yes (images will be served from your Sirv account)</label>
                         <value>true</value>
                     </option>
                     <option>
-                        <label>No</label>
+                        <label>No (images will be served from your server)</label>
                         <value>false</value>
                     </option>
                 </options>
@@ -68,7 +113,8 @@
                 <name>network</name>
                 <label>Network</label>
                 <notice><![CDATA[<b>Sirv CDN</b>: files delivered from global network.<br/><b>Sirv direct</b>: files delivered from primary datacentre.<br/><a target="_blank" href="https://my.sirv.com/#/account/settings">Learn more</a>]]></notice>
-                <type>select</type>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>
                     <option>
                         <label>Sirv CDN (recommended when live)</label>
@@ -87,6 +133,7 @@
                 <label>Folder name on Sirv</label>
                 <notice><![CDATA[Images will be copied here in <a target="_blank" href="https://my.sirv.com/#/browse">your Sirv account</a>.<br/>The folder will be automatically created by Sirv.]]></notice>
                 <type>text</type>
+                <type_class>\Magento\Framework\Data\Form\Element\Text</type_class>
                 <value>magento</value>
                 <install/>
             </field>
@@ -107,7 +154,8 @@
             <field>
                 <name>magento_watermark</name>
                 <label>Use Magento watermark</label>
-                <type>select</type>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>
                     <option>
                         <label>Yes</label>
@@ -119,6 +167,65 @@
                     </option>
                 </options>
                 <value>true</value>
+                <install/>
+            </field>
+        </fields>
+    </group>
+    <group id="sirv_media_viewer">
+        <label>Product page media gallery</label>
+        <fields>
+            <field>
+                <name>product_gallery_view</name>
+                <label>Product media gallery</label>
+                <notice><![CDATA[Replace the default product media gallery viewer with <a target="_blank" href="https://sirv.com/help/articles/sirv-media-viewer">Sirv Media Viewer</a>.]]></notice>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <options>
+                    <option>
+                        <label>Original</label>
+                        <value>original</value>
+                    </option>
+                    <option>
+                        <label>Sirv Media Viewer</label>
+                        <value>smv</value>
+                    </option>
+                </options>
+                <value>original</value>
+                <install/>
+            </field>
+            <field>
+                <name>viewer_contents</name>
+                <label>Order of content</label>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <options>
+                    <option>
+                        <label>Magento images &amp; videos</label>
+                        <value>1</value>
+                    </option>
+                    <option>
+                        <label>Magento images &amp; videos, then Sirv assets</label>
+                        <value>2</value>
+                    </option>
+                    <option>
+                        <label>Sirv assets, then Magento images &amp; videos</label>
+                        <value>3</value>
+                    </option>
+                    <option>
+                        <label>Sirv assets only</label>
+                        <value>4</value>
+                    </option>
+                </options>
+                <value>1</value>
+                <install/>
+            </field>
+            <field>
+                <name>product_assets_folder</name>
+                <label>Product assets folder</label>
+                <notice><![CDATA[Location of product assets for <b>Sirv Media Viewer</b>.<br/>Placeholders <b>{product-sku}</b> or <b>{product-id}</b> can be used here.<br/>e.g. products/{product-sku}]]></notice>
+                <type>text</type>
+                <type_class>\Magento\Framework\Data\Form\Element\Text</type_class>
+                <value></value>
                 <install/>
             </field>
         </fields>

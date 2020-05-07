@@ -2,10 +2,10 @@
 /**
  * Synchronizer widget template
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  *
  * @codingStandardsIgnoreFile
  */
@@ -76,7 +76,7 @@ $ajaxUrl = $block->escapeUrl($block->getAjaxUrl());
                     <?= /* @escapeNotVerified */ __('Synced images: %1 out of %2', sprintf('<span class="items-synced-text">%d</span>', $synced), sprintf('<span class="items-total-text">%d</span>', $total)) ?>
                 </p>
                 <p class="right-text-align visible-in-modal-view">
-                    <span class="sync-progress-label-text"><?= /* @escapeNotVerified */ __('Synchronization...') ?> <span class="progress-percent-text"><?= /* @escapeNotVerified */ $syncedPercent ?></span>%</span>
+                    <span class="sync-progress-label-text"><?= /* @escapeNotVerified */ __('Synchronization...') ?> <span class="progress-percent-text"><?= /* @escapeNotVerified */ $completedPercent ?></span>%</span>
                     <span class="sync-completed-label-text hidden-element"><?= /* @escapeNotVerified */ __('Synchronization complete.') ?></span>
                     <span class="sync-failed-label-text hidden-element"><?= /* @escapeNotVerified */ __('Synchronization failed!') ?></span>
                     <?= /* @escapeNotVerified */ __('(%1 out of %2 items completed)', sprintf('<span class="items-completed-text">%d</span>', $completed), sprintf('<span class="items-total-text">%d</span>', $total)) ?>

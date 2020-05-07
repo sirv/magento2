@@ -3,10 +3,10 @@
 /**
  * Frontend module configuration
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
@@ -78,4 +78,11 @@
         </arguments>
     </type>
     -->
+
+    <!-- NOTE: override template filter for cms block -->
+    <preference for="Magento\Widget\Model\Template\Filter" type="MagicToolbox\Sirv\Model\Template\Filter" />
+
+    <!-- NOTE: override some blocks for configurable product (SVM) -->
+    <preference for="Magento\Swatches\Block\Product\Renderer\Configurable" type="MagicToolbox\Sirv\Block\Product\Renderer\Configurable" />
+    <preference for="Magento\ConfigurableProduct\Block\Product\View\Type\Configurable" type="MagicToolbox\Sirv\Block\Product\View\Type\Configurable" />
 </config>

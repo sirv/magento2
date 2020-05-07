@@ -11,5 +11,10 @@ if (!$block->isVisibile()) {
 $sirvUrl = $block->getSirvUrl();
 ?>
 
+<?php if ($block->useSirvMediaViewer()) : ?>
+<link rel="preconnect" href="https://scripts.sirv.com" crossorigin/>
+<link rel="dns-prefetch" href="https://scripts.sirv.com"/>
+<script src="https://scripts.sirv.com/sirvjs/v3/sirv.js"></script>
+<?php endif; ?>
 <link rel="preconnect" href="<?= /* @escapeNotVerified */ $sirvUrl ?>" crossorigin/>
 <link rel="dns-prefetch" href="<?= /* @escapeNotVerified */ $sirvUrl ?>"/>

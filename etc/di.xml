@@ -3,10 +3,10 @@
 /**
  * Global module configuration
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
@@ -31,6 +31,13 @@
     <type name="MagicToolbox\Sirv\Helper\Sync">
         <arguments>
             <argument name="context" xsi:type="object">MagicToolbox\Sirv\Helper\Sync\Context</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="sirv_clean_product_images_cache" xsi:type="object">MagicToolbox\Sirv\Console\Command\CleanProductImagesCacheCommand</item>
+            </argument>
         </arguments>
     </type>
 </config>

@@ -5,10 +5,10 @@ namespace MagicToolbox\Sirv\Controller\Adminhtml\Settings;
 /**
  * Settings backend controller
  *
- * @author    Magic Toolbox <support@magictoolbox.com>
- * @copyright Copyright (c) 2019 Magic Toolbox <support@magictoolbox.com>. All rights reserved
- * @license   http://www.magictoolbox.com/license/
- * @link      http://www.magictoolbox.com/
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
  */
 class Disconnect extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 {
@@ -54,17 +54,20 @@ class Disconnect extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             'magento_watermark' => 'false',
             'email' => '',
             'password' => '',
+            'token' => '',
+            'token_expire_time' => '',
             'account' => '',
             'client_id' => '',
             'client_secret' => '',
-            'token' => '',
-            'token_expire_time' => '',
             'key' => '',
             'secret' => '',
             'bucket' => '',
-            'cdnURL' => '',
+            'cdn_url' => '',
             'sirv_rate_limit_data' => '',
             's3_rate_limit_data' => '',
+            'product_gallery_view' => 'original',
+            'viewer_contents' => '1',
+            'product_assets_folder' => '',
         ];
 
         foreach ($names as $name => $value) {
