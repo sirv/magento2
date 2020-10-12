@@ -72,6 +72,31 @@ class Head extends \Magento\Framework\View\Element\Template
     }
 
     /**
+     * Get base static URL
+     *
+     * @return string
+     */
+    public function getBaseStaticUrl()
+    {
+        $url = $this->dataHelper->baseStaticUrl();
+        if (empty($url)) {
+            $url = $this->getViewFileUrl('/');
+        }
+
+        return $url;
+    }
+
+    /**
+     * Get fetch mode
+     *
+     * @return string
+     */
+    public function getFetchMode()
+    {
+        return $this->dataHelper->getConfig('auto_fetch');
+    }
+
+    /**
      * Whether to use Sirv Media Viewer
      *
      * @return bool

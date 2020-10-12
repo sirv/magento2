@@ -10,10 +10,11 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-    <event name="controller_front_send_response_before">
-        <observer name="magictoolbox_sirv_fetch_files" instance="MagicToolbox\Sirv\Observer\FetchFilesObserver" />
-    </event>
     <event name="layout_generate_blocks_after">
         <observer name="magictoolbox_sirv_replace_gallery" instance="MagicToolbox\Sirv\Observer\ReplaceGalleryObserver" />
+    </event>
+    <event name="controller_front_send_response_before">
+        <observer name="magictoolbox_sirv_response_processing" instance="MagicToolbox\Sirv\Observer\ResponseProcessingObserver" />
+        <observer name="magictoolbox_sirv_fetch_files" instance="MagicToolbox\Sirv\Observer\FetchFilesObserver" />
     </event>
 </config>

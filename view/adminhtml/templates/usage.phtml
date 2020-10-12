@@ -1,0 +1,139 @@
+<?php
+/**
+ * Sirv usage block template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+/**
+ * @var $block \MagicToolbox\Sirv\Block\Adminhtml\Usage
+ */
+
+$data = $block->getUsageData();
+
+if (empty($data)) {
+    echo '<a target="_blank" href="https://my.sirv.com/#/account/usage">Usage data</a> is currently unavailable.';
+    return;
+}
+
+$refreshUrl = $block->escapeUrl($block->getAjaxUrl());
+$disconnectUrl = $this->getUrl('*/*/disconnect');
+?>
+<div class="sirv-usage-wraper">
+    <div class="col-sm-6 col-left">
+        <?php if (!empty($data['plan'])): ?>
+        <div class="row">
+            <h3>Your account</h3>
+            <div class="row">
+                <div class="col-sm-3"><label>Account</label></div>
+                <div class="col-sm-9"><?= $data['account'] ?></div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><label>Plan</label></div>
+                <div class="col-sm-9"><?= $data['plan']['name'] ?>&nbsp;&nbsp;<a target="_blank" href="https://my.sirv.com/#/account/billing/plan/">Upgrade plan</a></div>
+            </div>
+            <?php /* ?>
+            <div class="row">
+                <div class="col-sm-3"><label>Allowance</label></div>
+                <div class="col-sm-9"><?= $data['plan']['storage_limit']?>, <?= $data['plan']['data_transfer_limit']?> monthly transfer</div>
+            </div>
+            <?php */ ?>
+            <div class="row">
+                <div class="col-sm-3"><label>User</label></div>
+                <div class="col-sm-9"><?= $data['email'] ?>&nbsp;&nbsp;<a href="<?= $disconnectUrl ?>">Disconnect</a></div>
+            </div>
+        </div>
+        <?php endif; ?>
+        <?php if (!empty($data['storage'])): ?>
+        <div class="row">
+            <h3>Storage</h3>
+            <div class="row">
+                <div class="col-sm-3"><label>Allowance</label></div>
+                <div class="col-sm-9"><?= $data['storage']['allowance'] ?></div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><label>Used</label></div>
+                <div class="col-sm-9">
+                    <?= $data['storage']['used'] ?>
+                    <span class="text-muted">(<?= $data['storage']['used_percent'] ?>%)</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><label>Available</label></div>
+                <div class="col-sm-9">
+                    <?= $data['storage']['available'] ?>
+                    <span class="text-muted">(<?= $data['storage']['available_percent'] ?>%)</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3"><label>Files</label></div>
+                <div class="col-sm-9"><?= $data['storage']['files'] ?></div>
+            </div>
+        </div>
+        <?php endif; ?>
+        <?php if (!empty($data['traffic'])): ?>
+        <div class="row">
+            <h3>Traffic</h3>
+            <div class="row">
+                <div class="col-sm-3"><label>Allowance</label></div>
+                <div class="col-sm-9"><?= $data['traffic']['allowance'] ?></div>
+            </div>
+            <?php foreach ($data['traffic']['traffic'] as $label => $sdata): ?>
+            <div class="row">
+                <div class="col-sm-3"><label><?= $label ?></label></div>
+                <div class="col-sm-9">
+                    <div class="row">
+                        <div class="col-sm-3"><?= $sdata['size'] ?></div>
+                        <div class="col-sm-9 sirv-progress-bar-holder">
+                            <div class="sirv-progress-bar">
+                            <?php if ($sdata['size'] != '0 Bytes'): ?>
+                                <div><div style="width:<?= $sdata['size_percent_reverse'] ?>%;"></div></div>
+                            <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+    <div class="col-sm-6">
+        <div class="row">
+            <h3>
+                API usage
+                <span class="limits-update">
+                    <span class="last-update-time">Last update: <?= $data['current_time'] ?></span>&nbsp;&nbsp;
+                    <span class="refresh-api-usage-link">
+                        <a href="#" data-mage-init='{"sirvUsage":{"ajaxUrl":"<?= $refreshUrl ?>"},"loader":{}}'>Refresh</a>
+                    </span>
+                </span>
+            </h3>
+            <table class="admin__table-primary">
+                <thead>
+                <tr>
+                    <th class="data-grid-th no-link"><span>Type</span></th>
+                    <th class="data-grid-th no-link"><span>Limit</span></th>
+                    <th class="data-grid-th no-link"><span>Used</span></th>
+                    <th class="data-grid-th no-link"><span>Next reset</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($data['limits'] as $limitData): ?>
+                    <tr class="even _clickable">
+                        <td class=""><?= $limitData['type'] ?></td>
+                        <td class="col-number"><?= $limitData['limit'] ?></td>
+                        <td class="col-number"><?= $limitData['count'] ?></td>
+                        <td class=""><?= $limitData['reset'] ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

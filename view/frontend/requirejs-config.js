@@ -8,6 +8,10 @@
  */
 
 var config = {
+    paths: {
+        mageText: 'mage/requirejs/text',
+        text: 'MagicToolbox_Sirv/js/text'
+    },
     config: {
         mixins: {
             'Magento_ConfigurableProduct/js/configurable': {
@@ -15,6 +19,14 @@ var config = {
             },
             'Magento_Swatches/js/swatch-renderer': {
                 'MagicToolbox_Sirv/js/swatch-renderer': true
+            },
+            'Firebear_ConfigurableProducts/js/swatch-renderer': {
+                'MagicToolbox_Sirv/js/swatch-renderer': true
+            }
+        },
+        mageText: {
+            'headers': {
+                'X-Requested-With': 'XMLHttpRequest'
             }
         }
     }

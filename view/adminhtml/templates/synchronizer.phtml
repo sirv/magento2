@@ -16,113 +16,102 @@
 
 $data = $block->getSyncData();
 
-$total = $data['total'];
-$synced = $data['synced'];
-$queued = $data['queued'];
-$failed = $data['failed'];
+$syncedBarWidth = $data['synced-percent'];
+$queuedBarWidth = $syncedBarWidth + $data['queued-percent'];
+$failedBarWidth = $queuedBarWidth + $data['failed-percent'];
 
-if ($total) {
-    $completed = $synced + $queued + $failed;
-
-    $scale = 100;
-
-    $syncedPercent = floor($synced * 100 * $scale / $total);
-    $queuedPercent = floor($queued * 100 * $scale / $total);
-    $failedPercent = floor($failed * 100 * $scale / $total);
-    $completedPercent = $syncedPercent + $queuedPercent + $failedPercent;
-
-    if ($total == $completed) {
-        $rest = 100 * $scale - $completedPercent;
-        if ($rest > 0) {
-            if ($syncedPercent) {
-                $syncedPercent += $rest;
-            } elseif ($queuedPercent) {
-                $queuedPercent += $rest;
-            } else {
-                $failedPercent += $rest;
-            }
-        }        
-    }
-    $syncedPercent = $syncedPercent / $scale;
-    $queuedPercent = $queuedPercent / $scale;
-    $failedPercent = $failedPercent / $scale;
-    $completedPercent = $completedPercent / $scale;
-} else {
-    $synced = 0;
-    $queued = 0;
-    $failed = 0;
-    $completed = 0;
-    $syncedPercent = 0;
-    $queuedPercent = 0;
-    $failedPercent = 0;
-}
-
-$viewFailedLinkClass = 'sirv-view-failed-link' . ($failed ? '' : ' hidden-element');
+$viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidden-element');
 
 $ajaxUrl = $block->escapeUrl($block->getAjaxUrl());
 ?>
-<div data-role="sirv-synchronizer">
-    <div id="sirv-sync-wraper-container">
-        <div class="sirv-sync-wraper">
-            <div class="row"><div class="col-lg-12">
-                <h4 class="visible-in-modal-view">
-                    <?= /* @escapeNotVerified */ __('Keep this page open while images copy to Sirv.') ?><br/>
-                    <?= /* @escapeNotVerified */ __('It can take many minutes or even hours (for large libraries).') ?><br/>
-                    <?= /* @escapeNotVerified */ __('If sync is interrupted, please restart it to continue.') ?><br/>
-                </h4>
-            </div></div>
-            <div class="row"><div class="col-lg-12">
-                <p class="left-text-align hidden-in-modal-view">
-                    <?= /* @escapeNotVerified */ __('Synced images: %1 out of %2', sprintf('<span class="items-synced-text">%d</span>', $synced), sprintf('<span class="items-total-text">%d</span>', $total)) ?>
-                </p>
-                <p class="right-text-align visible-in-modal-view">
-                    <span class="sync-progress-label-text"><?= /* @escapeNotVerified */ __('Synchronization...') ?> <span class="progress-percent-text"><?= /* @escapeNotVerified */ $completedPercent ?></span>%</span>
-                    <span class="sync-completed-label-text hidden-element"><?= /* @escapeNotVerified */ __('Synchronization complete.') ?></span>
-                    <span class="sync-failed-label-text hidden-element"><?= /* @escapeNotVerified */ __('Synchronization failed!') ?></span>
-                    <?= /* @escapeNotVerified */ __('(%1 out of %2 items completed)', sprintf('<span class="items-completed-text">%d</span>', $completed), sprintf('<span class="items-total-text">%d</span>', $total)) ?>
-                </p>
-            </div></div>
-            <div class="row"><div class="col-lg-12">
-                <div class="progress-bar-holder" data-count="<?= /* @escapeNotVerified */ $total ?>">
-                    <div class="progress-bar progress-bar-timer" role="timerbar" data-content="00:00:00"></div>
-                    <div class="progress-bar progress-bar-error" role="errorbar" data-content="ERROR"></div>
-                    <div class="progress-bar progress-bar-synced" role="progressbar" style="width: <?= /* @escapeNotVerified */ $syncedPercent ?>%" data-count="<?= /* @escapeNotVerified */ $synced ?>"></div>
-                    <div class="progress-bar progress-bar-queued" role="progressbar" style="width: <?= /* @escapeNotVerified */ $queuedPercent ?>%" data-count="<?= /* @escapeNotVerified */ $queued ?>"></div>
-                    <div class="progress-bar progress-bar-failed" role="progressbar" style="width: <?= /* @escapeNotVerified */ $failedPercent ?>%" data-count="<?= /* @escapeNotVerified */ $failed ?>"></div>
-                </div>
-            </div></div>
-            <div class="row"><div class="col-lg-12">
-                <ul class="progress-list-group">
-                    <li class="progress-list-group-item progress-list-group-item-synced">
-                        <span class="progress-list-group-title"><?= /* @escapeNotVerified */ __('Synced images') ?>:</span>
-                        <span class="progress-list-group-value items-synced-text"><?= /* @escapeNotVerified */ $synced ?></span>
-                    </li>
-                    <li class="progress-list-group-item progress-list-group-item-queued">
-                        <span class="progress-list-group-title"><?= /* @escapeNotVerified */ __('Queued images') ?>:</span>
-                        <span class="progress-list-group-value items-queued-text"><?= /* @escapeNotVerified */ $queued ?></span>
-                    </li>
-                    <li class="progress-list-group-item progress-list-group-item-failed">
-                        <span class="progress-list-group-title"><?= /* @escapeNotVerified */ __('Failed images') ?>:</span>
-                        <span class="progress-list-group-value items-failed-text"><?= /* @escapeNotVerified */ $failed ?></span>
-                        <a class="<?= /* @escapeNotVerified */ $viewFailedLinkClass ?>" href="#" data-mage-init='{"button": {"event": "sirv-sync", "target": "[data-role=sirv-synchronizer]", "eventData": {"action": "view-failed"}}}'><?= /* @escapeNotVerified */ __('View list') ?></a>
-                    </li>
-                </ul>
-            </div></div>
-            <div class="row"><div class="col-lg-12">
-                <div data-role="sirv-messages" id="sirv-messages" class="messages"></div>
-            </div></div>
+<div class="sirv-sync-container">
+  <div class="sirv-sync-status" data-role="sirv-synchronizer">
+    <div class="sirv-sync-content">
+      <div class="row visible-in-modal-view">
+        <h1 class="sync-status-header">
+          <span class="sync-progress-label">
+            <?= __('Synchronization...') ?>
+          </span>
+          <span class="sync-completed-label hidden-element">
+            <?= __('Synchronization completed') ?>
+          </span>
+          <span class="sync-failed-label hidden-element">
+            <?= __('Synchronization failed') ?>
+          </span>
+        </h1>
+      </div>
+      <div class="row visible-in-modal-view">
+        <p class="sync-status-notice">
+        <?= __('Keep this page open while images copy to Sirv.') ?><br/>
+        <?= __('It can take many minutes or even hours (for large libraries).') ?><br/>
+        <?= __('If sync is interrupted, please restart it to continue.') ?><br/>
+        </p>
+      </div>
+      <div class="row">
+        <p class="progress-label">
+          <span class="progress-percent-label">
+            <b>
+              <span class="progress-percent-value"><?= $data['synced-percent'] ?></span>%
+            </b>
+          </span>
+          <span class="progress-completed-label">
+            <b>
+              <span class="items-completed-value"><?= $data['synced'] ?></span>
+              out of
+              <span class="items-total-value"><?= $data['total'] ?></span>
+            </b>
+            items completed
+          </span>
+        </p>
+      </div>
+      <div class="row">
+        <div class="progress-bar-holder">
+          <div class="progress-bar progress-bar-timer" role="timerbar" data-content="00:00:00"></div>
+          <div class="progress-bar progress-bar-synced" role="progressbar" style="width: <?= $syncedBarWidth ?>%"></div>
+          <div class="progress-bar progress-bar-queued" role="progressbar" style="width: <?= $queuedBarWidth ?>%"></div>
+          <div class="progress-bar progress-bar-failed" role="progressbar" style="width: <?= $failedBarWidth ?>%"></div>
         </div>
+      </div>
+      <div class="row">
+        <ul class="progress-counters-list">
+          <li class="list-item list-item-synced">
+            <span class="list-item-style-type"></span>
+            <span class="list-item-title"><?= __('Synced images') ?></span>
+            <span class="list-item-value"><?= $data['synced'] ?></span>
+          </li>
+          <li class="list-item list-item-queued">
+            <span class="list-item-style-type"></span>
+            <span class="list-item-title"><?= __('Queued images') ?></span>
+            <span class="list-item-value"><?= $data['queued'] ?></span>
+          </li>
+          <li class="list-item list-item-failed">
+            <span class="list-item-style-type"></span>
+            <span class="list-item-title"><?= __('Failed images') ?></span>
+            <span class="list-item-value"><?= $data['failed'] ?></span>
+            <span class="list-item-link">
+              <a class="<?= $viewFailedLinkClass ?>" href="#" data-mage-init='{"button": {"event": "sirv-sync", "target": "[data-role=sirv-synchronizer]", "eventData": {"action": "view-failed"}}}'><?= __('View list') ?></a>
+            </span>
+          </li>
+        </ul>
+      </div>
+      <div class="row">
+        <div data-role="sirv-messages" id="sirv-messages" class="messages"></div>
+      </div>
     </div>
+  </div>
+  <div class="sirv-sync-buttons sirv-actions">
+  <?= /* @noEscape */ $block->getButtonsHtml() ?>
+  </div>
 </div>
 <script type="text/x-magento-init">
     {
         "[data-role=sirv-synchronizer]": {
             "sirvSynchronizer": {
                 "ajaxUrl": "<?= /* @escapeNotVerified */ $ajaxUrl ?>",
-                "total": <?= /* @escapeNotVerified */ $total ?>,
-                "synced": <?= /* @escapeNotVerified */ $synced ?>,
-                "queued": <?= /* @escapeNotVerified */ $queued ?>,
-                "failed": <?= /* @escapeNotVerified */ $failed ?>
+                "total": <?= /* @escapeNotVerified */ $data['total'] ?>,
+                "synced": <?= /* @escapeNotVerified */ $data['synced'] ?>,
+                "queued": <?= /* @escapeNotVerified */ $data['queued'] ?>,
+                "failed": <?= /* @escapeNotVerified */ $data['failed'] ?>
             }
         }
     }

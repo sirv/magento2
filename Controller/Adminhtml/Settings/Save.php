@@ -15,7 +15,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data
+     * @var \MagicToolbox\Sirv\Helper\Data\Backend
      */
     protected $dataHelper = null;
 
@@ -24,13 +24,13 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      *
      * @param \Magento\Backend\App\Action\Context $context
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
+     * @param \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
      * @return void
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \MagicToolbox\Sirv\Helper\Data $dataHelper
+        \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
     ) {
         parent::__construct($context, $resultPageFactory);
         $this->dataHelper = $dataHelper;
@@ -60,7 +60,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             $this->dataHelper->saveConfig($name, $value);
         }
 
-        $success = true;
+        $addSuccessMessage = true;
         $doGetCredentials = false;
 
         $email = isset($config['email']) ? $config['email'] : null;
@@ -105,10 +105,10 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 } else {
                     $errorMsg = $apiClient->getErrorMsg();
                     if (preg_match('#must be a valid email#', $errorMsg)) {
-                        $errorMsg  = 'Wrong email address. Please check it and try again.';
+                        $errorMsg = 'Wrong email address. Please check it and try again.';
                     }
                     if (preg_match('#Duplicate entry#', $errorMsg)) {
-                        $errorMsg  = 'Specified email address is already registered or account name is already taken.';
+                        $errorMsg = 'Specified email address is already registered or account name is already taken.';
                     }
                     $this->messageManager->addWarningMessage(__($errorMsg));
                     $valid = false;
@@ -118,7 +118,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             if (!$valid) {
                 $this->dataHelper->saveConfig('password', '');
                 $password = null;
-                $success = false;
+                $addSuccessMessage = false;
             }
         }
 
@@ -131,8 +131,8 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 $this->messageManager->addWarningMessage(
                     __('Your Sirv access credentials were rejected. Please check and try again.')
                 );
-                $success = false;
             }
+            $addSuccessMessage = false;
         }
 
         if ($account) {
@@ -145,8 +145,8 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 $this->messageManager->addWarningMessage(
                     __('It seems that your Sirv account "%1" does not exist. Please select an account from the list.', $account)
                 );
-                $success = false;
             }
+            $addSuccessMessage = false;
         }
 
         if ($doGetCredentials) {
@@ -164,17 +164,23 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                     }
                 } else {
                     $this->messageManager->addWarningMessage(__('Unable to receive S3 credentials.'));
-                    $success = false;
+                    $addSuccessMessage = false;
                 }
             } else {
                 $this->messageManager->addWarningMessage(__('Unable to receive client credentials.'));
-                $success = false;
+                $addSuccessMessage = false;
             }
         }
 
         $network = isset($config['network']) ? $config['network'] : null;
-        if ($network !== null) {
-            $this->dataHelper->switchNetwork($network == 'cdn');
+        $autoFetch = isset($config['auto_fetch']) ? $config['auto_fetch'] : null;
+        $urlPrefix = isset($config['url_prefix']) ? $config['url_prefix'] : '';
+        if ($network !== null || $autoFetch !== null) {
+            $this->dataHelper->setAccountConfig(
+                $network == 'cdn',
+                $autoFetch == 'all' || $autoFetch == 'custom',
+                $urlPrefix
+            );
         }
 
         $imageFolder = isset($config['image_folder']) ? $config['image_folder'] : null;
@@ -182,8 +188,23 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             $this->dataHelper->disableSpinScanning($imageFolder);
         }
 
-        if ($success) {
-            $this->messageManager->addSuccess(__('The settings have been saved.'));
+        $smvJsOptions = isset($config['smv_js_options']) ? $config['smv_js_options'] : '';
+        if (preg_match('#</?script[^>]*+>#', $smvJsOptions, $matches)) {
+            $smvJsOptions = preg_replace('#</?script[^>]*+>#', '', $smvJsOptions);
+            $this->dataHelper->saveConfig('smv_js_options', $smvJsOptions);
+        }
+
+        $smvMaxHeight = isset($config['smv_max_height']) ? $config['smv_max_height'] : '';
+        $smvMaxHeightValid = preg_replace('#[^0-9]#', '', $smvMaxHeight);
+        if ($smvMaxHeight != $smvMaxHeightValid) {
+            $this->dataHelper->saveConfig('smv_max_height', $smvMaxHeightValid);
+        }
+
+        if ($addSuccessMessage) {
+            $message = __('The settings have been saved.') . ' ';
+            $url = $this->getUrl('adminhtml/cache');
+            $message .= __('<a class="save-message" href="%1">Clear your page cache</a> to see the changes.', $url);
+            $this->messageManager->addSuccess($message);
         }
 
         $resultRedirect->setPath('sirv/*/edit');

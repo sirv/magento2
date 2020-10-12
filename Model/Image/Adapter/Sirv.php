@@ -62,6 +62,13 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
     protected $_quality = null;
 
     /**
+     * Sirv quality
+     *
+     * @var int
+     */
+    protected $sirvQuality = null;
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\Filesystem $filesystem
@@ -87,6 +94,7 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
         }
         $this->syncHelper = $syncHelper;
         $this->mediaDirAbsPath = $syncHelper->getMediaDirAbsPath();
+        $this->sirvQuality = $dataHelper->getConfig('image_quality');
     }
 
     /**
@@ -226,6 +234,12 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
     {
         list($r, $g, $b) = $this->_backgroundColor;
         $this->setImagingOptions('canvas.color', sprintf("%02s%02s%02s", dechex($r), dechex($g), dechex($b)));
+
+        if ($this->_keepTransparency) {
+            if (IMAGETYPE_GIF === $this->_fileType || IMAGETYPE_PNG === $this->_fileType) {
+                $this->setImagingOptions('canvas.opacity', 0);
+            }
+        }
     }
 
     /**
@@ -421,6 +435,30 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
            'blue' => 255,
            'alpha' => 0
         ];
+    }
+
+    /**
+     * Get/set quality, values in percentage from 0 to 100
+     *
+     * @param int $value
+     * @return int
+     */
+    public function quality($value = null)
+    {
+        if (null !== $value) {
+            $this->_quality = (int)$value;
+        }
+
+        $quality = $this->sirvQuality ? $this->sirvQuality : $this->_quality;
+        if ($quality) {
+            switch ($this->_fileType) {
+                case IMAGETYPE_JPEG:
+                    $this->setImagingOptions('q', $quality);
+                    break;
+            }
+        }
+
+        return $this->_quality;
     }
 
     /**

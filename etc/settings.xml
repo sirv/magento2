@@ -1,14 +1,24 @@
 <?xml version="1.0"?>
+<!--
+/**
+ * Module settings
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ */
+-->
 <settings>
-    <notice><![CDATA[Accelerate your website with faster loading images. <a href="https://sirv.com/" target="_blank">About Sirv CDN</a> | <a href="https://my.sirv.com/#/contact" target="_blank">Get support</a><br/>Sirv will serve your entire media gallery. <a href="https://sirv.com/help/resources/magento-cdn-sirv-extension/#CSS_JS_media_and_skin_files" target="_blank">Follow these steps</a> to also serve CSS, JS and skin files.]]></notice>
+    <notice><![CDATA[Accelerate your website with faster loading images. <a href="https://sirv.com" target="_blank">About Sirv CDN</a> | <a href="https://my.sirv.com/#/contact/" target="_blank">Get support</a>]]></notice>
     <group id="user">
         <label>Sirv account</label>
         <fields>
             <field>
                 <name>account_exists</name>
-                <label>I already have Sirv account</label>
+                <label>I already have a Sirv account</label>
                 <type>radios</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\NewAccount</type_class>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios\NewAccount</type_class>
                 <options>
                     <option>
                         <label>Yes</label>
@@ -52,10 +62,10 @@
             <field>
                 <name>alias</name>
                 <label>Account name</label>
-                <notice><![CDATA[Choose a name that suits your business. At least 6 letters (or numbers), no spaces.]]></notice>
+                <notice><![CDATA[Choose a name that suits your business. At least 6 characters, may include letters, numbers and hyphens.]]></notice>
                 <type>text</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Text</type_class>
-                <placeholder>Sirv alias</placeholder>
+                <placeholder>Choose a name</placeholder>
                 <value></value>
                 <required>true</required>
             </field>
@@ -63,7 +73,7 @@
                 <name>account</name>
                 <label>Account</label>
                 <type>select</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Account</type_class>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
                 <options></options>
                 <value></value>
                 <placeholder>Select Sirv account</placeholder>
@@ -94,15 +104,16 @@
             <field>
                 <name>enabled</name>
                 <label>Enable Sirv</label>
+                <tooltip><![CDATA[Enable Sirv to automatically copy your media gallery to Sirv. Files will stay in sync and be optimised and served by Sirv CDN.]]></tooltip>
                 <type>radios</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>
                     <option>
-                        <label>Yes (images will be served from your Sirv account)</label>
+                        <label>Yes</label>
                         <value>true</value>
                     </option>
                     <option>
-                        <label>No (images will be served from your server)</label>
+                        <label>No</label>
                         <value>false</value>
                     </option>
                 </options>
@@ -112,16 +123,16 @@
             <field>
                 <name>network</name>
                 <label>Network</label>
-                <notice><![CDATA[<b>Sirv CDN</b>: files delivered from global network.<br/><b>Sirv direct</b>: files delivered from primary datacentre.<br/><a target="_blank" href="https://my.sirv.com/#/account/settings">Learn more</a>]]></notice>
+                <tooltip><![CDATA[Sirv CDN will rapidly serve files from Sirv's global network. Sirv Direct is better while testing - it will serve all files from Sirv's primary datacentre in Germany.]]></tooltip>
                 <type>radios</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>
                     <option>
-                        <label>Sirv CDN (recommended when live)</label>
+                        <label>Sirv CDN</label>
                         <value>cdn</value>
                     </option>
                     <option>
-                        <label>Sirv Direct (recommended when testing)</label>
+                        <label>Sirv Direct</label>
                         <value>direct</value>
                     </option>
                 </options>
@@ -131,17 +142,18 @@
             <field>
                 <name>image_folder</name>
                 <label>Folder name on Sirv</label>
-                <notice><![CDATA[Images will be copied here in <a target="_blank" href="https://my.sirv.com/#/browse">your Sirv account</a>.<br/>The folder will be automatically created by Sirv.]]></notice>
+                <tooltip><![CDATA[Images will be copied here in <a target="_blank" href="https://my.sirv.com/#/browse/">your Sirv account</a>. The folder will be automatically created by Sirv.]]></tooltip>
                 <type>text</type>
-                <type_class>\Magento\Framework\Data\Form\Element\Text</type_class>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Folder</type_class>
                 <value>magento</value>
                 <install/>
             </field>
             <field>
                 <name>profile</name>
                 <label>Image profile</label>
-                <notice><![CDATA[Choose one of your profiles if you wish to apply some settings to all images (e.g. watermarks, text overlays, effects).]]></notice>
+                <tooltip><![CDATA[Choose one of your <a target="_blank" href="https://my.sirv.com/#/profiles/">profiles</a> if you wish to apply some settings to all images (e.g. watermarks, text overlays, effects). <a target="_blank" href="https://sirv.com/help/articles/dynamic-imaging/profiles/">Learn more</a>.]]></tooltip>
                 <type>select</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
                 <options>
                     <option>
                         <label>Default</label>
@@ -150,6 +162,20 @@
                 </options>
                 <value>Default</value>
                 <install/>
+            </field>
+            <field>
+                <name>image_quality</name>
+                <label>Image quality</label>
+                <tooltip><![CDATA[JPEG image quality. The default JPEG image quality is set on your <a target="_blank" href="{{URL}}">Magento Stores Configuration page</a>.]]></tooltip>
+                <type>select</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
+                <options>
+                    <option>
+                        <label>Default (Magento default)</label>
+                        <value>0</value>
+                    </option>
+                </options>
+                <value>0</value>
             </field>
             <field>
                 <name>magento_watermark</name>
@@ -169,6 +195,39 @@
                 <value>true</value>
                 <install/>
             </field>
+            <field>
+                <name>auto_fetch</name>
+                <label>Serve static files</label>
+                <notice><![CDATA[Sirv will fetch files from this domain:]]></notice>
+                <tooltip><![CDATA[Sirv CDN can serve your JS, CSS and static theme files too. It minifies JS & CSS and uses multiplexing to accelerate file loading. <a target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#how-to-set-up-a-cdn-in-magento-2">Learn more</a>.]]></tooltip>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <options>
+                    <option>
+                        <label>JS, CSS &amp; associated files (recommended)</label>
+                        <value>custom</value>
+                    </option>
+                    <option>
+                        <label>JS, CSS &amp; all static files</label>
+                        <value>all</value>
+                    </option>
+                    <option>
+                        <label>None</label>
+                        <value>none</value>
+                    </option>
+                </options>
+                <value>none</value>
+            </field>
+            <field>
+                <name>url_prefix</name>
+                <label></label>
+                <notice></notice>
+                <type>select</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
+                <options></options>
+                <placeholder></placeholder>
+                <can_hide_select/>
+            </field>
         </fields>
     </group>
     <group id="sirv_media_viewer">
@@ -177,9 +236,9 @@
             <field>
                 <name>product_gallery_view</name>
                 <label>Product media gallery</label>
-                <notice><![CDATA[Replace the default product media gallery viewer with <a target="_blank" href="https://sirv.com/help/articles/sirv-media-viewer">Sirv Media Viewer</a>.]]></notice>
+                <tooltip><![CDATA[Replace your product media gallery viewer with <a target="_blank" href="https://sirv.com/help/articles/sirv-media-viewer/">Sirv Media Viewer</a>.]]></tooltip>
                 <type>radios</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios\ProductGalleryView</type_class>
                 <options>
                     <option>
                         <label>Original</label>
@@ -221,12 +280,35 @@
             </field>
             <field>
                 <name>product_assets_folder</name>
-                <label>Product assets folder</label>
-                <notice><![CDATA[Location of product assets for <b>Sirv Media Viewer</b>.<br/>Placeholders <b>{product-sku}</b> or <b>{product-id}</b> can be used here.<br/>e.g. products/{product-sku}]]></notice>
+                <label>Product folder names on Sirv</label>
+                <tooltip><![CDATA[Location of product assets for <b>Sirv Media Viewer</b>.<br/>Placeholders <b>{product-sku}</b> or <b>{product-id}</b> can be used here.<br/>e.g. products/{product-sku} <a target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#gallery/">Learn more</a>.]]></tooltip>
+                <notice><![CDATA[Folder structure on Sirv e.g. products/{product-sku}]]></notice>
                 <type>text</type>
-                <type_class>\Magento\Framework\Data\Form\Element\Text</type_class>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Folder</type_class>
                 <value></value>
                 <install/>
+            </field>
+            <field>
+                <name>smv_js_options</name>
+                <label>Sirv Media Viewer options</label>
+                <notice><![CDATA[<a target="_blank" href="https://sirv.com/help/viewer/">Choose your options here</a>, then copy and paste the Script tab content.]]></notice>
+                <type>textarea</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
+                <value>SirvOptions = {&#xa;  viewer: {&#xa;    zoom: {&#xa;      mode: 'inner',&#xa;    }&#xa;  }&#xa;}</value>
+            </field>
+            <field>
+                <name>smv_max_height</name>
+                <label>Max height</label>
+                <type>text</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Text</type_class>
+                <tooltip><![CDATA[Maximum height of thumbnail (in pixels). Empty to disable.]]></tooltip>
+                <value></value>
+            </field>
+            <field>
+                <name>assets-cache</name>
+                <label>Flush Sirv content cache</label>
+                <type>button</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\MultiSwitchButton\FlushAssets</type_class>
             </field>
         </fields>
     </group>
@@ -234,51 +316,48 @@
         <label>Synchronization</label>
         <fields>
             <field>
+                <label>Status</label>
                 <name>synchronizer</name>
                 <type>synchronizer</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Synchronizer</type_class>
-            </field>            
-        </fields>
-    </group>
-    <group id="account_info">
-        <label>Your account</label>
-        <fields>
-            <field>
-                <name>account</name>
-                <label>Account</label>
-                <type>note</type>
-                <value></value>
             </field>
             <field>
-                <name>plan</name>
-                <label>Plan</label>
-                <type>note</type>
-                <value></value>
-                <text><![CDATA[{{name}} <a target="_blank" href="https://my.sirv.com/#/account/billing/plan">Upgrade plan</a>]]></text>
-            </field>
-            <field>
-                <name>allowance</name>
-                <label>Allowance</label>
-                <type>note</type>
-                <value></value>
-                <text><![CDATA[{{storage_limit}}, {{data_transfer_limit}} monthly transfer]]></text>
-            </field>
-            <field>
-                <name>user</name>
-                <label>User</label>
-                <type>note</type>
-                <value></value>
-                <text><![CDATA[{{user}} <a href="{{url}}">Disconnect</a>]]></text>
+                <name>urls-cache</name>
+                <label>Flush product image cache</label>
+                <type>button</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\MultiSwitchButton\FlushUrls</type_class>
             </field>
         </fields>
     </group>
-    <group id="account_stats">
-        <label>Stats</label>
+    <group id="usage">
+        <label></label>
         <fields>
             <field>
-                <name>stats</name>
-                <type>stats</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Stats</type_class>
+                <name>usage</name>
+                <type>usage</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Usage</type_class>
+            </field>
+        </fields>
+    </group>
+    <group id="support">
+        <label>Support</label>
+        <fields>
+            <field>
+                <name>join_with_mysql</name>
+                <label>Join data with MySQL</label>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>false</value>
             </field>
         </fields>
     </group>

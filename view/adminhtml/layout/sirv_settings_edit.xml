@@ -19,6 +19,12 @@
                 <argument name="template" xsi:type="string">MagicToolbox_Sirv::title.phtml</argument>
             </action>
         </referenceBlock>
+        <referenceBlock name="page.title">
+            <block class="MagicToolbox\Sirv\Block\Adminhtml\Version" name="sirv.version" template="MagicToolbox_Sirv::version.phtml" />
+        </referenceBlock>
+        <referenceContainer name="page.wrapper">
+            <block class="MagicToolbox\Sirv\Block\Adminhtml\Upgrade" name="sirv.upgrade.banner" template="MagicToolbox_Sirv::upgrade.phtml" after="header" />
+        </referenceContainer>
         <referenceContainer name="content">
             <block class="MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit" name="sirv.settings.edit" />
         </referenceContainer>

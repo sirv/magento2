@@ -13,6 +13,23 @@ namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element;
 class Text extends \Magento\Framework\Data\Form\Element\Text
 {
     /**
+     * Get the element HTML
+     *
+     * @return string
+     */
+    public function getElementHtml()
+    {
+        $html = parent::getElementHtml();
+
+        if ($tooltip = $this->getTooltip()) {
+            $html .= '<div class="tooltip" data-mage-init=\'{"sirvTooltip":{}}\'><span class="help"><span></span></span>';
+            $html .= '<div class="tooltip-content">' . $tooltip . '</div></div>';
+        }
+
+        return $html;
+    }
+
+    /**
      * Get field extra attributes
      *
      * @return string

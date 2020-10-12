@@ -51,8 +51,6 @@ class FetchFilesObserver implements \Magento\Framework\Event\ObserverInterface
     {
         /** @var \Magento\Framework\App\Request\Http $request */
         // $request = $observer->getRequest();
-        /** @var \Magento\Framework\App\Response\Http\Interceptor $response */
-        // $response = $observer->getResponse();
         if ($this->isSirvEnabled) {
             $this->syncHelper->doFetch();
         }

@@ -29,35 +29,33 @@ define([
         },
 
         selectors: {
-            container: '#sirv-sync-wraper-container',
-            content: '.sirv-sync-wraper',
+            content: '.sirv-sync-content',
             notificationContainer: '[data-role="sirv-messages"]',
             buttons: {
-                save: '.sirv-save-config-button',
-                sync: '.sirv-sync-media-button',
-                flushUrl: '.sirv-flush-url-cache-button, .sirv-flush-url-cache-button button',
-                flushAsset: '.sirv-flush-asset-cache-button, .sirv-flush-asset-cache-button button'
+                save: '#sirv-save-config-button',
+                sync: '#sirv-sync-media-button',
+                flushUrl: '#mt-urls-cache',
+                flushAsset: '#mt-assets-cache'
             },
             bars: {
-                timer: '.sirv-sync-wraper .progress-bar-timer',
-                error: '.sirv-sync-wraper .progress-bar-error',
-                holder: '.sirv-sync-wraper .progress-bar-holder',
-                synced: '.sirv-sync-wraper .progress-bar-synced',
-                queued: '.sirv-sync-wraper .progress-bar-queued',
-                failed: '.sirv-sync-wraper .progress-bar-failed'
+                holder: '.sirv-sync-content .progress-bar-holder',
+                timer: '.sirv-sync-content .progress-bar-timer',
+                synced: '.sirv-sync-content .progress-bar-synced',
+                queued: '.sirv-sync-content .progress-bar-queued',
+                failed: '.sirv-sync-content .progress-bar-failed'
             },
             texts: {
-                progressLabel: '.sirv-sync-wraper .sync-progress-label-text',
-                completedLabel: '.sirv-sync-wraper .sync-completed-label-text',
-                failedLabel: '.sirv-sync-wraper .sync-failed-label-text',
-                progressPercent: '.sirv-sync-wraper .progress-percent-text',
-                completed: '.sirv-sync-wraper .items-completed-text',
-                total: '.sirv-sync-wraper .items-total-text',
-                synced: '.sirv-sync-wraper .items-synced-text',
-                queued: '.sirv-sync-wraper .items-queued-text',
-                failed: '.sirv-sync-wraper .items-failed-text'
+                progressLabel: '.sirv-sync-content .sync-progress-label',
+                completedLabel: '.sirv-sync-content .sync-completed-label',
+                failedLabel: '.sirv-sync-content .sync-failed-label',
+                progressPercent: '.sirv-sync-content .progress-percent-value',
+                completed: '.sirv-sync-content .items-completed-value',
+                total: '.sirv-sync-content .items-total-value',
+                synced: '.sirv-sync-content .progress-counters-list .list-item-synced .list-item-value',
+                queued: '.sirv-sync-content .progress-counters-list .list-item-queued .list-item-value',
+                failed: '.sirv-sync-content .progress-counters-list .list-item-failed .list-item-value'
             },
-            viewFailedLink: '.sirv-sync-wraper .sirv-view-failed-link'
+            viewFailedLink: '.sirv-sync-content .sirv-view-failed-link'
         },
 
         counters: {
@@ -104,7 +102,7 @@ define([
                     '</span>' +
                     '<ul>' +
                     '<% _.each(data.items, function(item, i) { %>' +
-                    '<li><%- item %></li>' +
+                    '<li><a target="_blank" href="<%- item.url %>"><%- item.path %></a></li>' +
                     '<% }); %>' +
                     '</ul>' +
                     '</div>'
@@ -163,6 +161,10 @@ define([
                 case 'view-failed':
                     this._viewFailed();
                     break;
+                case 'flush-empty-assets':
+                case 'flush-all-assets':
+                    this._flushAssetCache('empty', data.actionUrl);
+                    break;
                 default:
                     if (console && console.warn) console.warn($.mage.__('Unknown action!'));
             }
@@ -207,6 +209,7 @@ define([
             $(this.selectors.texts.completedLabel).addClass('hidden-element');
             $(this.selectors.texts.failedLabel).addClass('hidden-element');
             $(this.selectors.texts.progressLabel).removeClass('hidden-element');
+            $(this.selectors.viewFailedLink).addClass('hidden-element');
 
             this._addStripes();
 
@@ -258,7 +261,7 @@ define([
 
             dialogProperties = {
                 overlayClass: 'modals-overlay sirv-modals-overlay',
-                title: $.mage.__('Synchronize media'),
+                /* title: $.mage.__('Synchronize media'), */
                 autoOpen: false,
                 clickableOverlay: false,
                 type: 'popup',
@@ -321,6 +324,10 @@ define([
 
         /**
          * Do AJAX request
+         * @param {String} action
+         * @param {Object} params
+         * @param {Function} successCallback
+         * @param {Function} failureCallback
          */
         _doRequest: function (action, params, successCallback, failureCallback) {
             var self = this,
@@ -352,6 +359,9 @@ define([
                         if (response.data && response.data.error) {
                             error = response.data.error;
                         }
+                        if (response.error && response.message) {
+                            error = response.message;
+                        }
                     }
 
                     if (success && !error) {
@@ -379,6 +389,7 @@ define([
 
         /**
          * Sync request successed
+         * @param {Object} data
          */
         _syncSuccessed: function (data) {
             var counters = this.counters;
@@ -496,17 +507,17 @@ define([
                 counters = this.counters,
                 percents = this.percents;
 
-            $(selectors.bars.synced).attr('data-count', counters.synced).css('width', percents.synced + '%');
-            $(selectors.bars.queued).attr('data-count', counters.queued).css('width', percents.queued + '%');
-            $(selectors.bars.failed).attr('data-count', counters.failed).css('width', percents.failed + '%');
+            $(selectors.bars.synced).css('width', percents.synced + '%');
+            $(selectors.bars.queued).css('width', percents.synced + percents.queued + '%');
+            $(selectors.bars.failed).css('width', percents.synced + percents.queued + percents.failed + '%');
 
             $(selectors.texts.synced).html(counters.synced);
             $(selectors.texts.queued).html(counters.queued);
             $(selectors.texts.failed).html(counters.failed);
 
             $(selectors.texts.total).html(counters.total);
-            $(selectors.texts.completed).html(counters.cached);
-            $(selectors.texts.progressPercent).html(percents.cached);
+            $(selectors.texts.completed).html(counters.synced);
+            $(selectors.texts.progressPercent).html(percents.synced);
         },
 
         /**
@@ -522,6 +533,7 @@ define([
                 percents = this.percents,
                 synced = 0,
                 queued = 0,
+                failed = 0,
                 cached = 0,
                 isNew = true,
                 simulate = null,
@@ -529,7 +541,7 @@ define([
                 timerId = null;
 
             simulate = function () {
-                var syncedPercents, queuedPercents, cachedPercents;
+                var syncedPercents, queuedPercents, cachedPercents, failedPercents;
 
                 if (isNew) {
                     if (cached == counters.total) {
@@ -547,14 +559,16 @@ define([
 
                 syncedPercents = Math.floor(synced * 100 * 100 / counters.total) / 100;
                 queuedPercents = Math.floor(queued * 100 * 100 / counters.total) / 100;
+                failedPercents = Math.floor(failed * 100 * 100 / counters.total) / 100;
                 cachedPercents = Math.floor(cached * 100 * 100 / counters.total) / 100;
 
-                $(selectors.bars.synced).attr('data-count', synced).css('width', syncedPercents + '%');
-                $(selectors.bars.queued).attr('data-count', queued).css('width', queuedPercents + '%');
+                $(selectors.bars.synced).css('width', syncedPercents + '%');
+                $(selectors.bars.queued).css('width', syncedPercents + queuedPercents + '%');
+                $(selectors.bars.failed).css('width', syncedPercents + queuedPercents + failedPercents + '%');
                 $(selectors.texts.synced).html(synced);
                 $(selectors.texts.queued).html(queued);
-                $(selectors.texts.completed).html(cached);
-                $(selectors.texts.progressPercent).html(cachedPercents);
+                $(selectors.texts.completed).html(synced);
+                $(selectors.texts.progressPercent).html(syncedPercents);
 
                 timerId = setTimeout(simulate, interval);
             };
@@ -580,6 +594,7 @@ define([
                 interval = rest < 60 ? Math.floor(60 * 1000 / rest) : 1000;
                 synced = counters.synced;
                 queued = counters.queued;
+                failed = counters.failed;
                 cached = counters.cached;
 
                 timerId = setTimeout(simulate, interval);
@@ -592,12 +607,13 @@ define([
                 }
 
                 if (reset) {
-                    $(selectors.bars.synced).attr('data-count', counters.synced).css('width', percents.synced + '%');
-                    $(selectors.bars.queued).attr('data-count', counters.queued).css('width', percents.queued + '%');
+                    $(selectors.bars.synced).css('width', percents.synced + '%');
+                    $(selectors.bars.queued).css('width', percents.synced + percents.queued + '%');
+                    $(selectors.bars.failed).css('width', percents.synced + percents.queued + percents.failed +'%');
                     $(selectors.texts.synced).html(counters.synced);
                     $(selectors.texts.queued).html(counters.queued);
-                    $(selectors.texts.completed).html(counters.cached);
-                    $(selectors.texts.progressPercent).html(percents.cached);
+                    $(selectors.texts.completed).html(counters.synced);
+                    $(selectors.texts.progressPercent).html(percents.synced);
                 }
             };
 
@@ -606,6 +622,7 @@ define([
 
         /**
          * Rate limit exceeded
+         * @param {Object} data
          */
         _rateLimitExceeded: function (data) {
             var selectors = this.selectors,
@@ -661,6 +678,7 @@ define([
 
         /**
          * Convert time (in milliseconds) to string view (hh:mm:ss)
+         * @param {Integer} time
          */
         _timeToString: function (time) {
             var h, m, s;
@@ -709,15 +727,13 @@ define([
 
         /**
          * Sync failed
+         * @param {String} message
          */
         _syncFailed: function (message) {
             this.isSyncFailed = true;
 
+            this._calculatePercents();
             this._getSimulator().stop(true);
-
-            $(this.selectors.bars.holder).addClass('error-on');
-
-            $('.sirv-sync-wraper .progress-list-group').addClass('progress-list-group-faded');
 
             this._removeStripes();
 
@@ -726,7 +742,11 @@ define([
             $(this.selectors.texts.failedLabel).removeClass('hidden-element');
 
             if (message) {
-                $(this.selectors.bars.error).attr('data-content', message);
+                this._displayNotification({
+                    id: 'sync_failed_message',
+                    type: 'error',
+                    message: message
+                });
             }
 
             this.isSyncInProgress = false;
@@ -734,18 +754,28 @@ define([
 
         /**
          * Flush cache
+         * @param {String} flushMethod
          */
         _flushCache: function (flushMethod) {
-            $('#sirv-flush-url [data-toggle=dropdown].active').trigger('close.dropdown');
-            $('#sirv_group_fieldset_synchronization').get(0).scrollIntoView();
-
             this._disableButtons();
             this._addStripes();
             this._doRequest('flush', {'flushMethod': flushMethod}, this._flushSuccessed, this._flushFailed);
         },
 
         /**
+         * Flush asset cache
+         * @param {String} flushMethod
+         * @param {String} actionUrl
+         */
+        _flushAssetCache: function (flushMethod, actionUrl) {
+            this._disableButtons();
+            this._addStripes();
+            setLocation(actionUrl);
+        },
+
+        /**
          * Flush successed
+         * @param {Object} data
          */
         _flushSuccessed: function (data) {
             var counters = this.counters;
@@ -775,13 +805,16 @@ define([
             $(this.selectors.viewFailedLink).addClass('hidden-element');
             this._removeStripes();
             this._enableButtons();
+            $('body').trigger('processStop');
         },
 
         /**
          * Flush failed
+         * @param {String} message
          */
         _flushFailed: function (message) {
             this._syncFailed(message);
+            $('body').trigger('processStop');
         },
 
         /**
@@ -810,32 +843,14 @@ define([
          * Add stripes
          */
         _addStripes: function () {
-            var bars = ['synced', 'queued', 'failed', 'holder'],
-                key,
-                selector;
-            for (key in this.selectors.bars) {
-                if (bars.indexOf(key) == -1) {
-                    continue;
-                }
-                selector = this.selectors.bars[key];
-                $(selector).addClass('stripes');
-            }
+            $(this.selectors.bars.holder).addClass('stripes');
         },
 
         /**
          * Remove stripes
          */
         _removeStripes: function () {
-            var bars = ['synced', 'queued', 'failed', 'holder'],
-                key,
-                selector;
-            for (key in this.selectors.bars) {
-                if (bars.indexOf(key) == -1) {
-                    continue;
-                }
-                selector = this.selectors.bars[key];
-                $(selector).removeClass('stripes');
-            }
+            $(this.selectors.bars.holder).removeClass('stripes');
         },
 
         /**
@@ -849,6 +864,7 @@ define([
 
         /**
          * Get failed list successed
+         * @param {Object} data
          */
         _getFailedSuccessed: function (data) {
             if (data && data.pathes) {
@@ -877,6 +893,7 @@ define([
 
         /**
          * Display notification
+         * @param {Object} data
          */
         _displayNotification: function (data) {
             if (typeof(data) == 'undefined') {

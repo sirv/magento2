@@ -41,6 +41,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected $isSirvEnabled = false;
 
     /**
+     * Base static URL
+     *
+     * @var string
+     */
+    protected $baseStaticUrl = '';
+
+    /**
      * Whether to use Sirv Media Viewer
      *
      * @var bool
@@ -62,6 +69,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected $s3ClientFactory = null;
 
     /**
+     * Object manager
+     *
+     * @var \Magento\Framework\ObjectManagerInterface
+     */
+    protected $objectManager;
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\App\Helper\Context $context
@@ -69,6 +83,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \MagicToolbox\Sirv\Model\ConfigFactory $configModelFactory
      * @param \MagicToolbox\Sirv\Model\Api\SirvFactory $sirvClientFactory
      * @param \MagicToolbox\Sirv\Model\Api\S3Factory $s3ClientFactory
+     * @param \Magento\Framework\ObjectManagerInterface $objectManager
      * @return void
      */
     public function __construct(
@@ -76,7 +91,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\App\State $appState,
         \MagicToolbox\Sirv\Model\ConfigFactory $configModelFactory,
         \MagicToolbox\Sirv\Model\Api\SirvFactory $sirvClientFactory,
-        \MagicToolbox\Sirv\Model\Api\S3Factory $s3ClientFactory
+        \MagicToolbox\Sirv\Model\Api\S3Factory $s3ClientFactory,
+        \Magento\Framework\ObjectManagerInterface $objectManager
     ) {
         parent::__construct($context);
         $this->isBackend = ($appState->getAreaCode() == \Magento\Framework\App\Area::AREA_ADMINHTML);
@@ -84,6 +100,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->sirvClientFactory = $sirvClientFactory;
         $this->s3ClientFactory = $s3ClientFactory;
         $this->loadConfig();
+        $this->objectManager = $objectManager;
     }
 
     /**
@@ -144,25 +161,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Delete config
-     *
-     * @param string $name
-     * @return void
-     */
-    public function deleteConfig($name)
-    {
-        $model = $this->getConfigModel();
-        $model->load($name, 'name');
-        $id = $model->getId();
-        if ($id !== null) {
-            $model->delete();
-        }
-        if (isset($this->sirvConfig[$name])) {
-            unset($this->sirvConfig[$name]);
-        }
-    }
-
-    /**
      * Check for backend area
      *
      * @return bool
@@ -190,6 +188,21 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function useSirvMediaViewer()
     {
         return $this->useSirvMediaViewer;
+    }
+
+    /**
+     * Get/set base static URL
+     *
+     * @param string $url
+     * @return string
+     */
+    public function baseStaticUrl($url = null)
+    {
+        if (null !== $url) {
+            $this->baseStaticUrl = $url;
+        }
+
+        return $this->baseStaticUrl;
     }
 
     /**
@@ -331,214 +344,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         static $cache = null;
 
         if ($cache === null) {
-            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            $cache = $objectManager->get(\Magento\Framework\App\CacheInterface::class);
+            $cache = $this->objectManager->get(\Magento\Framework\App\CacheInterface::class);
         }
 
         return $cache;
-    }
-
-    /**
-     * Get list of user accounts
-     *
-     * @param bool $force
-     * @return array
-     */
-    public function getSirvUsersList($force = false)
-    {
-        static $users = null;
-
-        if ($users === null || $force) {
-            $email = $this->getConfig('email') ?: '';
-            $password = $this->getConfig('password') ?: '';
-            $cacheId = 'sirv_accounts_' . hash('md5', $email . $password);
-            $cache = $this->getAppCache();
-
-            $data = $force ? false : $cache->load($cacheId);
-            if (false !== $data) {
-                $users = $this->getUnserializer()->unserialize($data);
-            }
-
-            if (!is_array($users)) {
-                $users = $this->getSirvClient()->getUsersList();
-                natsort($users);
-                $cache->save($this->getSerializer()->serialize($users), $cacheId, [], 600);
-            }
-        }
-
-        return $users;
-    }
-
-    /**
-     * Get list of account profiles
-     *
-     * @return array
-     */
-    public function getProfiles()
-    {
-        static $profiles = null;
-
-        if ($profiles === null) {
-            $profiles = $this->getSirvClient()->getProfiles();
-            if (!is_array($profiles)) {
-                $profiles = [];
-            }
-        }
-
-        return $profiles;
-    }
-
-    /**
-     * Get Sirv account stats
-     *
-     * @param bool $force
-     * @return array|bool
-     */
-    public function getSirvAccountStats($force = false)
-    {
-        static $data = null;
-
-        if ($data === null) {
-            $account = $this->getConfig('account');
-            $cacheId = 'sirv_account_stats_' . hash('md5', $account);
-            $cache = $this->getAppCache();
-
-            $data = $force ? false : $cache->load($cacheId);
-            if (false !== $data) {
-                $data = $this->getUnserializer()->unserialize($data);
-            }
-
-            if (!is_array($data)) {
-                $data = $this->getSirvClient()->getStats();
-                $data = is_array($data) ? $data : [];
-                //NOTE: 900 - cache lifetime (in seconds)
-                $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 900);
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * Disable spin scanning for image folder
-     *
-     * @param string $imageFolder
-     * @return void
-     */
-    public function disableSpinScanning($imageFolder)
-    {
-        if (empty($imageFolder)) {
-            $imageFolder = 'catalog';
-        }
-
-        $imageFolder = '/' . ltrim($imageFolder, '/');
-
-        $disableSpinScanning = false;
-
-        /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
-        $apiClient = $this->getSirvClient();
-
-        //NOTE: make sure that folder exists and spin scanning is enabled
-        $options = $apiClient->getFolderOptions($imageFolder);
-
-        if ($options) {
-            $disableSpinScanning = (!isset($options->scanSpins) || $options->scanSpins) ? true : false;
-        } else {
-            $disableSpinScanning = true;
-            $apiClient->uploadFile($imageFolder . '/sirv_tmp.txt', '', "\n");
-            $apiClient->deleteFile($imageFolder . '/sirv_tmp.txt');
-        }
-
-        if ($disableSpinScanning) {
-            $apiClient->setFolderOptions($imageFolder, ['scanSpins' => false]);
-        }
-    }
-
-    /**
-     * Get CDN config
-     *
-     * @return array
-     */
-    public function getCdnConfig()
-    {
-        static $config = null;
-
-        if ($config === null) {
-            $account = $this->getConfig('account');
-            $cacheId = 'sirv_account_cdn_' . hash('md5', $account);
-            $cache = $this->getAppCache();
-
-            $data = $cache->load($cacheId);
-            if (false !== $data) {
-                $data = $this->getUnserializer()->unserialize($data);
-            }
-
-            if (!is_array($data)) {
-                /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
-                $apiClient = $this->getSirvClient();
-                $accountInfo = $apiClient->getAccountInfo();
-                $alias = '';
-                $cdnEnabled = false;
-                $cdnURL = '';
-                if ($accountInfo) {
-                    $alias = $accountInfo->alias;
-                    $cdnURL = isset($accountInfo->cdnURL) ? $accountInfo->cdnURL : '';
-                    if (isset($accountInfo->aliases->{$alias}) && isset($accountInfo->aliases->{$alias}->cdn)) {
-                        $cdnEnabled = $accountInfo->aliases->{$alias}->cdn;
-                    }
-                }
-                $data = [
-                    'alias' => $alias,
-                    'cdn_enabled' => $cdnEnabled,
-                    'cdn_url' => $cdnURL,
-                ];
-                $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 60);
-            }
-
-            $config = $data;
-        }
-
-        return $config;
-    }
-
-    /**
-     * Sync CDN config
-     *
-     * @return string
-     */
-    public function syncCdnConfig()
-    {
-        $config = $this->getCdnConfig();
-        $network = $config['cdn_enabled'] ? 'cdn' : 'direct';
-        $this->saveConfig('network', $network);
-        $this->saveConfig('cdn_url', $config['cdn_url']);
-
-        return $network;
-    }
-
-    /**
-     * Turn on/off CDN
-     *
-     * @param bool $useCDN
-     * @return void
-     */
-    public function switchNetwork($useCDN = true)
-    {
-        $config = $this->getCdnConfig();
-
-        if ($useCDN != $config['cdn_enabled']) {
-            /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
-            $apiClient = $this->getSirvClient();
-
-            $updated = $apiClient->configCDN($useCDN, $config['alias']);
-            if ($updated) {
-                $account = $this->getConfig('account');
-                $cacheId = 'sirv_account_cdn_' . hash('md5', $account);
-                $cache = $this->getAppCache();
-                $config['cdn_enabled'] = $useCDN;
-                $cache->save($this->getSerializer()->serialize($config), $cacheId, [], 600);
-            }
-        }
     }
 
     /**
@@ -551,9 +360,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         static $unserializer = null;
 
         if ($unserializer === null) {
-            $unserializer = \Magento\Framework\App\ObjectManager::getInstance()->get(
-                \Magento\Framework\Unserialize\Unserialize::class
-            );
+            $unserializer = $this->objectManager->get(\Magento\Framework\Unserialize\Unserialize::class);
         }
 
         return $unserializer;
@@ -571,14 +378,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($serializer === null) {
             if (class_exists('\Magento\Framework\Serialize\Serializer\Serialize', false)) {
                 //NOTE: Magento v2.2.x and v2.3.x
-                $serializer = \Magento\Framework\App\ObjectManager::getInstance()->get(
-                    \Magento\Framework\Serialize\Serializer\Serialize::class
-                );
+                $serializer = $this->objectManager->get(\Magento\Framework\Serialize\Serializer\Serialize::class);
             } else {
                 //NOTE: Magento v2.1.x
-                $serializer = \Magento\Framework\App\ObjectManager::getInstance()->get(
-                    \Zend\Serializer\Adapter\PhpSerialize::class
-                );
+                $serializer = $this->objectManager->get(\Zend\Serializer\Adapter\PhpSerialize::class);
             }
         }
 
@@ -597,9 +400,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         if (!isset($versions[$name])) {
             $versions[$name] = false;
-            $componentRegistrar = \Magento\Framework\App\ObjectManager::getInstance()->get(
-                \Magento\Framework\Component\ComponentRegistrar::class
-            );
+            $componentRegistrar = $this->objectManager->get(\Magento\Framework\Component\ComponentRegistrar::class);
             $moduleDir = $componentRegistrar->getPath(
                 \Magento\Framework\Component\ComponentRegistrar::MODULE,
                 $name

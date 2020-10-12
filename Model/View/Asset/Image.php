@@ -34,9 +34,9 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
     protected $contentType = 'image';
 
     /**
-     * Context interface
+     * Context
      *
-     * @var \Magento\Framework\View\Asset\ContextInterface
+     * @var \MagicToolbox\Sirv\Model\View\Asset\Image\Context
      */
     protected $context;
 
@@ -118,10 +118,17 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
     protected static $viewFileSystem;
 
     /**
+     * Flag, outdated Magento version
+     *
+     * @var bool
+     */
+    protected static $outdatedMagentoVersion;
+
+    /**
      * Constructor
      *
      * @param \Magento\Catalog\Model\Product\Media\ConfigInterface $mediaConfig
-     * @param \Magento\Framework\View\Asset\ContextInterface $context
+     * @param \MagicToolbox\Sirv\Model\View\Asset\Image\Context $context
      * @param \Magento\Framework\Encryption\EncryptorInterface $encryptor
      * @param string $filePath
      * @param array $miscParams
@@ -129,7 +136,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
      */
     public function __construct(
         \Magento\Catalog\Model\Product\Media\ConfigInterface $mediaConfig,
-        \Magento\Framework\View\Asset\ContextInterface $context,
+        \MagicToolbox\Sirv\Model\View\Asset\Image\Context $context,
         \Magento\Framework\Encryption\EncryptorInterface $encryptor,
         $filePath,
         array $miscParams = []
@@ -175,6 +182,10 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
 
         static::$storeManager = $objectManager->get(\Magento\Store\Model\StoreManager::class);
         static::$viewFileSystem = $objectManager->get(\Magento\Framework\View\FileSystem::class);
+
+        $productMetadata = $objectManager->get(\Magento\Framework\App\ProductMetadataInterface::class);
+        $version = $productMetadata->getVersion();
+        static::$outdatedMagentoVersion = version_compare($version, '2.3.4', '<') && version_compare($version, '2.3.0', '>=');
     }
 
     /**
@@ -360,6 +371,20 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
         $params['image_width'] = 'w:' . ($params['image_width'] ?? 'empty');
         $params['quality'] = 'q:' . ($params['quality'] ?? 'empty');
         $params['angle'] = 'r:' . ($params['angle'] ?? 'empty');
+
+        /* NOTE: for Magento version 2.3.0 - 2.3.3 */
+        if (static::$outdatedMagentoVersion) {
+            $params['keep_aspect_ratio'] = (isset($params['keep_aspect_ratio']) ? '' : 'non') . 'proportional';
+            $params['keep_frame'] = (isset($params['keep_frame']) ? '' : 'no') . 'frame';
+            $params['keep_transparency'] = (isset($params['keep_transparency']) ? '' : 'no') . 'transparency';
+            $params['constrain_only'] = (isset($params['constrain_only']) ? 'do' : 'not') . 'constrainonly';
+            $params['background'] = isset($params['background'])
+                ? 'rgb' . implode(',', $params['background'])
+                : 'nobackground';
+
+            return $params;
+        }
+
         $params['keep_aspect_ratio'] = (!empty($params['keep_aspect_ratio']) ? '' : 'non') . 'proportional';
         $params['keep_frame'] = (!empty($params['keep_frame']) ? '' : 'no') . 'frame';
         $params['keep_transparency'] = (!empty($params['keep_transparency']) ? '' : 'no') . 'transparency';

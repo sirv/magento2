@@ -152,6 +152,13 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     protected $imagesToFetch = [];
 
     /**
+     * Join data with MySQL
+     *
+     * @var bool
+     */
+    protected $joinWithMySQL = false;
+
+    /**
      * Logger
      *
      * @var \Psr\Log\LoggerInterface
@@ -183,7 +190,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         $this->logger = $context->getLogger();
         $this->sirvClient = $dataHelper->getSirvClient();
 
-        $bucket = $dataHelper->getConfig('bucket');
+        $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
 
         $this->baseUrl = $this->baseDirectUrl = 'https://' . $bucket . '.sirv.com';
 
@@ -252,7 +259,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         //NOTE: URL of pub/media folder
         $this->mediaBaseUrl = $catalogProductMediaConfig->getBaseMediaUrl();
         $this->mediaBaseUrl = rtrim($this->mediaBaseUrl, '\\/');
-        $this->mediaBaseUrl = preg_replace('#' . preg_quote($this->productMediaRelPath, '$#') . '#', '', $this->mediaBaseUrl);
+        $this->mediaBaseUrl = preg_replace('#' . preg_quote($this->productMediaRelPath, '#') . '$#', '', $this->mediaBaseUrl);
         if (!empty($cdnUrl) && strpos($this->mediaBaseUrl, $cdnUrl) !== false) {
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
             $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
@@ -270,6 +277,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 $dataHelper->getConfig('client_secret')
             );
         }
+
+        $this->joinWithMySQL = $dataHelper->getConfig('join_with_mysql') === 'true' ? true : false;
     }
 
     /**
@@ -596,7 +605,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                     if (strpos($relPath, $this->productMediaRelPath . '/') === 0 ||
                         strpos($relPath, $this->categoryMediaRelPath . '/') === 0 ||
                         strpos($relPath, $this->magic360MediaRelPath . '/') === 0 ||
-                        strpos($relPath, '/catalog/') === 0
+                        strpos($relPath, '/catalog/') === 0 ||
+                        strpos($relPath, '/wysiwyg/') === 0
                     ) {
                         $pathType = self::MAGENTO_MEDIA_PATH;
                     }
@@ -613,10 +623,27 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Get sync data
      *
+     * @param bool $force
      * @return array
      */
-    public function getSyncData()
+    public function getSyncData($force = false)
     {
+        static $data = null;
+
+        if (!($force || $data === null)) {
+            return $data;
+        }
+
+        $cacheId = 'sirv_sync_data';
+        $appCache = $this->dataHelper->getAppCache();
+        $data = $force ? false : $appCache->load($cacheId);
+        if (false !== $data) {
+            $data = $this->dataHelper->getUnserializer()->unserialize($data);
+            if (is_array($data)) {
+                return $data;
+            }
+        }
+
         /** @var \MagicToolbox\Sirv\Model\ResourceModel\Cache $resource */
         $resource = $this->cacheModel->getResource();
         /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
@@ -628,89 +655,151 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         /** @var \Magento\Framework\DB\Select $ctSelect */
         $ctSelect = clone $connection->select();
 
-        $mtSelect->reset()
-            ->from(
-                ['mt' => $mediaTable],
-                ['total' => 'COUNT(DISTINCT BINARY(`mt`.`value`))']
-            )
-            ->where('`mt`.`value` IS NOT NULL')
-            ->where('`mt`.`value` != ?', '');
-
-        /** @var int $total */
-        $total = (int)$connection->fetchOne($mtSelect);
-
-        $mtSelect->reset()
-            ->distinct()
-            ->from(
-                ['mt' => $mediaTable],
-                ['unique_value' => 'BINARY(`mt`.`value`)']
-            )
-            ->where('`mt`.`value` IS NOT NULL')
-            ->where('`mt`.`value` != ?', '');
-
-        $ctSelect->reset()
-            ->from(
-                ['ct' => $cacheTable],
-                [
-                    'ct.status',
-                    'sum' => 'COUNT(`ct`.`status`)',
-                ]
-            )
-            ->joinInner(
-                ['tt' => new \Zend_Db_Expr("({$mtSelect})")],
-                '`tt`.`unique_value` = `ct`.`path` OR CONCAT(:pm_rel_path, `tt`.`unique_value`) = `ct`.`path`',
-                []
-            )
-            ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp))')
-            ->group('ct.status');
-
-        /*
-        $query = $ctSelect->__toString();
-        SELECT `ct`.`status`, COUNT(`ct`.`status`) AS `sum` FROM `m2_sirv_cache` AS `ct`
-        INNER JOIN (
-            SELECT DISTINCT BINARY(`mt`.`value`) AS `unique_value` FROM `m2_catalog_product_entity_media_gallery` AS `mt`
-            WHERE (`mt`.`value` IS NOT NULL) AND (`mt`.`value` != '')
-        ) AS `tt`
-        ON `tt`.`unique_value` = `ct`.`path` OR CONCAT("/catalog/product", `tt`.`unique_value`) = `ct`.`path`
-        WHERE ((`ct`.`path_type` = 5 OR (`ct`.`path_type` = 4 AND `ct`.`path` REGEXP "^/catalog/product")))
-        GROUP BY `ct`.`status`;
-        */
-
         $bind = [
             ':mmp_type' => self::MAGENTO_MEDIA_PATH,
             ':mpmp_type' => self::MAGENTO_PRODUCT_MEDIA_PATH,
             ':pm_rel_path' => $this->productMediaRelPath,
+            ':pm_rel_path_with_slash' => $this->productMediaRelPath . '/',
             ':pm_rel_path_regexp' => '^' . $this->productMediaRelPath,
         ];
 
-        /** @var array $result */
-        $result = $connection->fetchPairs($ctSelect, $bind);
+        if ($this->joinWithMySQL) {
+            $getData = function () use (
+                &$connection,
+                &$mtSelect,
+                &$mediaTable,
+                &$ctSelect,
+                &$cacheTable,
+                &$bind
+            ) {
+                $mtSelect->reset()
+                    ->from(
+                        ['mt' => $mediaTable],
+                        ['total' => 'COUNT(DISTINCT BINARY(`mt`.`value`))']
+                    )
+                    ->where('`mt`.`value` IS NOT NULL')
+                    ->where('`mt`.`value` != ?', '');
 
-        $new = isset($result[self::IS_NEW]) ? (int)$result[self::IS_NEW] : 0;
-        $processing = isset($result[self::IS_PROCESSING]) ? (int)$result[self::IS_PROCESSING] : 0;
-        $synced = isset($result[self::IS_SYNCED]) ? (int)$result[self::IS_SYNCED] : 0;
-        $failed = isset($result[self::IS_FAILED]) ? (int)$result[self::IS_FAILED] : 0;
-        $cached = $new + $processing + $synced + $failed;
+                /** @var int $total */
+                $total = (int)$connection->fetchOne($mtSelect);
 
-        if ($total < $cached) {
-            $this->fixSyncData();
+                $mtSelect->reset()
+                    ->distinct()
+                    ->from(
+                        ['mt' => $mediaTable],
+                        ['unique_value' => 'BINARY(`mt`.`value`)']
+                    )
+                    ->where('`mt`.`value` IS NOT NULL')
+                    ->where('`mt`.`value` != ?', '');
 
-            /** @var array $result */
-            $result = $connection->fetchPairs($ctSelect, $bind);
+                $ctSelect->reset()
+                    ->from(
+                        ['ct' => $cacheTable],
+                        [
+                            'ct.status',
+                            'sum' => 'COUNT(`ct`.`status`)',
+                        ]
+                    )
+                    ->joinInner(
+                        ['tt' => new \Zend_Db_Expr("({$mtSelect})")],
+                        '`tt`.`unique_value` = `ct`.`path` OR ' .
+                        'CONCAT(:pm_rel_path, `tt`.`unique_value`) = `ct`.`path` OR ' .
+                        'CONCAT(:pm_rel_path_with_slash, `tt`.`unique_value`) = `ct`.`path`',
+                        []
+                    )
+                    ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp))')
+                    ->group('ct.status');
 
-            $new = isset($result[self::IS_NEW]) ? (int)$result[self::IS_NEW] : 0;
-            $processing = isset($result[self::IS_PROCESSING]) ? (int)$result[self::IS_PROCESSING] : 0;
-            $synced = isset($result[self::IS_SYNCED]) ? (int)$result[self::IS_SYNCED] : 0;
-            $failed = isset($result[self::IS_FAILED]) ? (int)$result[self::IS_FAILED] : 0;
+                /** @var array $pairs */
+                $pairs = $connection->fetchPairs($ctSelect, $bind);
+
+                $data = [];
+                $data['total'] = $total;
+                $data['synced'] = isset($pairs[\MagicToolbox\Sirv\Helper\Sync::IS_SYNCED]) ? (int)$pairs[\MagicToolbox\Sirv\Helper\Sync::IS_SYNCED] : 0;
+                $data['new'] = isset($pairs[\MagicToolbox\Sirv\Helper\Sync::IS_NEW]) ? (int)$pairs[\MagicToolbox\Sirv\Helper\Sync::IS_NEW] : 0;
+                $data['processing'] = isset($pairs[\MagicToolbox\Sirv\Helper\Sync::IS_PROCESSING]) ? (int)$pairs[\MagicToolbox\Sirv\Helper\Sync::IS_PROCESSING] : 0;
+                $data['queued'] = $data['new'] + $data['processing'];
+                $data['failed'] = isset($pairs[\MagicToolbox\Sirv\Helper\Sync::IS_FAILED]) ? (int)$pairs[\MagicToolbox\Sirv\Helper\Sync::IS_FAILED] : 0;
+
+                return $data;
+            };
+        } else {
+            unset($bind[':pm_rel_path_with_slash']);
+
+            $getData = function () use (
+                &$connection,
+                &$mtSelect,
+                &$mediaTable,
+                &$ctSelect,
+                &$cacheTable,
+                &$bind
+            ) {
+                $mtSelect->reset()
+                    ->distinct()
+                    ->from(
+                        ['mt' => $mediaTable],
+                        ['unique_value' => 'BINARY(`mt`.`value`)']
+                    )
+                    ->where('`mt`.`value` IS NOT NULL')
+                    ->where('`mt`.`value` != ?', '');
+
+                $mediaPathes = $connection->fetchCol($mtSelect, []);
+                foreach ($mediaPathes as &$path) {
+                    $path = '/' . ltrim($path, '\\/');
+                }
+                unset($path);
+
+                $ctSelect->reset()
+                    ->distinct()
+                    ->from(
+                        ['ct' => $cacheTable],
+                        [
+                            'short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")',
+                            'status'
+                        ]
+                    )
+                    ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp))');
+
+                /** @var array $cachedData */
+                $cachedData = $connection->fetchAll($ctSelect, $bind);
+
+                $pairs = [
+                    \MagicToolbox\Sirv\Helper\Sync::IS_UNDEFINED => 0,
+                    \MagicToolbox\Sirv\Helper\Sync::IS_NEW => 0,
+                    \MagicToolbox\Sirv\Helper\Sync::IS_PROCESSING => 0,
+                    \MagicToolbox\Sirv\Helper\Sync::IS_SYNCED => 0,
+                    \MagicToolbox\Sirv\Helper\Sync::IS_FAILED => 0,
+                ];
+                $mediaPathes = array_flip($mediaPathes);
+                foreach ($cachedData as $row) {
+                    if (isset($mediaPathes[$row['short_path']])) {
+                        $pairs[$row['status']]++;
+                    }
+                }
+
+                $data = [];
+                $data['total'] = count($mediaPathes);
+                $data['synced'] = $pairs[\MagicToolbox\Sirv\Helper\Sync::IS_SYNCED];
+                $data['new'] = $pairs[\MagicToolbox\Sirv\Helper\Sync::IS_NEW];
+                $data['processing'] = $pairs[\MagicToolbox\Sirv\Helper\Sync::IS_PROCESSING];
+                $data['queued'] = $data['new'] + $data['processing'];
+                $data['failed'] = $pairs[\MagicToolbox\Sirv\Helper\Sync::IS_FAILED];
+
+                return $data;
+            };
         }
 
-        $data = [
-            'total' => $total,
-            'synced' => $synced,
-            'queued' => $new + $processing,
-            'failed' => $failed,
-            'completed' => true,
-        ];
+        $data = $getData();
+        $cached = $data['synced'] + $data['queued'] + $data['failed'];
+
+        if ($data['total'] < $cached) {
+            $this->fixSyncData();
+            $data = $getData();
+        }
+
+        $data['completed'] = true;
+
+        $appCache->save($this->dataHelper->getSerializer()->serialize($data), $cacheId, [], 120);
 
         return $data;
     }
@@ -734,44 +823,6 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         /** @var \Magento\Framework\DB\Select $ctSelect */
         $ctSelect = clone $connection->select();
 
-        $ctSelect->reset()
-            ->from(
-                ['ct' => $cacheTable],
-                ['m_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
-            )
-            ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)')
-            ->where('`ct`.`status` != ?', self::IS_UNDEFINED);
-
-        $mtSelect->reset()
-            ->distinct()
-            ->from(
-                ['mt' => $mediaTable],
-                ['unique_value' => 'BINARY(`mt`.`value`)']
-            )
-            ->joinLeft(
-                ['tt' => new \Zend_Db_Expr("({$ctSelect})")],
-                '`tt`.`m_path` = `mt`.`value`',
-                []
-            )
-            ->where('`tt`.`m_path` IS NULL')
-            ->where('`mt`.`value` IS NOT NULL')
-            ->where('`mt`.`value` != ?', '');
-
-        /*
-        $query = $mtSelect->__toString();
-        SELECT DISTINCT BINARY(`mt`.`value`) AS `unique_value` FROM `m2_catalog_product_entity_media_gallery` AS `mt`
-        LEFT JOIN (
-            SELECT BINARY(REPLACE(`ct`.`path`, "/catalog/product", "")) AS `m_path` FROM `m2_sirv_cache` AS `ct`
-            WHERE (`ct`.`path_type` = 5 OR (`ct`.`path_type` = 4 AND `ct`.`path` REGEXP "^/catalog/product")) AND (`ct`.`status` != 0)
-        ) AS `tt`
-        ON `tt`.`m_path` = `mt`.`value`
-        WHERE (`tt`.`m_path` IS NULL) AND (`mt`.`value` IS NOT NULL) AND (`mt`.`value` != '')
-        */
-
-        if ($limit) {
-            $mtSelect->limit($limit);
-        }
-
         $bind = [
             ':mmp_type' => self::MAGENTO_MEDIA_PATH,
             ':mpmp_type' => self::MAGENTO_PRODUCT_MEDIA_PATH,
@@ -779,8 +830,77 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             ':pm_rel_path_regexp' => '^' . $this->productMediaRelPath,
         ];
 
-        /** @var array $result */
-        $result = $connection->fetchCol($mtSelect, $bind);
+        if ($this->joinWithMySQL) {
+            $ctSelect->reset()
+                ->from(
+                    ['ct' => $cacheTable],
+                    ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
+                )
+                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)')
+                ->where('`ct`.`status` != ?', self::IS_UNDEFINED);
+
+            $mtSelect->reset()
+                ->distinct()
+                ->from(
+                    ['mt' => $mediaTable],
+                    ['unique_value' => 'BINARY(`mt`.`value`)']
+                )
+                ->joinLeft(
+                    ['tt' => new \Zend_Db_Expr("({$ctSelect})")],
+                    '`tt`.`short_path` = `mt`.`value` OR TRIM(LEADING "/" FROM `tt`.`short_path`) = `mt`.`value`',
+                    []
+                )
+                ->where('`tt`.`short_path` IS NULL')
+                ->where('`mt`.`value` IS NOT NULL')
+                ->where('`mt`.`value` != ?', '');
+
+            if ($limit) {
+                $mtSelect->limit($limit);
+            }
+
+            /** @var array $result */
+            $result = $connection->fetchCol($mtSelect, $bind);
+        } else {
+            $mtSelect->reset()
+                ->distinct()
+                ->from(
+                    ['mt' => $mediaTable],
+                    ['unique_value' => 'BINARY(`mt`.`value`)']
+                )
+                ->where('`mt`.`value` IS NOT NULL')
+                ->where('`mt`.`value` != ?', '');
+
+            $mediaPathes = $connection->fetchCol($mtSelect, []);
+            foreach ($mediaPathes as &$path) {
+                $path = '/' . ltrim($path, '\\/');
+            }
+            unset($path);
+
+            $ctSelect->reset()
+                ->distinct()
+                ->from(
+                    ['ct' => $cacheTable],
+                    ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
+                )
+                ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp))')
+                ->where('`ct`.`status` != ?', self::IS_UNDEFINED);
+
+            $cachedPathes = $connection->fetchCol($ctSelect, $bind);
+            $cachedPathes = array_flip($cachedPathes);
+
+            $result = [];
+            $i = 0;
+            foreach ($mediaPathes as $path) {
+                if (isset($cachedPathes[$path])) {
+                    continue;
+                }
+                $result[] = $path;
+                $i++;
+                if ($limit && $i == $limit) {
+                    break;
+                }
+            }
+        }
 
         return $result;
     }
@@ -838,7 +958,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             )
             ->joinLeft(
                 ['tt' => "{$cacheTableTemp}"],
-                '`tt`.`path` = `mt`.`value`',
+                '`tt`.`path` = `mt`.`value` OR TRIM(LEADING "/" FROM `tt`.`path`) = `mt`.`value`',
                 []
             )
             ->where('`tt`.`path` IS NULL')
@@ -874,43 +994,6 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         /** @var \Magento\Framework\DB\Select $ctSelect */
         $ctSelect = clone $connection->select();
 
-        $ctSelect->reset()
-            ->from(
-                ['ct' => $cacheTable],
-                ['m_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
-            )
-            ->where('`ct`.`status` IN (?)', [self::IS_NEW, self::IS_PROCESSING])
-            ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
-
-        $mtSelect->reset()
-            ->distinct()
-            ->from(
-                ['mt' => $mediaTable],
-                ['unique_value' => 'BINARY(`mt`.`value`)']
-            )
-            ->joinLeft(
-                ['tt' => new \Zend_Db_Expr("({$ctSelect})")],
-                '`tt`.`m_path` = `mt`.`value`',
-                []
-            )
-            ->where('`tt`.`m_path` IS NOT NULL')
-            ->where('`mt`.`value` IS NOT NULL')
-            ->where('`mt`.`value` != ?', '');
-        /*
-        $query = $mtSelect->__toString();
-        SELECT DISTINCT BINARY(`mt`.`value`) AS `unique_value` FROM `m2_catalog_product_entity_media_gallery` AS `mt`
-        LEFT JOIN (
-            SELECT REPLACE(`ct`.`path`, "/catalog/product", "") AS `m_path` FROM `m2_sirv_cache` AS `ct`
-            WHERE (`ct`.`status` IN (1, 2)) AND (`ct`.`path_type` = 5 OR (`ct`.`path_type` = 4 AND `ct`.`path` REGEXP "^/catalog/product"))
-        ) AS `tt`
-        ON `tt`.`m_path` = `mt`.`value`
-        WHERE (`tt`.`m_path` IS NOT NULL) AND (`mt`.`value` IS NOT NULL) AND (`mt`.`value` != '');
-        */
-
-        if ($limit) {
-            $mtSelect->limit($limit);
-        }
-
         $bind = [
             ':mmp_type' => self::MAGENTO_MEDIA_PATH,
             ':mpmp_type' => self::MAGENTO_PRODUCT_MEDIA_PATH,
@@ -918,8 +1001,76 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             ':pm_rel_path_regexp' => '^' . $this->productMediaRelPath,
         ];
 
-        /** @var array $result */
-        $result = $connection->fetchCol($mtSelect, $bind);
+        if ($this->joinWithMySQL) {
+            $ctSelect->reset()
+                ->from(
+                    ['ct' => $cacheTable],
+                    ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
+                )
+                ->where('`ct`.`status` IN (?)', [self::IS_NEW, self::IS_PROCESSING])
+                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
+
+            $mtSelect->reset()
+                ->distinct()
+                ->from(
+                    ['mt' => $mediaTable],
+                    ['unique_value' => 'BINARY(`mt`.`value`)']
+                )
+                ->joinLeft(
+                    ['tt' => new \Zend_Db_Expr("({$ctSelect})")],
+                    '`tt`.`short_path` = `mt`.`value` OR TRIM(LEADING "/" FROM `tt`.`short_path`) = `mt`.`value`',
+                    []
+                )
+                ->where('`tt`.`short_path` IS NOT NULL')
+                ->where('`mt`.`value` IS NOT NULL')
+                ->where('`mt`.`value` != ?', '');
+
+            if ($limit) {
+                $mtSelect->limit($limit);
+            }
+
+            /** @var array $result */
+            $result = $connection->fetchCol($mtSelect, $bind);
+        } else {
+            $mtSelect->reset()
+                ->distinct()
+                ->from(
+                    ['mt' => $mediaTable],
+                    ['unique_value' => 'BINARY(`mt`.`value`)']
+                )
+                ->where('`mt`.`value` IS NOT NULL')
+                ->where('`mt`.`value` != ?', '');
+
+            $mediaPathes = $connection->fetchCol($mtSelect, []);
+            foreach ($mediaPathes as &$path) {
+                $path = '/' . ltrim($path, '\\/');
+            }
+            unset($path);
+
+            $ctSelect->reset()
+                ->distinct()
+                ->from(
+                    ['ct' => $cacheTable],
+                    ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
+                )
+                ->where('`ct`.`status` IN (?)', [self::IS_NEW, self::IS_PROCESSING])
+                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
+
+            $queuedPathes = $connection->fetchCol($ctSelect, $bind);
+
+            $result = [];
+            $i = 0;
+            $mediaPathes = array_flip($mediaPathes);
+            foreach ($queuedPathes as $path) {
+                if (isset($mediaPathes[$path])) {
+                    $result[] = $path;
+                    $i++;
+                    if ($limit && $i == $limit) {
+                        break;
+                    }
+                }
+            }
+        }
 
         return $result;
     }
@@ -943,33 +1094,6 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         /** @var \Magento\Framework\DB\Select $ctSelect */
         $ctSelect = clone $connection->select();
 
-        $ctSelect->reset()
-            ->from(
-                ['ct' => $cacheTable],
-                ['m_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
-            )
-            ->where('`ct`.`status` = ?', self::IS_FAILED)
-            ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
-
-        $mtSelect->reset()
-            ->distinct()
-            ->from(
-                ['mt' => $mediaTable],
-                ['unique_value' => 'BINARY(`mt`.`value`)']
-            )
-            ->joinLeft(
-                ['tt' => new \Zend_Db_Expr("({$ctSelect})")],
-                '`tt`.`m_path` = `mt`.`value`',
-                []
-            )
-            ->where('`tt`.`m_path` IS NOT NULL')
-            ->where('`mt`.`value` IS NOT NULL')
-            ->where('`mt`.`value` != ?', '');
-
-        if ($limit) {
-            $mtSelect->limit($limit);
-        }
-
         $bind = [
             ':mmp_type' => self::MAGENTO_MEDIA_PATH,
             ':mpmp_type' => self::MAGENTO_PRODUCT_MEDIA_PATH,
@@ -977,8 +1101,76 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             ':pm_rel_path_regexp' => '^' . $this->productMediaRelPath,
         ];
 
-        /** @var array $result */
-        $result = $connection->fetchCol($mtSelect, $bind);
+        if ($this->joinWithMySQL) {
+            $ctSelect->reset()
+                ->from(
+                    ['ct' => $cacheTable],
+                    ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
+                )
+                ->where('`ct`.`status` = ?', self::IS_FAILED)
+                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
+
+            $mtSelect->reset()
+                ->distinct()
+                ->from(
+                    ['mt' => $mediaTable],
+                    ['unique_value' => 'BINARY(`mt`.`value`)']
+                )
+                ->joinLeft(
+                    ['tt' => new \Zend_Db_Expr("({$ctSelect})")],
+                    '`tt`.`short_path` = `mt`.`value` OR TRIM(LEADING "/" FROM `tt`.`short_path`) = `mt`.`value`',
+                    []
+                )
+                ->where('`tt`.`short_path` IS NOT NULL')
+                ->where('`mt`.`value` IS NOT NULL')
+                ->where('`mt`.`value` != ?', '');
+
+            if ($limit) {
+                $mtSelect->limit($limit);
+            }
+
+            /** @var array $result */
+            $result = $connection->fetchCol($mtSelect, $bind);
+        } else {
+            $mtSelect->reset()
+                ->distinct()
+                ->from(
+                    ['mt' => $mediaTable],
+                    ['unique_value' => 'BINARY(`mt`.`value`)']
+                )
+                ->where('`mt`.`value` IS NOT NULL')
+                ->where('`mt`.`value` != ?', '');
+
+            $mediaPathes = $connection->fetchCol($mtSelect, []);
+            foreach ($mediaPathes as &$path) {
+                $path = '/' . ltrim($path, '\\/');
+            }
+            unset($path);
+
+            $ctSelect->reset()
+                ->distinct()
+                ->from(
+                    ['ct' => $cacheTable],
+                    ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
+                )
+                ->where('`ct`.`status` = ?', self::IS_FAILED)
+                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
+
+            $failedPathes = $connection->fetchCol($ctSelect, $bind);
+
+            $result = [];
+            $i = 0;
+            $mediaPathes = array_flip($mediaPathes);
+            foreach ($failedPathes as $path) {
+                if (isset($mediaPathes[$path])) {
+                    $result[] = $path;
+                    $i++;
+                    if ($limit && $i == $limit) {
+                        break;
+                    }
+                }
+            }
+        }
 
         return $result;
     }
@@ -1181,8 +1373,9 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         $aborted = false;
         $rateLimit = null;
 
-        foreach ($images as $image) {
-            $relPath = $this->productMediaRelPath . $image;
+        foreach ($images as $imagePath) {
+            $imagePath = '/' . ltrim($imagePath, '\\/');
+            $relPath = $this->productMediaRelPath . $imagePath;
             $absPath = $this->mediaDirAbsPath . $relPath;
 
             if (is_file($absPath)) {
@@ -1215,8 +1408,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 $result = false;
             }
 
-            if ($this->isCached($image)) {
-                $this->removeCacheData($image);
+            if ($this->isCached($imagePath)) {
+                $this->removeCacheData($imagePath);
             }
 
             if ($result) {
@@ -1262,6 +1455,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($chunks as $chunk) {
             $fetchData = [];
             foreach ($chunk as $imagePath) {
+                $imagePath = '/' . ltrim($imagePath, '\\/');
                 $relPath = $this->productMediaRelPath . $imagePath;
                 $absPath = $this->mediaDirAbsPath . $relPath;
                 if (is_file($absPath)) {
@@ -1438,5 +1632,15 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     public function getBaseUrl()
     {
         return $this->baseUrl;
+    }
+
+    /**
+     * Get images fetch list
+     *
+     * @return array
+     */
+    public function getImagesFetchList()
+    {
+        return $this->imagesToFetch;
     }
 }

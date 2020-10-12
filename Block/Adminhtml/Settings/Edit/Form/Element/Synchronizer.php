@@ -38,15 +38,8 @@ class Synchronizer extends \Magento\Framework\Data\Form\Element\AbstractElement
      */
     public function getElementHtml()
     {
-        $data = $this->getValue();
-
-        if (!is_array($data)) {
-            return '';
-        }
-
         $layout = $this->getForm()->getParent()->getLayout();
         $syncBlock = $layout->createBlock(\MagicToolbox\Sirv\Block\Adminhtml\Synchronizer::class);
-        $syncBlock->setSyncData($data);
         $html = $syncBlock->toHtml();
 
         return $html;

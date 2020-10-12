@@ -47,20 +47,6 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $assetsModelFactory = null;
 
     /**
-     * Assets data
-     *
-     * @var array
-     */
-    static protected $assetsData = [];
-
-    /**
-     * View config
-     *
-     * @var \Magento\Framework\View\ConfigInterface
-     */
-    protected $presentationConfig;
-
-    /**
      * Image helper
      *
      * @var \Magento\Catalog\Helper\Image
@@ -68,11 +54,39 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $imageHelper;
 
     /**
+     * Json encoder
+     *
+     * @var \Magento\Framework\Json\EncoderInterface
+     */
+    protected $jsonEncoder;
+
+    /**
      * Gallery block
      *
      * @var \Magento\Catalog\Block\Product\View\Gallery
      */
     protected $galleryBlock = null;
+
+    /**
+     * Slide sources
+     *
+     * @var integer
+     */
+    protected $slideSources;
+
+    /**
+     * cURL resource
+     *
+     * @var resource
+     */
+    protected static $curlHandle = null;
+
+    /**
+     * Assets data
+     *
+     * @var array
+     */
+    protected static $assetsData = [];
 
     /**
      * Viewer slides
@@ -89,11 +103,18 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $activeSlideIndex;
 
     /**
-     * cURL resource
+     * Current product id
      *
-     * @var resource
+     * @var integer
      */
-    protected static $curlHandle = null;
+    protected $productId = 0;
+
+    /**
+     * Configurable data
+     *
+     * @var array
+     */
+    protected $configurableData = [];
 
     /**
      * Constructor
@@ -102,8 +123,8 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
      * @param \MagicToolbox\Sirv\Helper\Sync $syncHelper
      * @param \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory
-     * @param \Magento\Framework\View\ConfigInterface $presentationConfig
      * @param \Magento\Catalog\Helper\Image $imageHelper
+     * @param \Magento\Framework\Json\EncoderInterface $jsonEncoder
      * @return void
      */
     public function __construct(
@@ -111,15 +132,16 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         \MagicToolbox\Sirv\Helper\Data $dataHelper,
         \MagicToolbox\Sirv\Helper\Sync $syncHelper,
         \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory,
-        \Magento\Framework\View\ConfigInterface $presentationConfig,
-        \Magento\Catalog\Helper\Image $imageHelper
+        \Magento\Catalog\Helper\Image $imageHelper,
+        \Magento\Framework\Json\EncoderInterface $jsonEncoder
     ) {
         parent::__construct($context);
         $this->dataHelper = $dataHelper;
         $this->syncHelper = $syncHelper;
         $this->assetsModelFactory = $assetsModelFactory;
-        $this->presentationConfig = $presentationConfig;
         $this->imageHelper = $imageHelper;
+        $this->jsonEncoder = $jsonEncoder;
+        $this->slideSources = (int)($this->dataHelper->getConfig('viewer_contents') ?: self::MAGENTO_ASSETS);
     }
 
     /**
@@ -145,45 +167,39 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Get styles
+     * Get max height
      *
-     * @return string
+     * @return integer
      */
-    public function getViewerStyles()
+    public function getMaxHeight()
     {
-        $styles = '';
-
-        $imageDisplayArea = 'product_page_image_medium';
-
-        $attributes = $this->presentationConfig->getViewConfig()->getMediaAttributes(
-            'Magento_Catalog',
-            \Magento\Catalog\Helper\Image::MEDIA_TYPE_CONFIG_NODE,
-            $imageDisplayArea
-        );
-
-        $width = $attributes['width'] ?? 0;
-        $height = $attributes['height'] ?? 0;
-
-        if ($width) {
-            $styles .= "width: {$width}px;";
-        }
-
-        if ($height) {
-            $styles .= "height: {$height}px;";
-        }
-
-        return $styles;
+        return (int)($this->dataHelper->getConfig('smv_max_height') ?: 0);
     }
 
     /**
-     * Get options
+     * Get configured options
      *
      * @return string
      */
-    public function getViewerOptions()
+    public function getViewerJsOptions()
+    {
+        $options = $this->dataHelper->getConfig('smv_js_options') ?: '';
+        if ($options) {
+            $options = "\n<script>\n{$options}\n</script>\n";
+        }
+
+        return $options;
+    }
+
+    /**
+     * Get runtime options
+     *
+     * @return string
+     */
+    public function getViewerDataOptions()
     {
         if (!isset($this->viewerSlides)) {
-            $this->setViewerSlides();
+            $this->initAssetsData();
         }
 
         $options = 'slide.first: ' . $this->activeSlideIndex . ';';
@@ -199,118 +215,265 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     public function getViewerSlides()
     {
         if (!isset($this->viewerSlides)) {
-            $this->setViewerSlides();
+            $this->initAssetsData();
         }
 
         return $this->viewerSlides;
     }
 
     /**
-     * Get viewer contents source option
+     * Get configuration for js
      *
-     * @return integer
+     * @return string
      */
-    public function getViewerContentsSource()
+    public function getJsonConfig()
     {
-        return (int)($this->dataHelper->getConfig('viewer_contents') ?: self::MAGENTO_ASSETS);
+        if (!isset($this->viewerSlides)) {
+            $this->initAssetsData();
+        }
+
+        return $this->jsonEncoder->encode($this->configurableData);
     }
 
     /**
-     * Set viewer slides
+     * Init assets data
      *
      * @return void
      */
-    protected function setViewerSlides()
+    protected function initAssetsData()
     {
+        if (!$this->galleryBlock) {
+            return;
+        }
+
         $this->viewerSlides = [];
         $this->activeSlideIndex = 0;
 
-        $viewerContents = $this->getViewerContentsSource();
+        $product = $this->galleryBlock->getProduct();
+        $this->productId = $product->getId();
 
-        if ($viewerContents != self::SIRV_ASSETS) {
-            $data = $this->getMagentoAssetsData();
-            $this->viewerSlides = $data['slides'];
-            $this->activeSlideIndex = $data['active-slide'];
+        $this->configurableData['current-id'] = $this->productId;
+        $this->configurableData['slides'] = [];
+        $this->configurableData['active-slides'] = [];
+
+        foreach ($this->getAssociatedProducts($product) as $associatedProduct) {
+            $id = $associatedProduct->getId();
+            $data = $this->getProductAssetsData($associatedProduct);
+            $this->configurableData['slides'][$id] = array_keys($data['slides']);
+            $this->configurableData['active-slides'][$id] = count($this->viewerSlides) + $data['active-slide'];
+            $this->viewerSlides = array_merge($this->viewerSlides, $data['slides']);
         }
 
-        if ($viewerContents != self::MAGENTO_ASSETS) {
-            $data = $this->getSirvAssetsData($this->galleryBlock->getProduct());
+        $data = $this->getProductAssetsData($product);
+        $this->configurableData['slides'][$this->productId] = array_keys($data['slides']);
+        $this->configurableData['active-slides'][$this->productId] = count($this->viewerSlides) + $data['active-slide'];
+        $this->viewerSlides = array_merge($this->viewerSlides, $data['slides']);
+
+        $this->activeSlideIndex = $this->configurableData['active-slides'][$this->productId];
+    }
+
+    /**
+     * Get associated products
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @return \Magento\Catalog\Model\Product[]
+     */
+    protected function getAssociatedProducts($product)
+    {
+        $products = [];
+
+        $isConfigurable = $product->getTypeId() === \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE;
+        if ($isConfigurable) {
+            $block = $this->getConfigurableBlock();
+            if ($block) {
+                $products = $block->getAllowProducts();
+            }
         }
 
-        switch ($viewerContents) {
+        return $products;
+    }
+
+    /**
+     * Get configurable block
+     *
+     * @return \Magento\ConfigurableProduct\Block\Product\View\Type\Configurable
+     */
+    protected function getConfigurableBlock()
+    {
+        static $configurableBlock = null;
+
+        if ($configurableBlock === null) {
+            /** @var \Magento\Framework\View\Layout $layout */
+            $layout = $this->galleryBlock->getLayout();
+
+            /** @var \Magento\Swatches\Block\Product\Renderer\Configurable $block */
+            $block = $layout->getBlock('product.info.options.swatches');
+            if (!$block) {
+                /** @var \Magento\Catalog\Block\Product\View $wrapperBlock */
+                $wrapperBlock = $layout->getBlock('product.info.options.wrapper');
+                if ($wrapperBlock) {
+                    $block = $wrapperBlock->getChildBlock('swatch_options');
+                }
+
+                if (!$block) {
+                    /** @var \Magento\ConfigurableProduct\Block\Product\View\Type\Configurable $block */
+                    $block = $layout->getBlock('product.info.options.configurable');
+                    if (!$block) {
+                        if ($wrapperBlock) {
+                            $block = $wrapperBlock->getChildBlock('options_configurable');
+                        }
+                    }
+                }
+            }
+
+            $configurableBlock = $block ?: false;
+        }
+
+        return $configurableBlock;
+    }
+
+    /**
+     * Get product assets data
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @return array
+     */
+    protected function getProductAssetsData($product)
+    {
+        $productId = $product->getId();
+
+        if (isset(self::$assetsData[$productId])) {
+            return self::$assetsData[$productId];
+        }
+
+        $slides = [];
+        $activeSlideIndex = 0;
+
+        if ($this->slideSources != self::SIRV_ASSETS) {
+            $data = $this->getMagentoAssetsData($product);
+            $slides = $data['slides'];
+            $activeSlideIndex = $data['active-slide'];
+        }
+
+        if ($this->slideSources != self::MAGENTO_ASSETS) {
+            $data = $this->getSirvAssetsData($product);
+        }
+
+        switch ($this->slideSources) {
             case self::MAGENTO_AND_SIRV_ASSETS:
-                if (empty($this->viewerSlides)) {
-                    $this->viewerSlides = $data['slides'];
-                    $this->activeSlideIndex = $data['active-slide'];
+                if (empty($slides)) {
+                    $slides = $data['slides'];
                 } else {
-                    $this->viewerSlides = array_merge($this->viewerSlides, $data['slides']);
+                    $slides = array_merge($slides, $data['slides']);
                 }
                 break;
             case self::SIRV_AND_MAGENTO_ASSETS:
                 if (!empty($data['slides'])) {
-                    $this->viewerSlides = array_merge($data['slides'], $this->viewerSlides);
-                    $this->activeSlideIndex = $data['active-slide'];
+                    $slides = array_merge($data['slides'], $slides);
+                    //$activeSlideIndex += count($data['slides']);
+                    $activeSlideIndex = 0;
                 }
                 break;
             case self::SIRV_ASSETS:
-                $this->viewerSlides = $data['slides'];
-                $this->activeSlideIndex = $data['active-slide'];
+                $slides = $data['slides'];
                 break;
         }
 
-        if (empty($this->viewerSlides)) {
-            $this->activeSlideIndex = 0;
-            $product = $this->galleryBlock->getProduct();
-            $slideId = 'item-' . $product->getId() . '-0';
+        if (empty($slides) && $this->productId == $productId) {
+            $slideId = 'item-' . $productId . '-0';
             $url = $this->imageHelper->getDefaultPlaceholderUrl('image');
-            $this->viewerSlides[$slideId] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" />';
+            $slides[$slideId] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" />';
         }
+
+        self::$assetsData[$productId] = [
+            'active-slide' => $activeSlideIndex,
+            'slides' => $slides
+        ];
+
+        return self::$assetsData[$productId];
     }
 
     /**
      * Get Magento assets data
      *
+     * @param \Magento\Catalog\Model\Product $product
      * @return array
      */
-    protected function getMagentoAssetsData()
+    protected function getMagentoAssetsData($product)
     {
         $slides = [];
         $activeSlideIndex = 0;
-        $galleryImages = $this->galleryBlock->getGalleryImages();
-        $product = $this->galleryBlock->getProduct();
-        $productId = $product->getId();
-        $baseImage = $product->getImage();
-        $idPrefix = 'item-' . $productId . '-';
-        $index = 0;
 
-        foreach ($galleryImages as $image) {
-            if ($baseImage == $image->getData('file')) {
-                $activeSlideIndex = $index;
-            }
+        $images = $product->getMediaGalleryImages();
+        if ($images instanceof \Magento\Framework\Data\Collection) {
+            $productId = $product->getId();
+            $baseImage = $product->getImage();
+            $productName = $product->getName();
+            $idPrefix = 'item-' . $productId . '-';
+            $index = 0;
+            $disabled = ($this->productId == $productId ? 'false' : 'true');
 
-            $slideId = $idPrefix . $index;
-            switch ($image->getData('media_type')) {
-                case 'external-video':
-                    $url = $image->getData('video_url');
-                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '"></div>';
-                    $index++;
-                    break;
-                case 'image':
-                    $absPath = $image->getData('path');
-                    $relPath = $this->syncHelper->getRelativePath($absPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
-                    $url = $image->getData('large_image_url');
-                    if ($this->syncHelper->isSynced($relPath)) {
-                        $parts = explode('?', $url, 2);
-                        if (isset($parts[1])) {
-                            $parts[1] = str_replace('+', '%20', $parts[1]);
+            //NOTE: to sort by position for associated products
+            $iterator = $images->getIterator();
+            $iterator->uasort(function ($a, $b) {
+                $aPos = (int)$a->getPosition();
+                $bPos = (int)$b->getPosition();
+                if ($aPos > $bPos) {
+                    return 1;
+                } elseif ($aPos < $bPos) {
+                    return -1;
+                }
+                return 0;
+            });
+            $iterator->rewind();
+
+            $imageUrlBuilder = $this->getImageUrlBuilder();
+
+            while ($iterator->valid()) {
+                $image = $iterator->current();
+
+                if ($baseImage == $image->getData('file')) {
+                    $activeSlideIndex = $index;
+                }
+
+                $slideId = $idPrefix . $index;
+                switch ($image->getData('media_type')) {
+                    case 'external-video':
+                        $url = $image->getData('video_url');
+                        $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-disabled="' . $disabled . '"></div>';
+                        $index++;
+                        break;
+                    case 'image':
+                        $absPath = $image->getData('path');
+                        $relPath = $this->syncHelper->getRelativePath($absPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
+                        $url = $image->getData('large_image_url');
+                        if (empty($url)) {
+                            if ($imageUrlBuilder) {
+                                $url = $imageUrlBuilder->getUrl($image->getData('file'), 'product_page_image_large');
+                            } else {
+                                $url = $this->imageHelper->init($product, 'product_page_image_large')
+                                    ->setImageFile($image->getData('file'))
+                                    ->getUrl();
+                            }
                         }
-                        $url = implode('?', $parts);
-                        $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-type="zoom"></div>';
-                    } else {
-                        $slides[$slideId] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" />';
-                    }
-                    $index++;
-                    break;
+
+                        $alt = $image->getData('label') ?: $productName;
+                        $alt = $this->galleryBlock->escapeHtmlAttr($alt, false);
+
+                        if ($this->syncHelper->isSynced($relPath)) {
+                            $parts = explode('?', $url, 2);
+                            if (isset($parts[1])) {
+                                $parts[1] = str_replace('+', '%20', $parts[1]);
+                            }
+                            $url = implode('?', $parts);
+                            $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-type="zoom" data-disabled="' . $disabled . '" data-alt="' . $alt . '"></div>';
+                        } else {
+                            $slides[$slideId] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" data-disabled="' . $disabled . '" data-alt="' . $alt . '" />';
+                        }
+                        $index++;
+                        break;
+                }
+                $iterator->next();
             }
         }
 
@@ -328,28 +491,27 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getSirvAssetsData($product)
     {
-        $productId = $product->getId();
-
-        if (isset(self::$assetsData[$productId])) {
-            return self::$assetsData[$productId];
-        }
-
         $assetsFolder = $this->dataHelper->getConfig('product_assets_folder') ?: '';
+        $assetsFolder = trim($assetsFolder);
+        $assetsFolder = trim($assetsFolder, '/');
         if (empty($assetsFolder)) {
             return [
                 'active-slide' => 0,
-                'slides' => [],
+                'slides' => []
             ];
         }
 
+        $productId = $product->getId();
         $productSku = $product->getSku();
+
         if (strpos($assetsFolder, '{product-id}') !== false) {
             $assetsFolder = str_replace('{product-id}', $productId, $assetsFolder);
-        } else if (strpos($assetsFolder, '{product-sku}') !== false) {
+        } elseif (strpos($assetsFolder, '{product-sku}') !== false) {
             $assetsFolder = str_replace('{product-sku}', $productSku, $assetsFolder);
         } else {
             $assetsFolder = $assetsFolder . '/' . $productSku;
         }
+
         $folderUrl = $this->syncHelper->getBaseUrl() . '/' . $assetsFolder;
 
         $assetsModel = $this->assetsModelFactory->create();
@@ -367,31 +529,30 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $assets = is_object($contents) && isset($contents->assets) && is_array($contents->assets) ? $contents->assets : [];
 
         $slides = [];
-        $activeSlideIndex = 0;
         $idPrefix = 'sirv-item-' . $productId . '-';
         $index = 0;
+        $disabled = ($this->productId == $productId ? 'false' : 'true');
         foreach ($assets as $asset) {
             $slideId = $idPrefix . $index;
             switch ($asset->type) {
                 case 'image':
                     $url = $folderUrl . '/' . $asset->name;
-                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-type="zoom"></div>';
+                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-type="zoom" data-disabled="' . $disabled . '"></div>';
                     $index++;
                     break;
                 case 'spin':
+                case 'video':
                     $url = $folderUrl . '/' . $asset->name;
-                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '"></div>';
+                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-disabled="' . $disabled . '"></div>';
                     $index++;
                     break;
             }
         }
 
-        self::$assetsData[$productId] = [
-            'active-slide' => $activeSlideIndex,
-            'slides' => $slides,
+        return [
+            'active-slide' => 0,
+            'slides' => $slides
         ];
-
-        return self::$assetsData[$productId];
     }
 
     /**
@@ -437,13 +598,23 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Get Sirv base URL
+     * Get image URL builder
      *
-     * @return integer
+     * @return \Magento\Catalog\Model\Product\Image\UrlBuilder|null
      */
-    public function getBaseUrl()
+    public function getImageUrlBuilder()
     {
-        return $this->syncHelper->getBaseUrl();
+        static $imageUrlBuilder = null;
+
+        if ($imageUrlBuilder === null) {
+            if (class_exists('\Magento\Catalog\Model\Product\Image\UrlBuilder', false)) {
+                $imageUrlBuilder = \Magento\Framework\App\ObjectManager::getInstance()->get(
+                    \Magento\Catalog\Model\Product\Image\UrlBuilder::class
+                );
+            }
+        }
+
+        return $imageUrlBuilder;
     }
 
     /**
@@ -457,7 +628,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             curl_close(self::$curlHandle);
             self::$curlHandle = null;
         }
-        if (method_exists(get_parent_class($this) , '__destruct')) {
+        if (method_exists(get_parent_class($this), '__destruct')) {
             parent::__destruct();
         }
     }

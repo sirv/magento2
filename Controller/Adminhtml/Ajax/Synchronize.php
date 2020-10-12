@@ -15,7 +15,7 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data
+     * @var \MagicToolbox\Sirv\Helper\Data\Backend
      */
     protected $dataHelper = null;
 
@@ -31,14 +31,14 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      *
      * @param \Magento\Backend\App\Action\Context $context
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
+     * @param \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
      * @param \MagicToolbox\Sirv\Helper\Sync $syncHelper
      * @return void
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \MagicToolbox\Sirv\Helper\Data $dataHelper,
+        \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper,
         \MagicToolbox\Sirv\Helper\Sync $syncHelper
     ) {
         parent::__construct($context, $resultPageFactory);
@@ -68,7 +68,7 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 if ($stage) {
                     $data = $this->syncHelper->syncMediaGallery($stage);
                 } else {
-                    $data = $this->syncHelper->getSyncData();
+                    $data = $this->syncHelper->getSyncData(true);
                 }
                 $result['success'] = true;
                 break;
@@ -85,8 +85,15 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 $pathes = $this->syncHelper->getFailedPathes();
                 $productMediaRelPath = $this->syncHelper->getProductMediaRelPath();
                 $mediaDirAbsPath = $this->syncHelper->getMediaDirAbsPath();
+                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+                $storeManager = $objectManager->get(\Magento\Store\Model\StoreManagerInterface::class);
+                $mediaBaseUrl = $storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
+                $mediaBaseUrl = rtrim($mediaBaseUrl, '\\/');
                 foreach ($pathes as $i => $path) {
-                    $pathes[$i] = $mediaDirAbsPath . $productMediaRelPath . $path;
+                    $pathes[$i] = [
+                        'path' => $mediaDirAbsPath . $productMediaRelPath . '/' . ltrim($path, '\\/'),
+                        'url' => $mediaBaseUrl . $productMediaRelPath . '/' . ltrim($path, '\\/'),
+                    ];
                 }
                 $data = ['pathes' => $pathes];
                 $result['success'] = true;

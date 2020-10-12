@@ -37,153 +37,28 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
             $dataHelper->getConfig('client_secret')
         );
 
-        $buttonsConfig = [
-            'sirv-flush-asset' => [
-                'label' => __('Flush assets info cache'),
-                'title' => __('Flush assets info cache'),
-                'class_name' => \Magento\Backend\Block\Widget\Button\SplitButton::class,
-                'button_class' => 'sirv-button sirv-flush-asset-cache-button',
-                'class' => 'secondary',
-                'options' => [
-                    'empty' => [
-                        'label' => __('For products without assets'),
-                        'title' => __('Clear data without assets from the Sirv extension database cache'),
-                        'onclick' => 'setLocation(\'' . $this->getUrl('*/*/flush', ['flush-action' => 'empty']) . '\')',
-                        'default' => true
-                    ],
-                    'all' => [
-                        'label' => __('For all products'),
-                        'title' => __('Clear all asset\'s data from the Sirv extension database cache'),
-                        'onclick' => 'setLocation(\'' . $this->getUrl('*/*/flush', ['flush-action' => 'all']) . '\')',
-                        'default' => false
-                    ],
-                ]
-            ],
-            'sirv-flush-url' => [
-                'label' => __('Flush image cache'),
-                'title' => __('Flush image cache'),
-                'class_name' => \Magento\Backend\Block\Widget\Button\SplitButton::class,
-                'button_class' => 'sirv-button sirv-flush-url-cache-button',
-                'class' => 'secondary',
-                'options' => [
-                    'failed' => [
-                        'label' => __('Failed'),
-                        'title' => __('Clear failed images from the Sirv extension database cache'),
-                        'onclick' => 'return false',
-                        'data_attribute' => [
-                            'mage-init' => [
-                                'button' => [
-                                    'event' => 'sirv-sync',
-                                    'target' => '[data-role=sirv-synchronizer]',
-                                    'eventData' => [
-                                        'action' => 'flush-failed'
-                                    ]
-                                ]
-                            ]
-                        ],
-                        'default' => true
-                    ],
-                    'all' => [
-                        'label' => __('All'),
-                        'title' => __('Clear all images from the Sirv extension database cache'),
-                        'onclick' => 'return false',
-                        'data_attribute' => [
-                            'mage-init' => [
-                                'button' => [
-                                    'event' => 'sirv-sync',
-                                    'target' => '[data-role=sirv-synchronizer]',
-                                    'eventData' => [
-                                        'action' => 'flush-all'
-                                    ]
-                                ]
-                            ]
-                        ],
-                        'default' => false
-                    ],
-                    /*
-                    'master' => [
-                        'label' => __('Master'),
-                        'title' => __('Delete images from Sirv and clear database cache (not recommended)'),
-                        'onclick' => 'return false',
-                        'data_attribute' => [
-                            'mage-init' => [
-                                'button' => [
-                                    'event' => 'sirv-sync',
-                                    'target' => '[data-role=sirv-synchronizer]',
-                                    'eventData' => [
-                                        'action' => 'flush-master'
-                                    ]
-                                ]
-                            ]
-                        ],
-                        'default' => false
-                    ]
-                    */
-                ]
-            ],
-            'sirv-sync' => [
-                'label' => __('Sync Media Gallery'),
-                'class' => 'sirv-button sirv-sync-media-button action-secondary',
-                'onclick' => 'return false',
-                'data_attribute' => [
-                    'mage-init' => [
-                        'button' => [
-                            'event' => 'sirv-sync',
-                            'target' => '[data-role=sirv-synchronizer]',
-                            'eventData' => [
-                                'action' => 'start-sync'
-                            ]
-                        ]
-                    ]
-                ]
-            ],
-            'sirv-save' => [
-                'label' => __('Save Settings'),
-                'class' => 'sirv-button sirv-save-config-button primary',
-                'data_attribute' => [
-                    'mage-init' => [
-                        'button' => [
-                            'event' => 'save',
-                            'target' => '#edit_form'
-                        ]
+        $config = [
+            'id' => 'sirv-save-config-button',
+            'label' => __('Save Settings'),
+            'class' => 'sirv-button primary',
+            'data_attribute' => [
+                'mage-init' => [
+                    'sirvButton' => [
+                        'event' => 'save',
+                        'target' => '#edit_form',
+                        'showLoader' => true,
                     ]
                 ]
             ]
         ];
 
         if ($disabled) {
-            $buttonsConfig['sirv-flush-asset']['disabled'] = 'disabled';
-            $buttonsConfig['sirv-flush-asset']['button_class'] .= ' disabled';
-            $buttonsConfig['sirv-flush-url']['disabled'] = 'disabled';
-            $buttonsConfig['sirv-flush-url']['button_class'] .= ' disabled';
-            $buttonsConfig['sirv-sync']['disabled'] = 'disabled';
-            $buttonsConfig['sirv-save']['disabled'] = 'disabled';
+            $config['disabled'] = 'disabled';
         }
 
         $this->addButton(
-            'sirv-flush-asset',
-            $buttonsConfig['sirv-flush-asset'],
-            0,
-            4
-        );
-
-        $this->addButton(
-            'sirv-flush-url',
-            $buttonsConfig['sirv-flush-url'],
-            0,
-            3
-        );
-
-        $this->addButton(
-            'sirv-sync',
-            $buttonsConfig['sirv-sync'],
-            0,
-            2
-        );
-
-        $this->addButton(
             'sirv-save',
-            $buttonsConfig['sirv-save'],
+            $config,
             0,
             1
         );
@@ -192,7 +67,7 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
     /**
      * Get data helper
      *
-     * @return \MagicToolbox\Sirv\Helper\Data
+     * @return \MagicToolbox\Sirv\Helper\Data\Backend
      */
     protected function getDataHelper()
     {
@@ -200,7 +75,7 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
 
         if ($helper == null) {
             $helper = \Magento\Framework\App\ObjectManager::getInstance()
-                ->get(\MagicToolbox\Sirv\Helper\Data::class);
+                ->get(\MagicToolbox\Sirv\Helper\Data\Backend::class);
         }
 
         return $helper;

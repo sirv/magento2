@@ -1,4 +1,14 @@
 <?php
+/**
+ * Head block template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
 
 /**
  * @var $block \MagicToolbox\Sirv\Block\Html\Head
@@ -9,6 +19,9 @@ if (!$block->isVisibile()) {
 }
 
 $sirvUrl = $block->getSirvUrl();
+$baseStaticUrl = $block->getBaseStaticUrl();
+$sirvDomain = parse_url($sirvUrl, PHP_URL_HOST) ?: '';
+$staticDomain = parse_url($baseStaticUrl, PHP_URL_HOST) ?: '';
 ?>
 
 <?php if ($block->useSirvMediaViewer()) : ?>
@@ -18,3 +31,16 @@ $sirvUrl = $block->getSirvUrl();
 <?php endif; ?>
 <link rel="preconnect" href="<?= /* @escapeNotVerified */ $sirvUrl ?>" crossorigin/>
 <link rel="dns-prefetch" href="<?= /* @escapeNotVerified */ $sirvUrl ?>"/>
+<script>
+    require.config({
+        'config': {
+            'text': {
+                'domains': {
+                    'sirv': '<?= $block->escapeUrl($sirvDomain) ?>',
+                    'static': '<?= $block->escapeUrl($staticDomain) ?>'
+                },
+                'fetchMode': '<?= $block->getFetchMode() ?>'
+            }
+        }
+    });
+</script>

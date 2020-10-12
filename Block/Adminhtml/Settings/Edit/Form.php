@@ -22,16 +22,9 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data
+     * @var \MagicToolbox\Sirv\Helper\Data\Backend
      */
     protected $dataHelper = null;
-
-    /**
-     * Sync helper factory
-     *
-     * @var \MagicToolbox\Sirv\Helper\SyncFactory $syncHelperFactory
-     */
-    protected $syncHelperFactory = null;
 
     /**
      * Object manager
@@ -45,7 +38,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
      * @param \Magento\Framework\Registry $registry
      * @param \Magento\Framework\Data\FormFactory $formFactory
      * @param \Magento\Framework\Module\Dir\Reader $modulesReader
-     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
+     * @param \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
      * @param \Magento\Framework\ObjectManagerInterface $objectManager
      * @param array $data
      * @return void
@@ -55,14 +48,12 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         \Magento\Framework\Registry $registry,
         \Magento\Framework\Data\FormFactory $formFactory,
         \Magento\Framework\Module\Dir\Reader $modulesReader,
-        \MagicToolbox\Sirv\Helper\Data $dataHelper,
-        \MagicToolbox\Sirv\Helper\SyncFactory $syncHelperFactory,
+        \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper,
         \Magento\Framework\ObjectManagerInterface $objectManager,
         array $data = []
     ) {
         $this->moduleDirReader = $modulesReader;
         $this->dataHelper = $dataHelper;
-        $this->syncHelperFactory = $syncHelperFactory;
         $this->objectManager = $objectManager;
         parent::__construct($context, $registry, $formFactory, $data);
     }
@@ -112,23 +103,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             ]);
         }
 
-        $version = $this->dataHelper->getModuleVersion('MagicToolbox_Sirv');
-        if ($version) {
-            $afterElementHtml = 'Version: ' . $version;
-
-            $latestVersion = $this->getModuleLatestVersion();
-            if ($latestVersion && version_compare($version, $latestVersion, '<')) {
-                $afterElementHtml .= '&nbsp;&nbsp;&nbsp;&nbsp;Latest version: ' . $latestVersion . ' (<a href="https://sirv.com/integration/magento/" target="_blank" style="margin: 0;">download zip</a>)';
-            }
-
-            $fieldset = $form->addFieldset('sirv_group_fieldset_version', ['legend' => '']);
-            $fieldset->addField('mt-config-version', 'label', [
-                'label' => null,
-                'after_element_html' => $afterElementHtml
-            ]);
-        }
-
-        $requiredVersion = '1.6.0';
+        $requiredVersion = '1.6.6';
         $outdatedModules = $this->getOutdatedModules($requiredVersion);
         if (!empty($outdatedModules)) {
             $fieldset = $form->addFieldset('sirv_group_fieldset_outdated_notice', ['legend' => '']);
@@ -174,10 +149,9 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             $xpaths[] = '/settings/group[@id="user"]';
         }
 
-        $stats = $this->dataHelper->getSirvAccountStats();
-        if (!$stats) {
-            $xpaths[] = '/settings/group[@id="account_info"]/fields/field[name="plan" or name="allowance"]';
-            $xpaths[] = '/settings/group[@id="account_stats"]';
+        $support = $this->getRequest()->getParam('support');
+        if ($support !== 'true') {
+            $xpaths[] = '/settings/group[@id="support"]';
         }
 
         //NOTE: to hide unnecessary options
@@ -208,16 +182,20 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 $required = isset($field->required) && ((string)$field->required == 'true') ? true : false;
 
                 $fieldConfig = [
-                    'label'     => $label,
-                    'title'     => $title,
-                    'name'      => 'magictoolbox[' . $name . ']',
-                    'note'      => (string)$field->notice,
-                    'class'     => 'mt-option',
-                    'required'  => $required,
+                    'label'    => $label,
+                    'title'    => $title,
+                    'name'     => 'magictoolbox[' . $name . ']',
+                    'note'     => (string)$field->notice,
+                    'class'    => 'mt-option',
+                    'required' => $required,
                 ];
 
                 if ($value !== null) {
                     $fieldConfig['value'] = $value;
+                }
+
+                if (isset($field->tooltip)) {
+                    $fieldConfig['tooltip'] = (string)$field->tooltip;
                 }
 
                 if (isset($field->autofocus)) {
@@ -230,6 +208,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
                 if (isset($field->placeholder)) {
                     $fieldConfig['placeholder'] = (string)$field->placeholder;
+                }
+
+                if (isset($field->can_hide_select)) {
+                    $fieldConfig['can_hide_select'] = true;
                 }
 
                 $typeClass = isset($field->type_class) ? (string)$field->type_class : false;
@@ -251,14 +233,12 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     $fieldConfig['in_a_row'] = isset($field->in_a_row) ? true : false;
                 }
 
-                if ($type == 'note') {
-                    $fieldConfig['text'] = isset($field->text) ? (string)$field->text : ($value === null ? '' : $value);
-                }
-
                 switch ($name) {
                     case 'first_and_last_name':
+                        // no break
                     case 'alias':
                         $fieldConfig['disabled'] = !$isNewAccount;
+                        // no break
                     case 'register':
                         $fieldConfig['hidden'] = !$isNewAccount;
                         break;
@@ -272,10 +252,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         }
                         break;
                     case 'network':
-                        //NOTE: to update network value
-                        $network = $this->dataHelper->syncCdnConfig();
-
-                        $fieldConfig['value'] = $network;
+                        $fieldConfig['value'] = $this->dataHelper->syncConfig('network');
                         break;
                     case 'profile':
                         $profiles = $this->dataHelper->getProfiles();
@@ -293,24 +270,65 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             $fieldConfig['values'][] = ['value' => $profile, 'label' => $profile];
                         }
                         break;
-                    case 'synchronizer':
-                        $syncHelper = $this->syncHelperFactory->create();
-                        $fieldConfig['value'] = $syncHelper->getSyncData();
+                    case 'image_quality':
+                        $url = $this->getUrl('adminhtml/system_config/edit', [
+                            'section' => 'system'
+                        ]);
+                        $url .= '#system_upload_configuration-link';
+                        $fieldConfig['tooltip'] = str_replace('{{URL}}', $url, $fieldConfig['tooltip']);
+
+                        $fieldConfig['values'][] = [
+                            'value' => '',
+                            'label' => ' ',
+                            'disabled' => 'true',
+                        ];
+                        $labels = [
+                            100 => '100% - Extreme quality (huge filesize)',
+                            90 => '90% - Very high quality',
+                            80 => '80% - High quality (Sirv recommended default)',
+                            65 => '65% - Medium quality',
+                            40 => '40% - Low quality',
+                            20 => '20% - Very low quality',
+                        ];
+                        for ($i = 100; $i > 0; $i--) {
+                            $fieldConfig['values'][] = [
+                                'value' => $i,
+                                'label' => isset($labels[$i]) ? $labels[$i] : $i . '%'
+                            ];
+                        }
                         break;
-                    case 'plan':
-                        $fieldConfig['text'] = str_replace('{{name}}', $stats['plan']['name'], $fieldConfig['text']);
+                    case 'auto_fetch':
+                        $fieldConfig['value'] = $this->dataHelper->syncConfig('auto_fetch');
                         break;
-                    case 'allowance':
-                        $fieldConfig['text'] = str_replace('{{storage_limit}}', $stats['plan']['storage_limit'], $fieldConfig['text']);
-                        $fieldConfig['text'] = str_replace('{{data_transfer_limit}}', $stats['plan']['data_transfer_limit'], $fieldConfig['text']);
+                    case 'url_prefix':
+                        $urlPrefix = $this->dataHelper->syncConfig('url_prefix');
+                        $domains = $this->dataHelper->getDomains();
+                        if (!empty($urlPrefix) && !in_array($urlPrefix, $domains)) {
+                            $fieldConfig['values'][] = ['value' => $urlPrefix, 'label' => $urlPrefix];
+                        }
+                        foreach ($domains as $domain) {
+                            $fieldConfig['values'][] = ['value' => $domain, 'label' => $domain];
+                        }
+                        $fieldConfig['value'] = empty($urlPrefix) ? reset($domains) : $urlPrefix;
                         break;
-                    case 'user':
-                        $fieldConfig['text'] = str_replace('{{user}}', $email, $fieldConfig['text']);
-                        $url = $this->getUrl('*/*/disconnect');
-                        $fieldConfig['text'] = str_replace('{{url}}', $url, $fieldConfig['text']);
+                    case 'image_folder':
+                    case 'product_assets_folder':
+                        $valuePrefix = isset($config['bucket']) ? $config['bucket'] : $config['account'];
+                        $valuePrefix = 'https://' . $valuePrefix . '.sirv.com/';
+                        if ($config['network'] == 'cdn' && isset($config['cdn_url']) && is_string($config['cdn_url'])) {
+                            $valuePrefix = trim($config['cdn_url']);
+                            if (!empty($valuePrefix)) {
+                                $valuePrefix = 'https://' . rtrim($valuePrefix, '/') . '/';
+                            }
+                        }
+                        /* $fieldConfig['before_element_html'] = $valuePrefix; */
+                        $fieldConfig['value_prefix'] = $valuePrefix;
                         break;
-                    case 'stats':
-                        $fieldConfig['value'] = $stats;
+                    case 'smv_js_options':
+                        $fieldConfig['rows'] = 7;
+                        break;
+                    case 'smv_max_height':
+                        $fieldConfig['after_element_html'] = ' px';
                         break;
                 }
 
@@ -323,44 +341,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         $this->setForm($form);
 
         return parent::_prepareForm();
-    }
-
-    /**
-     * Get the latest version of the module
-     *
-     * @return string|bool
-     */
-    protected function getModuleLatestVersion()
-    {
-        $version = false;
-        $hostname = 'www.magictoolbox.com';
-        $errno = 0;
-        $errstr = '';
-        $path = 'api/platform/sirvmagento2/version/?t=' . time();
-        $level = error_reporting(0);
-        $handle = fsockopen('ssl://' . $hostname, 443, $errno, $errstr, 30);
-        error_reporting($level);
-        if ($handle) {
-            $response = '';
-            $headers  = "GET /{$path} HTTP/1.1\r\n";
-            $headers .= "Host: {$hostname}\r\n";
-            $headers .= "Connection: Close\r\n\r\n";
-            fwrite($handle, $headers);
-            while (!feof($handle)) {
-                $response .= fgets($handle);
-            }
-            fclose($handle);
-            $response = substr($response, strpos($response, "\r\n\r\n") + 4);
-            $responseObj = json_decode($response);
-            if (is_object($responseObj) && isset($responseObj->version)) {
-                $match = [];
-                if (preg_match('#v([0-9]++(?:\.[0-9]++)*+)#is', $responseObj->version, $match)) {
-                    $version = $match[1];
-                }
-            }
-        }
-
-        return $version;
     }
 
     /**

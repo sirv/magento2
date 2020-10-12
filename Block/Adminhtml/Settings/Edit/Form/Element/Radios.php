@@ -23,6 +23,26 @@ class Radios extends \Magento\Framework\Data\Form\Element\Radios
         $class = $this->getData('in_a_row') ? 'admin__field-option-inline' : 'admin__field-option-not-inline';
         $html = preg_replace('#\badmin__field-option\b#', '$0 ' . $class, $html);
 
+        if ($tooltip = $this->getTooltip()) {
+            $html .= '<div class="tooltip" data-mage-init=\'{"sirvTooltip":{}}\'><span class="help"><span></span></span>';
+            $html .= '<div class="tooltip-content">' . $tooltip . '</div></div>';
+        }
+
         return $html;
+    }
+
+    /**
+     * Get disabled attribute value
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    public function getDisabled($value)
+    {
+        if ($this->getData('disabled')) {
+            return 'disabled';
+        }
+
+        return false;
     }
 }

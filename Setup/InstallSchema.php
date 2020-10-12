@@ -67,13 +67,13 @@ class InstallSchema implements InstallSchemaInterface
             'name',
             Table::TYPE_TEXT,
             64,
-            ['nullable'  => false],
+            ['nullable' => false],
             'Name'
         )->addColumn(
             'value',
             Table::TYPE_TEXT,
             null,
-            ['nullable'  => false],
+            ['nullable' => false],
             'Value'
         )->addIndex(
             $setup->getIdxName(
@@ -107,25 +107,25 @@ class InstallSchema implements InstallSchemaInterface
             'path',
             Table::TYPE_TEXT,
             255,
-            ['nullable'  => false, 'default' => ''],
+            ['nullable' => false, 'default' => ''],
             'Relative file path'
         )->addColumn(
             'path_type',
             Table::TYPE_SMALLINT,
             null,
-            ['unsigned' => true, 'nullable'  => false, 'default' => 0],
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
             'Path type'
         )->addColumn(
             'status',
             Table::TYPE_SMALLINT,
             null,
-            ['unsigned' => true, 'nullable'  => false, 'default' => 0],
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
             'Sync status'
         )->addColumn(
             'modification_time',
             Table::TYPE_INTEGER,
             null,
-            ['unsigned' => true, 'nullable'  => false, 'default' => 0],
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
             'Modification time'
         )->addIndex(
             $setup->getIdxName(
@@ -162,7 +162,7 @@ class InstallSchema implements InstallSchemaInterface
             'contents',
             Table::TYPE_TEXT,
             null,
-            ['nullable'  => false],
+            ['nullable' => false],
             'Contents'
         )->addIndex(
             $setup->getIdxName(

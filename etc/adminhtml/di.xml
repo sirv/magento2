@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Notifications config
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\Notification\MessageList">
+        <arguments>
+            <argument name="messages" xsi:type="array">
+                <item name="sirv" xsi:type="string">MagicToolbox\Sirv\Model\System\Message\GallerySynced</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

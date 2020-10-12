@@ -16,6 +16,7 @@
                 <resource id="Magento_Backend::system">
                     <resource id="MagicToolbox_Sirv::sirv_settings" title="Sirv CDN" sortOrder="90">
                         <resource id="MagicToolbox_Sirv::sirv_settings_edit" title="Configuration" sortOrder="10"/>
+                        <resource id="MagicToolbox_Sirv::sirv_documentation" title="Documentation" sortOrder="20"/>
                     </resource>
                 </resource>
             </resource>

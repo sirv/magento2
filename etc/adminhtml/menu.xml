@@ -24,5 +24,13 @@
             parent="MagicToolbox_Sirv::sirv_settings"
             action="sirv/settings/edit"
             resource="MagicToolbox_Sirv::sirv_settings_edit"/>
+        <add id="MagicToolbox_Sirv::sirv_documentation"
+            title="Documentation"
+            module="MagicToolbox_Sirv"
+            sortOrder="20"
+            parent="MagicToolbox_Sirv::sirv_settings"
+            action="sirv/documentation/index"
+            target="_blank"
+            resource="MagicToolbox_Sirv::sirv_documentation"/>
     </menu>
 </config>

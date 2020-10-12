@@ -1,0 +1,31 @@
+<?php
+/**
+ * Upgrade block template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+/**
+ * @var $block \MagicToolbox\Sirv\Block\Adminhtml\Version
+ */
+
+$ajaxUrl = $block->escapeUrl($block->getAjaxUrl());
+?>
+<?php if ($block->hasNewVersion()): ?>
+<div class="sirv-upgrade-banner-wrapper">
+    <div class="sirv-upgrade-banner">
+        New version available!
+        <span class="sirv-latest-version">
+            <a href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#installation" target="_blank">Download <?= $block->getLatestVersion() ?></a>
+        </span>
+        <span class="sirv-whats-new">
+            <a href="#" data-mage-init='{"sirvChangelog":{"changelogUrl":"<?= $ajaxUrl; ?>"}}'>What's new...</a>
+        </span>
+    </div>
+</div>
+<?php endif; ?>

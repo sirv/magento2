@@ -82,7 +82,8 @@
     <!-- NOTE: override template filter for cms block -->
     <preference for="Magento\Widget\Model\Template\Filter" type="MagicToolbox\Sirv\Model\Template\Filter" />
 
-    <!-- NOTE: override some blocks for configurable product (SVM) -->
-    <preference for="Magento\Swatches\Block\Product\Renderer\Configurable" type="MagicToolbox\Sirv\Block\Product\Renderer\Configurable" />
-    <preference for="Magento\ConfigurableProduct\Block\Product\View\Type\Configurable" type="MagicToolbox\Sirv\Block\Product\View\Type\Configurable" />
+    <!-- NOTE: override base URL for Auto-Fetch static files-->
+    <type name="Magento\Store\Model\Store">
+        <plugin name="sirvBaseUrlPlugin" type="MagicToolbox\Sirv\Plugin\Store" sortOrder="1000" />
+    </type>
 </config>

@@ -8,9 +8,18 @@
  */
 
 var config = {
+    paths: {
+        'sirv/template': 'MagicToolbox_Sirv/templates'
+    },
     map: {
         '*': {
-            sirvSynchronizer: 'MagicToolbox_Sirv/js/synchronizer'
+            sirvButton: 'MagicToolbox_Sirv/js/button',
+            sirvMultiSwitchButton: 'MagicToolbox_Sirv/js/multiswitchbutton',
+            sirvEditFolderOption: 'MagicToolbox_Sirv/js/edit-folder-option',
+            sirvTooltip: 'MagicToolbox_Sirv/js/tooltip',
+            sirvChangelog: 'MagicToolbox_Sirv/js/changelog',
+            sirvSynchronizer: 'MagicToolbox_Sirv/js/synchronizer',
+            sirvUsage: 'MagicToolbox_Sirv/js/usage'
         }
     }
 };

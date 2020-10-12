@@ -12,19 +12,6 @@ define([
 ], function ($) {
     'use strict';
 
-    /**
-     * Viewer contents
-     *
-     * 1 Magento images/videos
-     * 2 Magento images/videos + Sirv assets
-     * 3 Sirv assets + Magento images/videos
-     * 4 Sirv assets only
-     */
-    var MAGENTO_ASSETS = 1,
-        MAGENTO_AND_SIRV_ASSETS = 2,
-        SIRV_AND_MAGENTO_ASSETS = 3,
-        SIRV_ASSETS = 4;
-
     var mixin = {
         options: {
             sirvConfig: {
@@ -32,12 +19,11 @@ define([
                 currentProductId: null,
                 smvContainerSelector: 'div.smv-pg-container',
                 slides: [],
-                dataIds: {},
-                additionalAssets: {},
-                viewerContentsSource: MAGENTO_ASSETS,
-                baseUrl: ''
+                activeSlides: []
             }
         },
+
+        lockedMethods: {},
 
         /**
          * Initialize configuration
@@ -45,9 +31,15 @@ define([
          * @private
          */
         _initializeOptions: function () {
-            var spConfig, sirvConfig, smvContainer;
+            if (this._lockedOrLockMethod('_initializeOptions')) {
+                this._super();
+                return;
+            }
+
+            var spConfig, sirvConfig, jsonConfig, smvContainer;
 
             this._super();
+            this._unlockMethod('_initializeOptions');
 
             spConfig = this.options.spConfig;
             sirvConfig = this.options.sirvConfig;
@@ -63,22 +55,11 @@ define([
 
             sirvConfig.enabled = true;
             sirvConfig.currentProductId = spConfig.productId;
-            sirvConfig.dataIds[spConfig.productId] = $.parseJSON(smvContainer.attr('data-initial-slides'));
 
-            if (spConfig && spConfig.sirvConfig) {
-                if (spConfig.sirvConfig.assetsData) {
-                    sirvConfig.additionalAssets = spConfig.sirvConfig.assetsData;
-                }
-                if (spConfig.sirvConfig.viewerContentsSource) {
-                    sirvConfig.viewerContentsSource = spConfig.sirvConfig.viewerContentsSource;
-                    if (typeof(sirvConfig.viewerContentsSource) == 'string') {
-                        sirvConfig.viewerContentsSource = parseInt(sirvConfig.viewerContentsSource, 10);
-                    }
-                }
-                if (spConfig.sirvConfig.baseUrl) {
-                    sirvConfig.baseUrl = spConfig.sirvConfig.baseUrl;
-                }
-            }
+            jsonConfig = $.parseJSON(smvContainer.attr('data-json-config'));
+            sirvConfig.slides = jsonConfig['slides'];
+            sirvConfig.activeSlides = jsonConfig['active-slides'];
+            sirvConfig.currentProductId = jsonConfig['current-id'];
         },
 
         /**
@@ -87,17 +68,22 @@ define([
          * @private
          */
         _changeProductImage: function () {
+            if (this._lockedOrLockMethod('_changeProductImage')) {
+                this._super();
+                return;
+            }
+
             var spConfig = this.options.spConfig,
                 sirvConfig = this.options.sirvConfig,
                 productId = spConfig.productId,
                 doReplace = !(this.options.gallerySwitchStrategy === 'prepend'),
-                galleryData,
                 smvContainer,
                 smViewerNode,
                 smViewer;
 
             if (!sirvConfig.enabled) {
                 this._super();
+                this._unlockMethod('_changeProductImage');
                 return;
             }
 
@@ -105,6 +91,7 @@ define([
             if (!smvContainer.length) {
                 console && console.warn && console.warn('Sirv Media Viewer container not found!');
                 this._super();
+                this._unlockMethod('_changeProductImage');
                 return;
             }
 
@@ -113,224 +100,99 @@ define([
             }
 
             if (sirvConfig.currentProductId == productId) {
+                this._unlockMethod('_changeProductImage');
                 return;
             }
 
-            var i, l, pId, dataIds, items, enabledIds = [];
+            var i, l, pId, dataIds;
 
             smViewerNode = smvContainer.find('.Sirv').get(0);
             smViewer = Sirv.getInstance(smViewerNode);
-            items = this._getSlides(productId);
+            dataIds = sirvConfig.slides[productId];
 
-            if (items.length) {
-                if (typeof(sirvConfig.dataIds[productId]) == 'undefined') {
-                    sirvConfig.dataIds[productId] = [];
-
-                    for (i = items.length - 1; i >= 0; i--) {
-                        smViewer.insertItem(items[i].slide, 0);
-                        sirvConfig.dataIds[productId].unshift(items[i].id);
+            if (dataIds.length) {
+                for (i = 0, l = dataIds.length; i < l; i++) {
+                    smViewer.enableItem(dataIds[i]);
+                }
+                for (pId in sirvConfig.slides) {
+                    if (pId == productId || !doReplace && pId == spConfig.productId) {
+                        continue;
                     }
-                } else {
-                    dataIds = sirvConfig.dataIds[productId];
+                    dataIds = sirvConfig.slides[pId];
                     for (i = 0, l = dataIds.length; i < l; i++) {
-                        smViewer.enableItem(dataIds[i]);
+                        smViewer.disableItem(dataIds[i]);
                     }
                 }
-
-                smViewer.jump(sirvConfig.dataIds[productId][0]);
-
-                enabledIds.push(productId);
-                if (!doReplace) {
-                    enabledIds.push(spConfig.productId);
-                }
+                smViewer.jump(sirvConfig.activeSlides[productId]);
             } else {
                 if (doReplace) {
-                    dataIds = sirvConfig.dataIds[spConfig.productId];
+                    dataIds = sirvConfig.slides[spConfig.productId];
                     for (i = 0, l = dataIds.length; i < l; i++) {
                         smViewer.enableItem(dataIds[i]);
                     }
                 }
-
-                smViewer.jump(sirvConfig.dataIds[spConfig.productId][0]);
-
-                enabledIds.push(spConfig.productId);
-            }
-
-            for (pId in sirvConfig.dataIds) {
-                if (enabledIds.indexOf(pId) != -1) {
-                    continue;
+                for (pId in sirvConfig.slides) {
+                    if (pId == spConfig.productId) {
+                        continue;
+                    }
+                    dataIds = sirvConfig.slides[pId];
+                    for (i = 0, l = dataIds.length; i < l; i++) {
+                        smViewer.disableItem(dataIds[i]);
+                    }
                 }
-                dataIds = sirvConfig.dataIds[pId];
-                for (i = 0, l = dataIds.length; i < l; i++) {
-                    smViewer.disableItem(dataIds[i]);
-                }
+                smViewer.jump(sirvConfig.activeSlides[spConfig.productId]);
             }
 
             sirvConfig.currentProductId = productId;
+
+            this._unlockMethod('_changeProductImage');
         },
 
         /**
-         * Get slides for viewer
+         * Check for method is locked or lock method
          *
-         * @param {Integer} id
-         * @returns Array
+         * @param {String} methodName
+         * @returns {bool}
          * @private
          */
-        _getSlides: function (id) {
-            var sirvConfig = this.options.sirvConfig,
-                assetsData = [];
-
-            if (typeof(sirvConfig.slides[id]) != 'object') {
-                sirvConfig.slides[id] = this._getAssetsData(id);
+        _lockedOrLockMethod: function (methodName) {
+            if (this.lockedMethods[methodName]) {
+                return true;
             }
-
-            return sirvConfig.slides[id];
+            this.lockedMethods[methodName] = true;
+            return false;
         },
 
         /**
-         * Get assets data
+         * Unlock method
          *
-         * @param {Integer} id
-         * @returns Array
+         * @param {String} methodName
          * @private
          */
-        _getAssetsData: function (id) {
-            var sirvConfig = this.options.sirvConfig,
-                assetsData = [],
-                assetsData1 = [],
-                assetsData2 = [];
-
-            if (sirvConfig.viewerContentsSource != SIRV_ASSETS) {
-                assetsData1 = this._getMagentoAssetsData(id);
-            }
-
-            if (sirvConfig.viewerContentsSource != MAGENTO_ASSETS) {
-                assetsData2 = this._getSirvAssetsData(id);
-            }
-
-            switch (sirvConfig.viewerContentsSource) {
-                case MAGENTO_ASSETS:
-                    assetsData = assetsData1;
-                    break;
-                case MAGENTO_AND_SIRV_ASSETS:
-                    assetsData = assetsData1;
-                    assetsData2.forEach(function (item) {
-                        assetsData.push(item);
-                    });
-                    break;
-                case SIRV_AND_MAGENTO_ASSETS:
-                    assetsData = assetsData2;
-                    assetsData1.forEach(function (item) {
-                        assetsData.push(item);
-                    });
-                    break;
-                case SIRV_ASSETS:
-                    assetsData = assetsData2;
-                    break;
-            }
-
-            return assetsData;
-        },
-
-        /**
-         * Get Magento assets data
-         *
-         * @param {Integer} id
-         * @returns Array
-         * @private
-         */
-        _getMagentoAssetsData: function (id) {
-            var spConfig = this.options.spConfig,
-                sirvConfig = this.options.sirvConfig,
-                mageGalleryData = null,
-                assetsData = [];
-
-            if (spConfig.images && spConfig.images[id] && spConfig.images[id].length) {
-                mageGalleryData = spConfig.images[id];
-            }
-
-            if (mageGalleryData) {
-                mageGalleryData = this._sortImages(mageGalleryData);
-
-                $.each(mageGalleryData, function (index, data) {
-                    var dataId = 'item-' + id + '-' + index,
-                        element,
-                        arr;
-
-                    switch (data.type) {
-                        case 'image':
-                            arr = data.full.split('?', 2);
-                            if (arr.length == 2) {
-                                arr[1] = arr[1].replace('+', '%20');
-                            }
-                            if (arr[0].indexOf(sirvConfig.baseUrl) === 0) {
-                                element = document.createElement('div');
-                                element.setAttribute('data-type', 'zoom');
-                            } else {
-                                element = document.createElement('img');
-                                element.setAttribute('data-type', 'static');
-                            }
-                            element.setAttribute('data-id', dataId);
-                            element.setAttribute('data-src', arr.join('?'));
-                            break;
-                        case 'video':
-                            element = document.createElement('div');
-                            element.setAttribute('data-id', dataId);
-                            element.setAttribute('data-src', data.videoUrl);
-                            break;
-                        default:
-                            return;
-                    }
-
-                    assetsData.push({
-                        'id': dataId,
-                        'slide': element
-                    });
-                });
-            }
-
-            return assetsData;
-        },
-
-        /**
-         * Get Sirv assets data
-         *
-         * @param {Integer} id
-         * @returns Array
-         * @private
-         */
-        _getSirvAssetsData: function (id) {
-            var sirvConfig = this.options.sirvConfig,
-                assetsData = [];
-
-            if (sirvConfig.additionalAssets[id]) {
-                $.each(sirvConfig.additionalAssets[id].slides, function (dataId, htmlString) {
-                    var element = document.createElement('div');
-                    element.innerHTML = htmlString.trim();
-                    assetsData.push({
-                        'id': dataId,
-                        'slide': element.firstChild
-                    });
-                });
-            }
-
-            return assetsData;
+        _unlockMethod: function (methodName) {
+            this.lockedMethods[methodName] = false;
         }
     };
 
     return function (widget) {
+        var widgetNameSpace, widgetName;
 
         if (typeof(widget) == 'undefined') {
             widget = $.mage.configurable;
         }
 
+        widgetNameSpace = widget.prototype.namespace || 'mage';
+        widgetName = widget.prototype.widgetName || 'configurable';
+
         /* NOTE: to skip multiple mixins */
+        /*
         if (typeof(widget.prototype.options.sirvConfig) != 'undefined') {
             return widget;
         }
+        */
 
-        $.widget('mage.configurable', widget, mixin);
+        $.widget(widgetNameSpace + '.' + widgetName, widget, mixin);
 
-        return $.mage.configurable;
+        return $[widgetNameSpace][widgetName];
     };
 });

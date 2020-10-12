@@ -19,10 +19,21 @@ $viewerHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\MediaViewer::class
 $viewerHelper->setGalleryBlock($block);
 
 $viewerSlides = $viewerHelper->getViewerSlides();
-$ids = $block->escapeHtmlAttr(json_encode(array_keys($viewerSlides)));
+$jsonConfig = $block->escapeHtmlAttr($viewerHelper->getJsonConfig());
+$jsOptions = $viewerHelper->getViewerJsOptions();
+$maxHeight = $viewerHelper->getMaxHeight();
+$dataOptions = $viewerHelper->getViewerDataOptions();
 ?>
-<div class="smv-pg-container" data-initial-slides="<?= $ids ?>">
-    <div class="Sirv" data-options="<?= $viewerHelper->getViewerOptions() ?>">
+<?= $jsOptions ?>
+<?php if ($maxHeight) : ?>
+<style>
+.smv-pg-container .Sirv > .smv {
+    max-height: <?= $maxHeight ?>px;
+}
+</style>
+<?php endif; ?>
+<div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>">
+    <div class="Sirv" data-options="<?= $dataOptions ?>">
         <?= implode("\n", $viewerSlides) ?>
     </div>
 </div>

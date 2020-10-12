@@ -489,7 +489,7 @@ class Sirv
      * @param array $data
      * @return bool
      */
-    protected function updateAccountInfo($data)
+    public function updateAccountInfo($data)
     {
         if (!$this->getToken()) {
             return false;
@@ -540,136 +540,24 @@ class Sirv
     }
 
     /**
-     * Get stats
+     * Enable JS and HTML serving
      *
-     * @return array|bool
+     * @param bool $allow
+     * @return bool
      */
-    public function getStats()
+    public function enableJsAndHtmlServing($allow = true)
     {
-        static $stats = null;
-
-        if ($stats !== null) {
-            return $stats;
-        }
-
-        if (empty($this->email) || empty($this->account) || !$this->getToken()) {
-            $stats = false;
+        if (!$this->getToken()) {
             return false;
         }
 
-        $stats = [];
-        $stats['account'] = $this->account;
-        $stats['email'] = $this->email;
+        $this->sendRequest(
+            'v2/account/dangerousContentTypes',
+            'POST',
+            ['allow' => $allow]
+        );
 
-        $billingPlanInfo = $this->getBillingPlanInfo();
-
-        if (empty($billingPlanInfo)) {
-            $stats = false;
-            return false;
-        }
-
-        $storageLimit = (int)$billingPlanInfo->storage;
-        $dataTransferLimit = isset($billingPlanInfo->dataTransferLimit) ? (int)$billingPlanInfo->dataTransferLimit : 0;
-        $stats['plan'] = [
-            'name' => $billingPlanInfo->name,
-            'storage_limit' => $this->getFormatedSize($storageLimit),
-            'data_transfer_limit' => $dataTransferLimit ? $this->getFormatedSize($dataTransferLimit) : '&#8734',
-        ];
-
-        $storageInfo = $this->getStorageInfo();
-
-        if (empty($storageInfo)) {
-            $stats = false;
-            return false;
-        }
-
-        $allowance = (int)$storageInfo->plan + (int)$storageInfo->extra;
-        $used = (int)$storageInfo->used;
-        $available = $allowance - $used;
-        $stats['storage'] = [
-            'allowance' => $this->getFormatedSize($allowance),
-            'used' => $this->getFormatedSize($used),
-            'used_percent' => number_format($used / $allowance * 100, 2, '.', ''),
-            'available' => $this->getFormatedSize($available),
-            'available_percent' => number_format($available / $allowance * 100, 2, '.', ''),
-            'files' => (int)$storageInfo->files
-        ];
-
-        $stats['traffic'] = [
-            'allowance' => $this->getFormatedSize($dataTransferLimit),
-            'traffic' => []
-        ];
-
-        $dates = [
-            'This month' => [
-                date('Y-m-01'),
-                date('Y-m-t')
-            ],
-            date('F Y', strtotime('first day of -1 month')) => [
-                date('Y-m-01', strtotime('first day of -1 month')),
-                date('Y-m-t', strtotime('last day of -1 month'))
-            ],
-            date('F Y', strtotime('first day of -2 month')) => [
-                date('Y-m-01', strtotime('first day of -2 month')),
-                date('Y-m-t', strtotime('last day of -2 month'))
-            ],
-            date('F Y', strtotime('first day of -3 month')) => [
-                date('Y-m-01', strtotime('first day of -3 month')),
-                date('Y-m-t', strtotime('last day of -3 month'))
-            ]
-        ];
-
-        $dataTransferLimit = $dataTransferLimit ? $dataTransferLimit : PHP_INT_MAX;
-
-        foreach ($dates as $label => $date) {
-            $traffic = $this->getHttpStats($date[0], $date[1]);
-
-            if ($this->responseCode != 200 || empty($traffic)) {
-                $stats = false;
-                break;
-            }
-
-            $stats['traffic']['traffic'][$label] = [
-                'size' => '0 Bytes',
-                'size_percent_reverse' => '100',
-            ];
-
-            $traffic = get_object_vars($traffic);
-
-            $size = 0;
-            foreach ($traffic as $v) {
-                $size += (isset($v->total->size) ? (int)$v->total->size : 0);
-            }
-
-            $sizePercent = ($size / $dataTransferLimit) * 100;
-
-            $stats['traffic']['traffic'][$label] = [
-                'size' => $this->getFormatedSize($size),
-                'size_percent_reverse' => number_format(100 - $sizePercent, 2, '.', ''),
-            ];
-        }
-
-        return $stats;
-    }
-
-    /**
-     * Get formated size
-     *
-     * @param int $size
-     * @param int $precision
-     * @return string
-     */
-    protected function getFormatedSize($size, $precision = 2)
-    {
-        $sign = ($size >= 0) ? '' : '-';
-        $size = abs($size);
-
-        $units = [' Bytes', ' KB', ' MB', ' GB', ' TB'];
-        for ($i = 0; $size >= 1000 && $i < 4; $i++) {
-            $size /= 1000;
-        }
-
-        return $sign . round($size, $precision) . $units[$i];
+        return $this->responseCode == 200;
     }
 
     /**
