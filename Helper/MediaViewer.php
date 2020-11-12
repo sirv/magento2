@@ -185,7 +185,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $options = $this->dataHelper->getConfig('smv_js_options') ?: '';
         if ($options) {
-            $options = "\n<script>\n{$options}\n</script>\n";
+            $options = "\n<script type=\"text/javascript\">\n{$options}\n</script>\n";
         }
 
         return $options;

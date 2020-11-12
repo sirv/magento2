@@ -588,7 +588,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($this->imagesToFetch as $image) {
             $imagesData[] = [
                 //NOTE: source link
-                'url' => $this->mediaBaseUrl . $image,
+                'url' => $this->mediaBaseUrl . str_replace('%2F', '/', rawurlencode($image)),
                 //NOTE: destination path
                 'filename' => $this->imageFolder . $image,
                 //NOTE: wait flag
@@ -1461,7 +1461,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 if (is_file($absPath)) {
                     $fetchData[] = [
                         //NOTE: source link
-                        'url' => $this->mediaBaseUrl . $relPath,
+                        'url' => $this->mediaBaseUrl . str_replace('%2F', '/', rawurlencode($relPath)),
                         //NOTE: destination path
                         'filename' => $this->imageFolder . $relPath,
                         //NOTE: wait flag
@@ -1568,6 +1568,11 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             case 'failed':
                 //NOTE: clear cached data with failed status from DB table
                 $resource->deleteByStatus(self::IS_FAILED);
+                $result = true;
+                break;
+            case 'queued':
+                $resource->deleteByStatus(self::IS_NEW);
+                $resource->deleteByStatus(self::IS_PROCESSING);
                 $result = true;
                 break;
             case 'all':

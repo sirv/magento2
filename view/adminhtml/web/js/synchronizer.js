@@ -102,7 +102,10 @@ define([
                     '</span>' +
                     '<ul>' +
                     '<% _.each(data.items, function(item, i) { %>' +
-                    '<li><a target="_blank" href="<%- item.url %>"><%- item.path %></a></li>' +
+                    '<li><a target="_blank" href="<%- item.url %>" title="' +
+                    '<% if (item.exists) { %>file exists' +
+                    '<% } else { %>file does not exist<% } %>"' +
+                    '><%- item.path %></a></li>' +
                     '<% }); %>' +
                     '</ul>' +
                     '</div>'
@@ -151,6 +154,9 @@ define([
                     break;
                 case 'flush-failed':
                     this._flushCache('failed');
+                    break;
+                case 'flush-queued':
+                    this._flushCache('queued');
                     break;
                 case 'flush-all':
                     this._flushCache('all');
@@ -466,7 +472,7 @@ define([
         },
 
         /**
-         * Update progress view
+         * Calculate percents
          */
         _calculatePercents: function () {
             var counters = this.counters,
@@ -484,7 +490,7 @@ define([
                 if (restPercent > 0) {
                     if (percents.synced) {
                         percents.synced += restPercent;
-                    } else if ($percents.queued) {
+                    } else if (percents.queued) {
                         percents.queued += restPercent;
                     } else {
                         percents.failed += restPercent;
@@ -784,6 +790,9 @@ define([
                 case 'failed':
                     counters.failed = 0;
                     break;
+                case 'queued':
+                    counters.queued = 0;
+                    break;
                 case 'all':
                 case 'master':
                     counters.synced = 0;
@@ -867,11 +876,11 @@ define([
          * @param {Object} data
          */
         _getFailedSuccessed: function (data) {
-            if (data && data.pathes) {
-                var message = data.pathes.length + ' image' +
-                    (data.pathes.length > 1 ? 's' : '') +
+            if (data && data.failed) {
+                var message = data.failed.length + ' image' +
+                    (data.failed.length > 1 ? 's' : '') +
                     ' could not be synced to Sirv because ' +
-                    (data.pathes.length > 1 ? 'they are' : 'it is') +
+                    (data.failed.length > 1 ? 'they are' : 'it is') +
                     ' missing from your server.';
 
                 this._displayNotification({
@@ -883,7 +892,7 @@ define([
                     id: 'failed_list_items',
                     type: 'list',
                     message: 'List of images:',
-                    items: data.pathes
+                    items: data.failed
                 });
             }
 

@@ -180,6 +180,7 @@
             <field>
                 <name>magento_watermark</name>
                 <label>Use Magento watermark</label>
+                <tooltip><![CDATA[Use the standard Magento <a target="_blank" href="{{URL}}">watermark settings</a> or apply advanced watermarks with a <a target="_blank" href="https://my.sirv.com/#/profiles/">Sirv profile</a>.]]></tooltip>
                 <type>radios</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>

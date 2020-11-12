@@ -242,6 +242,10 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
             return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
         }
 
+        if (!is_file($absPath)) {
+            return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
+        }
+
         $url = static::$syncHelper->getUrl($relPath);
         $url .= $this->getUrlQuery($absPath);
 

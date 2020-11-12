@@ -297,6 +297,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             ];
                         }
                         break;
+                    case 'magento_watermark':
+                        $url = $this->getUrl('theme/design_config', []);
+                        $fieldConfig['tooltip'] = str_replace('{{URL}}', $url, $fieldConfig['tooltip']);
+                    break;
                     case 'auto_fetch':
                         $fieldConfig['value'] = $this->dataHelper->syncConfig('auto_fetch');
                         break;
