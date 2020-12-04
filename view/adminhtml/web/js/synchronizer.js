@@ -317,7 +317,7 @@ define([
          */
         _doSync: function () {
             if (this.isSyncCanceled) {
-                this._syncСompleted();
+                this._syncCompleted();
                 return;
             }
 
@@ -451,7 +451,7 @@ define([
 
                 //NOTE: protector
                 if (data.completed) {
-                    this._syncСompleted();
+                    this._syncCompleted();
                     return;
                 }
 
@@ -468,7 +468,7 @@ define([
                 }
             }
 
-            this._syncСompleted();
+            this._syncCompleted();
         },
 
         /**
@@ -671,7 +671,7 @@ define([
                 $(this.selectors.notificationContainer).html('');
 
                 if (this.isSyncCanceled) {
-                    this._syncСompleted();
+                    this._syncCompleted();
                 } else {
                     this.syncStage = 1;
                     this._doSync();
@@ -711,7 +711,7 @@ define([
         /**
          * Sync completed
          */
-         _syncСompleted: function () {
+         _syncCompleted: function () {
             this._removeStripes();
 
             $(this.selectors.texts.progressLabel).addClass('hidden-element');

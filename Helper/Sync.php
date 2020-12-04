@@ -200,7 +200,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             if (!empty($cdnUrl)) {
                 $this->baseUrl = 'https://' . $cdnUrl;
             } else {
-                $customDomain = $dataHelper->getConfig('сustom_domain');
+                $customDomain = $dataHelper->getConfig('custom_domain');
                 if (is_string($customDomain)) {
                     $customDomain = trim($customDomain);
                     //NOTE: cut protocol
