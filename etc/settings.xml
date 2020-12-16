@@ -120,6 +120,7 @@
                 <value>false</value>
                 <install/>
             </field>
+            <!--
             <field>
                 <name>network</name>
                 <label>Network</label>
@@ -139,6 +140,7 @@
                 <value>cdn</value>
                 <install/>
             </field>
+            -->
             <field>
                 <name>image_folder</name>
                 <label>Folder name on Sirv</label>
@@ -229,6 +231,56 @@
                 <placeholder></placeholder>
                 <can_hide_select/>
             </field>
+            <field>
+                <name>lazy_load</name>
+                <label>Lazy loading</label>
+                <tooltip><![CDATA[Whether to load images on demand.]]></tooltip>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <options>
+                    <option>
+                        <label>On</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>Off</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>true</value>
+            </field>
+            <field>
+                <name>js_components</name>
+                <label>sirv.js components</label>
+                <tooltip><![CDATA[
+                    Reduce JS file size by
+                    <a target="_blank" href="https://sirv.com/help/articles/sirv-media-viewer/#selectively-load-compontents">
+                        selectively loading components
+                    </a>.
+                ]]></tooltip>
+                <type>checkboxes</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Checkboxes</type_class>
+                <options>
+                    <option>
+                        <label>Image</label>
+                        <value>image</value>
+                    </option>
+                    <option>
+                        <label>Spin</label>
+                        <value>spin</value>
+                    </option>
+                    <option>
+                        <label>Zoom</label>
+                        <value>zoom</value>
+                    </option>
+                    <option>
+                        <label>Video</label>
+                        <value>video</value>
+                    </option>
+                </options>
+                <value>image,spin,zoom,video</value>
+                <install/>
+            </field>
         </fields>
     </group>
     <group id="sirv_media_viewer">
@@ -250,7 +302,7 @@
                         <value>smv</value>
                     </option>
                 </options>
-                <value>original</value>
+                <value>smv</value>
                 <install/>
             </field>
             <field>
@@ -260,23 +312,23 @@
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>
                     <option>
-                        <label>Magento images &amp; videos</label>
-                        <value>1</value>
+                        <label>Sirv assets, then Magento images &amp; videos</label>
+                        <value>3</value>
                     </option>
                     <option>
                         <label>Magento images &amp; videos, then Sirv assets</label>
                         <value>2</value>
                     </option>
                     <option>
-                        <label>Sirv assets, then Magento images &amp; videos</label>
-                        <value>3</value>
+                        <label>Magento images &amp; videos</label>
+                        <value>1</value>
                     </option>
                     <option>
                         <label>Sirv assets only</label>
                         <value>4</value>
                     </option>
                 </options>
-                <value>1</value>
+                <value>3</value>
                 <install/>
             </field>
             <field>
@@ -286,7 +338,7 @@
                 <notice><![CDATA[Folder structure on Sirv e.g. products/{product-sku}]]></notice>
                 <type>text</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Folder</type_class>
-                <value></value>
+                <value>products/{product-sku}</value>
                 <install/>
             </field>
             <field>
@@ -302,41 +354,14 @@
                 <label>Max height</label>
                 <type>text</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Text</type_class>
-                <tooltip><![CDATA[Maximum height of thumbnail (in pixels). Empty to disable.]]></tooltip>
+                <tooltip><![CDATA[Maximum height of gallery & thumbnails. Leave empty to make it responsive.]]></tooltip>
                 <value></value>
             </field>
             <field>
-                <name>assets-cache</name>
-                <label>Flush Sirv content cache</label>
+                <name>assets_cache</name>
+                <label>Product gallery cache</label>
                 <type>button</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\MultiSwitchButton\FlushAssets</type_class>
-            </field>
-        </fields>
-    </group>
-    <group id="synchronization">
-        <label>Synchronization</label>
-        <fields>
-            <field>
-                <label>Status</label>
-                <name>synchronizer</name>
-                <type>synchronizer</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Synchronizer</type_class>
-            </field>
-            <field>
-                <name>urls-cache</name>
-                <label>Flush product image cache</label>
-                <type>button</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\MultiSwitchButton\FlushUrls</type_class>
-            </field>
-        </fields>
-    </group>
-    <group id="usage">
-        <label></label>
-        <fields>
-            <field>
-                <name>usage</name>
-                <type>usage</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Usage</type_class>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushAssets</type_class>
             </field>
         </fields>
     </group>
@@ -358,7 +383,72 @@
                         <value>false</value>
                     </option>
                 </options>
+                <tooltip><![CDATA[Yes - more complex SQL queries are used, MySQL server load increases.<br/><br/>No - simpler SQL queries are used, data is joining using PHP.]]></tooltip>
                 <value>false</value>
+            </field>
+            <field>
+                <name>validate</name>
+                <label>Validate cache</label>
+                <type>validator</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Validator</type_class>
+            </field>
+        </fields>
+    </group>
+    <group id="synchronization">
+        <label>Synchronization</label>
+        <fields>
+            <field>
+                <name>delete_cached_images</name>
+                <label>Delete cached images during sync</label>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <tooltip><![CDATA[
+                    Save disk space by deleting the many resized images generated by the Magento product image cache. Sirv does not require them.
+                    <br/><br/>
+                    If required, you can regenerate the Magento image cache with the Magento CLI command: <b>php bin/magento catalog:images:resize</b>
+                ]]></tooltip>
+                <value>false</value>
+            </field>
+            <field>
+                <name>flush_magento_images_cache</name>
+                <label>Flush Magento Catalog Images Cache</label>
+                <type>button</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushMagentoImagesCache</type_class>
+                <value>Flush Cache</value>
+                <title>Flush Cache</title>
+                <tooltip><![CDATA[Delete pregenerated product images files]]></tooltip>
+            </field>
+            <field>
+                <name>synchronizer</name>
+                <label>Sync status</label>
+                <type>synchronizer</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Synchronizer</type_class>
+            </field>
+            <field>
+                <name>urls_cache</name>
+                <label>Synchronized image cache</label>
+                <type>button</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushUrls</type_class>
+            </field>
+        </fields>
+    </group>
+    <group id="usage">
+        <label></label>
+        <fields>
+            <field>
+                <name>usage</name>
+                <type>usage</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Usage</type_class>
             </field>
         </fields>
     </group>

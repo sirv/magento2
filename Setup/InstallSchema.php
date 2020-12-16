@@ -64,6 +64,18 @@ class InstallSchema implements InstallSchemaInterface
             ['identity' => true, 'unsigned' => true, 'nullable' => false, 'primary' => true],
             'ID'
         )->addColumn(
+            'scope',
+            Table::TYPE_TEXT,
+            8,
+            ['nullable' => false, 'default' => 'default'],
+            'Config Scope'
+        )->addColumn(
+            'scope_id',
+            Table::TYPE_INTEGER,
+            null,
+            ['nullable' => false, 'default' => 0],
+            'Config Scope ID'
+        )->addColumn(
             'name',
             Table::TYPE_TEXT,
             64,
@@ -78,10 +90,10 @@ class InstallSchema implements InstallSchemaInterface
         )->addIndex(
             $setup->getIdxName(
                 $tableName,
-                ['name'],
+                ['scope', 'scope_id', 'name'],
                 AdapterInterface::INDEX_TYPE_UNIQUE
             ),
-            ['name'],
+            ['scope', 'scope_id', 'name'],
             ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
         )->setComment(
             'Sirv configuration'

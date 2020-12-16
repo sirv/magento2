@@ -36,7 +36,30 @@ class Select extends \Magento\Framework\Data\Form\Element\Select
         }
 
         if ($hideSelect) {
-            $html .= '<div class="control-value admin__field-value">' . $value . '</div>';
+            $label = $value;
+            if ($values) {
+                foreach ($values as $key => $option) {
+                    if (!is_array($option)) {
+                        if ($key == $value) {
+                            $label = $option;
+                            break;
+                        }
+                    } elseif (is_array($option['value'])) {
+                        foreach ($option['value'] as $groupItem) {
+                            if ($groupItem['value'] == $value) {
+                                $label = $groupItem['label'];
+                                break 2;
+                            }
+                        }
+                    } else {
+                        if ($option['value'] == $value) {
+                            $label = $option['label'];
+                            break;
+                        }
+                    }
+                }
+            }
+            $html .= '<div class="control-value admin__field-value">' . $label . '</div>';
         }
 
         $required = '';

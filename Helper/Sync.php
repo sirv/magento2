@@ -166,6 +166,13 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     protected $logger = null;
 
     /**
+     * Media directory object
+     *
+     * @var \Magento\Framework\Filesystem\Directory\WriteInterface
+     */
+    protected $mediaDirectory;
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\App\Helper\Context $context
@@ -279,6 +286,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         $this->joinWithMySQL = $dataHelper->getConfig('join_with_mysql') === 'true' ? true : false;
+        $this->mediaDirectory = $filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
     }
 
     /**
@@ -1305,9 +1313,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      * Method to synchronize media gallery
      *
      * @param int $stage
+     * @param bool $doClean
      * @return array
      */
-    public function syncMediaGallery($stage)
+    public function syncMediaGallery($stage, $doClean = false)
     {
         if (!$this->isAuth) {
             return ['error' => 'Not authenticated!'];
@@ -1345,9 +1354,9 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         if ($this->isLocalHost) {
-            $result = $this->syncWithUploading($images, $breakTime);
+            $result = $this->syncWithUploading($images, $breakTime, $doClean);
         } else {
-            $result = $this->syncWithFetching($images, $breakTime);
+            $result = $this->syncWithFetching($images, $breakTime, $doClean);
         }
 
         $data = array_merge($data, $result);
@@ -1364,9 +1373,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @param array $images
      * @param int $breakTime
+     * @param bool $doClean
      * @return array
      */
-    protected function syncWithUploading($images, $breakTime)
+    protected function syncWithUploading($images, $breakTime, $doClean = false)
     {
         $synced = 0;
         $failed = 0;
@@ -1416,6 +1426,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 $modificationTime = filemtime($absPath);
                 $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_SYNCED, $modificationTime);
                 $synced++;
+
+                if ($doClean) {
+                    $this->cleanMagentoImagesCache($imagePath);
+                }
             } else {
                 $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_FAILED, 0);
                 $failed++;
@@ -1440,9 +1454,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @param array $images
      * @param int $breakTime
+     * @param bool $doClean
      * @return array
      */
-    protected function syncWithFetching($images, $breakTime)
+    protected function syncWithFetching($images, $breakTime, $doClean = false)
     {
         $synced = 0;
         $failed = 0;
@@ -1523,6 +1538,12 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                         $modificationTime = filemtime($absPath);
                         $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_SYNCED, $modificationTime);
                         $synced++;
+
+                        if ($doClean) {
+                            $this->cleanMagentoImagesCache(
+                                preg_replace('#^' . preg_quote($this->productMediaRelPath, '#') . '#', '', $relPath)
+                            );
+                        }
                     } else {
                         $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_FAILED, 0);
                         $failed++;
@@ -1551,6 +1572,21 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             'ratelimit' => $rateLimit,
             'error' => $error,
         ];
+    }
+
+    /**
+     * Method to clean Magento images cache
+     *
+     * @param string $imagePath
+     * @return bool
+     */
+    protected function cleanMagentoImagesCache($imagePath)
+    {
+        $pattern = $this->productMediaRelPath . '/cache/*' . $imagePath;
+        $foundFiles = $this->mediaDirectory->search($pattern);
+        foreach ($foundFiles as $foundFile) {
+            $this->mediaDirectory->delete($foundFile);
+        }
     }
 
     /**

@@ -1,0 +1,81 @@
+<?php
+/**
+ * Element renderer template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+/* @var $block \Magento\Backend\Block\Widget\Form\Renderer\Fieldset\Element */
+$element = $block->getElement();
+$note = $element->getNote() ? '<div class="note admin__field-note" id="' . $element->getId() . '-note">' . $element->getNote() . '</div>' : '';
+$elementBeforeLabel = $element->getExtType() == 'checkbox admin__control-checkbox' || $element->getExtType() == 'radio admin__control-radio';
+$addOn = ($element->getBeforeElementHtml() || $element->getAfterElementHtml()) && !$element->getNoWrapAsAddon();
+$fieldId = ($element->getHtmlContainerId()) ? ' id="' . $element->getHtmlContainerId() . '"' : '';
+$fieldClass = "admin__field field field-{$element->getId()} {$element->getCssClass()}";
+$fieldClass .= ($elementBeforeLabel) ? ' choice' : '';
+$fieldClass .= ($addOn) ? ' with-addon' : '';
+$fieldClass .= ($element->getRequired()) ? ' required _required' : '';
+$fieldClass .= ($note) ? ' with-note' : '';
+$fieldClass .= (!$element->getLabelHtml()) ? ' no-label' : '';
+
+$fieldAttributes = $fieldId . ' class="' . $fieldClass . '" '
+    . $block->getUiId('form-field', $element->getId())
+    . ($element->getFieldExtraAttributes() ? ' ' . $element->getFieldExtraAttributes() : '');
+?>
+<?php if (!$element->getNoDisplay()) : ?>
+    <?php if ($element->getType() == 'hidden') : ?>
+        <?= $element->getElementHtml() ?>
+    <?php else : ?>
+    <div<?= /* @noEscape */ $fieldAttributes ?>>
+        <?php if ($elementBeforeLabel) : ?>
+            <?= $element->getElementHtml() ?>
+            <?= $element->getLabelHtml('', $element->getScopeLabel()) ?>
+            <?= /* @noEscape */ $note ?>
+        <?php else : ?>
+            <?= $element->getLabelHtml('', $element->getScopeLabel()) ?>
+            <div class="admin__field-control control">
+                <?= /* @noEscape */ ($addOn) ? '<div class="admin__field">' . $element->getElementHtml() . '</div>' : $element->getElementHtml() ?>
+                <?= /* @noEscape */ $note ?>
+            </div>
+            <?php if ($element->getData('parent_scope')) : ?>
+                <div class="admin__field-additional-control">
+                    <div class="center-container-table">
+                        <div class="center-container-table-cell">
+                            <div class="center-container-block">
+                                <?php
+                                    $hasOwnValue = $element->getData('has_own_value');
+                                    $hiddenInputName = str_replace('mt-', 'scope-switcher[', $element->getHtmlId()) . ']';
+                                ?>
+                                <div
+                                    class="scope-switcher"
+                                    data-role="scope-switcher"
+                                    data-name="<?= $element->getName() ?>">
+                                    <input
+                                        type="hidden"
+                                        name="<?= $hiddenInputName ?>"
+                                        value="<?= $hasOwnValue ? 'on' : 'off' ?>" />
+                                    <input
+                                        type="checkbox"
+                                        class="scope-switcher-status"
+                                        id="<?= $element->getId() ?>-switcher"
+                                        <?= $hasOwnValue ? ' checked="checked"' : '' ?> />
+                                    <label class="scope-switcher-label"
+                                        for="<?= $element->getId() ?>-switcher"
+                                        data-text-on="<?= __('Enabled') ?>"
+                                        data-text-off="<?= __('Disabled') ?>"
+                                        title="<?= $hasOwnValue ? __('Enabled') : __('Disabled') ?>"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+<?php endif; ?>

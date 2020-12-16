@@ -19,28 +19,49 @@ class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      */
     public function execute()
     {
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $dataHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Data\Backend::class);
+        /** @var \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper */
+        $dataHelper = $this->getDataHelper();
         $config = $dataHelper->getConfig();
+
         $account = isset($config['account']) ? $config['account'] : '';
         if ($account) {
+            $unauthorized = false;
             /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
             $apiClient = $dataHelper->getSirvClient();
             $accountInfo = $apiClient->getAccountInfo();
             $alias = $accountInfo && $accountInfo->alias ? $accountInfo->alias : false;
-            //NOTE: if the account name has been changed
-            if ($alias && ($alias != $account)) {
+
+            if ($alias) {
+                if ($alias != $account) {
+                    $unauthorized = true;
+                    $message = __(
+                        'The account name "%1" has been changed or removed. Please, select your new account name.',
+                        $account
+                    );
+                }
+            } else {
+                $code = $apiClient->getResponseCode();
+                if ($code == 401 || $code == 403) {
+                    //NOTE: 401 Unauthorized
+                    //      403 Forbidden
+                    $unauthorized = true;
+                    $dataHelper->saveConfig('password', '');
+                    $message = __(
+                        'Unable to connect the account: "%1". The password may have been changed!',
+                        $account
+                    );
+                } else {
+                    $this->messageManager->addWarningMessage(__('Unexpected error occurred. Code: "%1".', $code));
+                }
+            }
+
+            if ($unauthorized) {
                 $dataHelper->saveConfig('account', '');
                 $dataHelper->saveConfig('bucket', '');
                 $dataHelper->saveConfig('token', '');
                 $dataHelper->saveConfig('client_id', '');
                 $dataHelper->saveConfig('client_secret', '');
-                $this->messageManager->addWarningMessage(
-                    __(
-                        'The account name "%1" has been changed or removed. Please, select your new account name.',
-                        $account
-                    )
-                );
+                $this->messageManager->addWarningMessage($message);
 
                 /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
                 $resultRedirect = $this->resultRedirectFactory->create();

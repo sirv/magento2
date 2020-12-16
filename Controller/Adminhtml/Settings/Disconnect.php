@@ -46,20 +46,30 @@ class Disconnect extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
         $resultRedirect = $this->resultRedirectFactory->create();
 
+        $collection = $this->dataHelper->getConfigModel()->getCollection();
+        $collection->addFieldToFilter('scope_id', ['neq' => 0]);
+        foreach ($collection as $item) {
+            $item->delete();
+        }
+
         $names = [
             'enabled' => 'false',
             'network' => 'cdn',
             'image_folder' => 'magento',
             'profile' => 'Default',
             'magento_watermark' => 'false',
-            'product_gallery_view' => 'original',
-            'viewer_contents' => '1',
-            'product_assets_folder' => '',
+            'product_gallery_view' => 'smv',
+            'viewer_contents' => '3',
+            'product_assets_folder' => 'products/{product-sku}',
             'auto_fetch' => 'none',
             'url_prefix' => null,
+            'lazy_load' => 'true',
+            'js_components' => 'image,spin,zoom,video',
             'account_exists' => null,
             'email' => null,
             'password' => null,
+            'alias' => null,
+            'first_and_last_name' => null,
             'token' => null,
             'token_expire_time' => null,
             'account' => null,

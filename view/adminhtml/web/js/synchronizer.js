@@ -34,8 +34,8 @@ define([
             buttons: {
                 save: '#sirv-save-config-button',
                 sync: '#sirv-sync-media-button',
-                flushUrl: '#mt-urls-cache',
-                flushAsset: '#mt-assets-cache'
+                flushUrl: '#mt-urls_cache-button',
+                flushAsset: '#mt-assets_cache-button'
             },
             bars: {
                 holder: '.sirv-sync-content .progress-bar-holder',
@@ -119,6 +119,8 @@ define([
         timerId: null,
         timeIsLeft: 0,
 
+        doDeleteCachedImages: false,
+
         /** @inheritdoc */
         _create: function () {
             this.counters.total = Number(this.options.total);
@@ -168,8 +170,12 @@ define([
                     this._viewFailed();
                     break;
                 case 'flush-empty-assets':
+                case 'flush-notempty-assets':
                 case 'flush-all-assets':
                     this._flushAssetCache('empty', data.actionUrl);
+                    break;
+                case 'flush-magento-images-cache':
+                    setLocation(data.actionUrl);
                     break;
                 default:
                     if (console && console.warn) console.warn($.mage.__('Unknown action!'));
@@ -228,6 +234,8 @@ define([
                 /* NOTE: all images must be in cache, so we can skip stage 1 */
                 this.syncStage = 2;
             }
+
+            this.doDeleteCachedImages = $('[name=mt-config\\[delete_cached_images\\]]:checked').val();
 
             this._doSync();
         },
@@ -325,7 +333,12 @@ define([
                 this._getSimulator().start();
             }
 
-            this._doRequest('synchronize', {'syncStage': this.syncStage}, this._syncSuccessed, this._syncFailed);
+            this._doRequest(
+                'synchronize',
+                {'syncStage': this.syncStage, 'doClean': this.doDeleteCachedImages},
+                this._syncSuccessed,
+                this._syncFailed
+            );
         },
 
         /**
@@ -640,7 +653,7 @@ define([
             this._displayNotification({
                 id: 'rate_limit_exceeded_message',
                 type: 'notice',
-                message: data.message
+                message: this._improveRateLimitMessage(data.message, timeIsLeft)
             });
 
             if (this.timerId !== null) {
@@ -653,6 +666,35 @@ define([
                 $.proxy(this._updateRateLimitTimer, this),
                 1000
             );
+        },
+
+        /**
+         * Improve rate limit message
+         * @param {String} message
+         * @param {Integer} timeIsLeft
+         */
+        _improveRateLimitMessage: function (message, timeIsLeft) {
+            var matches, fph, h, m, s;
+
+            matches = message.match(/\((\d+)\)\.\s+Retry\s+after/);
+            if (matches && timeIsLeft > 0) {
+                fph = matches[1].replace(/(\d)(\d\d\d)$/, '$1,$2');
+
+                s = Math.floor(timeIsLeft / 1000);
+                h = Math.floor(s / 3600);
+                s -= h * 3600;
+                m = Math.floor(s / 60);
+                s -= m * 60;
+
+                h = h == 0 ? '' : (' ' + h + ' hour' + (h == 1 ? '' : 's'));
+                m = m == 0 ? '' : (' ' + m + ' min');
+                s = s == 0 ? '' : (' ' + s + ' sec');
+                s = h == '' && m == '' && s == '' ? ' 0 sec' : s;
+
+                message = 'Rate limit exceeded (' + fph + ' files per hour). Sync will resume in' + h + m + s + '.';
+            }
+
+            return message;
         },
 
         /**

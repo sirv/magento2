@@ -13,6 +13,66 @@ namespace MagicToolbox\Sirv\Helper\Data;
 class Backend extends \MagicToolbox\Sirv\Helper\Data
 {
     /**
+     * Get config scope
+     *
+     * @return string
+     */
+    public function getConfigScope()
+    {
+        return static::$configScope;
+    }
+
+    /**
+     * Get config scope id
+     *
+     * @return integer
+     */
+    public function getConfigScopeId()
+    {
+        return static::$configScopeId;
+    }
+
+    /**
+     * Get config parent scope
+     *
+     * @return string|false
+     */
+    public function getParentConfigScope()
+    {
+        return static::$configScope == self::SCOPE_STORE ? self::SCOPE_WEBSITE : (static::$configScope == self::SCOPE_WEBSITE ? self::SCOPE_DEFAULT : false);
+    }
+
+    /**
+     * Get default profile option names
+     *
+     * @return array
+     */
+    public function getDefaultProfileOptions()
+    {
+        return $this->defaultProfileOptions;
+    }
+
+    /**
+     * Get config
+     *
+     * @param string $name
+     * @param string $scope
+     * @return mixed
+     */
+    public function getConfig($name = null, $scope = null)
+    {
+        if ($scope === null) {
+            $config =& static::$sirvConfig;
+        } elseif (isset(static::$fullConfig[$scope])) {
+            $config =& static::$fullConfig[$scope];
+        } else {
+            $config = [];
+        }
+
+        return $name ? (isset($config[$name]) ? $config[$name] : null) : $config;
+    }
+
+    /**
      * Delete config
      *
      * @param string $name
@@ -20,14 +80,38 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
      */
     public function deleteConfig($name)
     {
-        $model = $this->getConfigModel();
-        $model->load($name, 'name');
+        if (isset($this->defaultProfileOptions[$name])) {
+            $scope = self::SCOPE_DEFAULT;
+            $scopeId = 0;
+        } else {
+            $scope = static::$configScope;
+            $scopeId = static::$configScopeId;
+        }
+
+        $collection = $this->getConfigModel()->getCollection();
+        $collection->addFieldToFilter('scope', $scope);
+        $collection->addFieldToFilter('scope_id', $scopeId);
+        $collection->addFieldToFilter('name', $name);
+
+        $model = $collection->getFirstItem();
         $id = $model->getId();
         if ($id !== null) {
             $model->delete();
         }
-        if (isset($this->sirvConfig[$name])) {
-            unset($this->sirvConfig[$name]);
+
+        if (isset(static::$fullConfig[$scope][$name])) {
+            unset(static::$fullConfig[$scope][$name]);
+            if (isset(static::$sirvConfig[$name])) {
+                unset(static::$sirvConfig[$name]);
+                /*if (isset(static::$fullConfig[self::SCOPE_STORE][$name])) {
+                    static::$sirvConfig[$name] = static::$fullConfig[self::SCOPE_STORE][$name];
+                } else */
+                if (isset(static::$fullConfig[self::SCOPE_WEBSITE][$name])) {
+                    static::$sirvConfig[$name] = static::$fullConfig[self::SCOPE_WEBSITE][$name];
+                } elseif (isset(static::$fullConfig[self::SCOPE_DEFAULT][$name])) {
+                    static::$sirvConfig[$name] = static::$fullConfig[self::SCOPE_DEFAULT][$name];
+                }
+            }
         }
     }
 
@@ -154,6 +238,18 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                             $data['fetching_url'] = rtrim($data['fetching_url'], '/') . '/';
                         }
                     }
+                    $data['minify'] = false;
+                    if (isset($info->minify)) {
+                        $data['minify'] = isset($info->minify->enabled) ? $info->minify->enabled : false;
+                    }
+                } else {
+                    $message = 'Can\'t get Sirv account info. ' .
+                        'Code: ' . $apiClient->getResponseCode() . ' ' .
+                        $apiClient->getErrorMsg();
+                    $this->_logger->error($message);
+                    throw new \Magento\Framework\Exception\LocalizedException(
+                        $message
+                    );
                 }
 
                 $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 60);
@@ -178,6 +274,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
         $config = $this->getAccountConfig();
         $data = [];
 
+        /*
         if ($cdn != $config['cdn_enabled']) {
             $data['aliases'] = [
                 $config['alias'] => [
@@ -185,6 +282,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                 ]
             ];
         }
+        */
 
         if ($fetching != $config['fetching_enabled'] || $url != $config['fetching_url']) {
             $data['fetching'] = [
@@ -199,6 +297,12 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
             }
         }
 
+        if ($fetching && $config['minify']) {
+            $data['minify'] = [
+                'enabled' => false
+            ];
+        }
+
         /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
         $apiClient = null;
 
@@ -211,12 +315,13 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
             if ($apiClient === null) {
                 $apiClient = $this->getSirvClient();
             }
+
             $updated = $apiClient->updateAccountInfo($data);
             if ($updated) {
                 $account = $this->getConfig('account');
                 $cacheId = 'sirv_account_info_' . hash('md5', $account);
                 $cache = $this->getAppCache();
-                $config['cdn_enabled'] = $cdn;
+                //$config['cdn_enabled'] = $cdn;
                 $config['fetching_enabled'] = $fetching;
                 if (!empty($url)) {
                     $config['fetching_url'] = $url;

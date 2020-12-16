@@ -49,7 +49,7 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     /**
      * Synchronize action
      *
-     * @return \Magento\Backend\Model\View\Result\Redirect
+     * @return \Magento\Framework\Controller\Result\Json
      */
     public function execute()
     {
@@ -66,7 +66,8 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             case 'synchronize':
                 $stage = isset($postData['syncStage']) ? (int)$postData['syncStage'] : 0;
                 if ($stage) {
-                    $data = $this->syncHelper->syncMediaGallery($stage);
+                    $doClean = isset($postData['doClean']) ? $postData['doClean'] == 'true' : false;
+                    $data = $this->syncHelper->syncMediaGallery($stage, $doClean);
                 } else {
                     $data = $this->syncHelper->getSyncData(true);
                 }

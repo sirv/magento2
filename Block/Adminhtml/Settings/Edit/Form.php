@@ -72,10 +72,17 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     'id' => 'edit_form',
                     'action' => $this->getData('action'),
                     'method' => 'post',
-                    'class' => 'magictoolbox-config',
+                    'class' => 'mt-config',
                 ]
             ]
         );
+
+        /** @var \Magento\Backend\Block\Widget\Form\Renderer\Element $elementRenderer */
+        //$elementRenderer = \Magento\Framework\Data\Form::getElementRenderer();
+
+        /** @var \Magento\Backend\Block\Widget\Form\Renderer\Fieldset\Element $fieldsetElementRenderer */
+        $fieldsetElementRenderer = \Magento\Framework\Data\Form::getFieldsetElementRenderer();
+        $fieldsetElementRenderer->setTemplate('MagicToolbox_Sirv::widget/form/renderer/fieldset/element.phtml');
 
         $form->setUseContainer(true);//NOTE: to display form tag
 
@@ -94,6 +101,12 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
             return parent::_prepareForm();
         }
+
+        $config = $this->dataHelper->getConfig();
+
+        $currentScope = $this->dataHelper->getConfigScope();
+        $currentScopeId = $this->dataHelper->getConfigScopeId();
+        $parentScope = $this->dataHelper->getParentConfigScope();
 
         if (isset($xml->notice)) {
             $fieldset = $form->addFieldset('sirv_group_fieldset_notice', ['legend' => '']);
@@ -118,8 +131,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 'after_element_html' => $messages
             ]);
         }
-
-        $config = $this->dataHelper->getConfig();
 
         $email = isset($config['email']) ? $config['email'] : '';
         $password = isset($config['password']) ? $config['password'] : '';
@@ -149,6 +160,15 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             $xpaths[] = '/settings/group[@id="user"]';
         }
 
+        if ($currentScope != 'default') {
+            $defaultProfileOptions = $this->dataHelper->getDefaultProfileOptions();
+            $defaultProfileOptions = array_keys($defaultProfileOptions);
+            $fieldNames = 'name="' . implode('" or name="', $defaultProfileOptions) . '"';
+            $xpaths[] = '/settings/group/fields/field[' . $fieldNames . ']';
+            $xpaths[] = '/settings/group[@id="synchronization"]';
+            $xpaths[] = '/settings/group[@id="usage"]';
+        }
+
         $support = $this->getRequest()->getParam('support');
         if ($support !== 'true') {
             $xpaths[] = '/settings/group[@id="support"]';
@@ -164,7 +184,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         }
 
         foreach ($xml->group as $group) {
-            $fieldset = $form->addFieldset('sirv_group_fieldset_' . (string)$group['id'], ['legend' => __((string)$group->label)]);
+            $fieldset = $form->addFieldset(
+                'sirv_group_fieldset_' . (string)$group['id'],
+                ['legend' => __((string)$group->label)]
+            );
 
             if (isset($group->notice)) {
                 $field = $fieldset->addField('mt-' . (string)$group['id'] . '-notice', 'label', [
@@ -181,17 +204,22 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 $value = isset($config[$name]) ? $config[$name] : (isset($field->value) ? (string)$field->value : null);
                 $required = isset($field->required) && ((string)$field->required == 'true') ? true : false;
 
+                $suffix = $type == 'checkboxes' ? '[]' : '';
                 $fieldConfig = [
                     'label'    => $label,
                     'title'    => $title,
-                    'name'     => 'magictoolbox[' . $name . ']',
+                    'name'     => 'mt-config[' . $name . ']' . $suffix,
                     'note'     => (string)$field->notice,
                     'class'    => 'mt-option',
                     'required' => $required,
                 ];
 
                 if ($value !== null) {
-                    $fieldConfig['value'] = $value;
+                    if ($type == 'checkboxes') {
+                        $fieldConfig['checked'] = explode(',', $value);
+                    } else {
+                        $fieldConfig['value'] = $value;
+                    }
                 }
 
                 if (isset($field->tooltip)) {
@@ -219,7 +247,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     $fieldset->addType($type, $typeClass);
                 }
 
-                if ($type == 'select' || $type == 'radios') {
+                if ($type == 'select' || $type == 'radios' || $type == 'checkboxes') {
                     $fieldConfig['values'] = [];
                     foreach ($field->options->option as $option) {
                         $fieldConfig['values'][] = [
@@ -251,9 +279,9 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             $fieldConfig['values'][] = ['value' => $account, 'label' => $account];
                         }
                         break;
-                    case 'network':
-                        $fieldConfig['value'] = $this->dataHelper->syncConfig('network');
-                        break;
+                    // case 'network':
+                    //     $fieldConfig['value'] = $this->dataHelper->syncConfig('network');
+                    //     break;
                     case 'profile':
                         $profiles = $this->dataHelper->getProfiles();
                         if (!in_array($fieldConfig['value'], $profiles)) {
@@ -300,7 +328,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     case 'magento_watermark':
                         $url = $this->getUrl('theme/design_config', []);
                         $fieldConfig['tooltip'] = str_replace('{{URL}}', $url, $fieldConfig['tooltip']);
-                    break;
+                        break;
                     case 'auto_fetch':
                         $fieldConfig['value'] = $this->dataHelper->syncConfig('auto_fetch');
                         break;
@@ -308,25 +336,41 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $urlPrefix = $this->dataHelper->syncConfig('url_prefix');
                         $domains = $this->dataHelper->getDomains();
                         if (!empty($urlPrefix) && !in_array($urlPrefix, $domains)) {
-                            $fieldConfig['values'][] = ['value' => $urlPrefix, 'label' => $urlPrefix];
+                            $fieldConfig['values'][] = [
+                                'value' => $urlPrefix,
+                                'label' => preg_replace('#https?://#i', '', rtrim($urlPrefix, '/'))
+                            ];
                         }
                         foreach ($domains as $domain) {
-                            $fieldConfig['values'][] = ['value' => $domain, 'label' => $domain];
+                            $fieldConfig['values'][] = [
+                                'value' => $domain,
+                                'label' => preg_replace('#https?://#i', '', rtrim($domain, '/'))
+                            ];
                         }
                         $fieldConfig['value'] = empty($urlPrefix) ? reset($domains) : $urlPrefix;
                         break;
                     case 'image_folder':
+                        //NOTE: for auto sync 'network' option
+                        $this->dataHelper->syncConfig('network');
                     case 'product_assets_folder':
                         $valuePrefix = isset($config['bucket']) ? $config['bucket'] : $config['account'];
-                        $valuePrefix = 'https://' . $valuePrefix . '.sirv.com/';
+                        $valuePrefix = '//' . $valuePrefix . '.sirv.com/';
                         if ($config['network'] == 'cdn' && isset($config['cdn_url']) && is_string($config['cdn_url'])) {
                             $valuePrefix = trim($config['cdn_url']);
                             if (!empty($valuePrefix)) {
-                                $valuePrefix = 'https://' . rtrim($valuePrefix, '/') . '/';
+                                $valuePrefix = rtrim($valuePrefix, '/') . '/';
                             }
                         }
                         /* $fieldConfig['before_element_html'] = $valuePrefix; */
                         $fieldConfig['value_prefix'] = $valuePrefix;
+                        break;
+                    case 'viewer_contents':
+                        $data = $this->dataHelper->getAccountUsageData();
+                        if (!isset($data['plan']) ||
+                            !isset($data['plan']['name']) ||
+                            preg_match('#beta|free|demo#i', $data['plan']['name'])) {
+                            $fieldConfig['note'] .= '<span style="color: red;">Sirv assets cannot be used with Free plan!</span>';
+                        }
                         break;
                     case 'smv_js_options':
                         $fieldConfig['rows'] = 7;
@@ -336,6 +380,17 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         break;
                 }
 
+                $fieldConfig['parent_scope'] = $parentScope;
+                if ($fieldConfig['parent_scope']) {
+                    $currentScopeValue = $this->dataHelper->getConfig($name, $currentScope);
+                    if ($currentScopeValue !== null) {
+                        $fieldConfig['has_own_value'] = true;
+                    } else {
+                        $fieldConfig['has_own_value'] = false;
+                        $fieldConfig['disabled'] = true;
+                    }
+                }
+
                 $field = $fieldset->addField('mt-' . $name, $type, $fieldConfig);
             }
         }
@@ -343,6 +398,13 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         unset($xml);
 
         $this->setForm($form);
+
+        $this->setChild(
+            'form_after',
+            $this->getLayout()->createBlock(
+                \Magento\Framework\View\Element\Template::class
+            )->setTemplate('MagicToolbox_Sirv::widget/form/form_after.phtml')
+        );
 
         return parent::_prepareForm();
     }

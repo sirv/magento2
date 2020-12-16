@@ -31,6 +31,14 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
         $this->removeButton('save');
 
         $dataHelper = $this->getDataHelper();
+
+        $scope = $dataHelper->getConfigScope();
+        $scopeId = $dataHelper->getConfigScopeId();
+
+        $this->setFormActionUrl(
+            $this->getUrl('*/*/save', ($scope == 'default' ? [] : [$scope => $scopeId]))
+        );
+
         $disabled = !(
             $dataHelper->getConfig('account') &&
             $dataHelper->getConfig('client_id') &&
@@ -54,6 +62,10 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
 
         if ($disabled) {
             $config['disabled'] = 'disabled';
+            $switcher = $this->getLayout()->getBlock('sirv.system.config.switcher');
+            $switcher->setSwitchWebsites(false);
+            $switcher->setSwitchStoreGroups(false);
+            $switcher->setSwitchStoreViews(false);
         }
 
         $this->addButton(

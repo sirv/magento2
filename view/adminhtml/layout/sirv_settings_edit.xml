@@ -25,6 +25,17 @@
         <referenceContainer name="page.wrapper">
             <block class="MagicToolbox\Sirv\Block\Adminhtml\Upgrade" name="sirv.upgrade.banner" template="MagicToolbox_Sirv::upgrade.phtml" after="header" />
         </referenceContainer>
+        <referenceContainer name="page.main.actions">
+            <block class="Magento\Backend\Block\Store\Switcher" name="sirv.system.config.switcher" template="Magento_Backend::store/switcher.phtml">
+                <arguments>
+                    <argument name="switch_websites" xsi:type="string">1</argument>
+                    <argument name="switch_store_groups" xsi:type="string">0</argument>
+                    <argument name="switch_store_views" xsi:type="string">1</argument>
+                    <argument name="default_selection_name" xsi:type="string" translate="true">Default Config</argument>
+                    <argument name="show_manage_stores_link" xsi:type="string">0</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
         <referenceContainer name="content">
             <block class="MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit" name="sirv.settings.edit" />
         </referenceContainer>

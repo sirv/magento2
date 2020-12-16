@@ -18,7 +18,7 @@ define([
 
         /** @inheritdoc */
         _create: function () {
-            var value = $('[name=magictoolbox\\[product_gallery_view\\]]:checked').val();
+            var value = $('[name=mt-config\\[product_gallery_view\\]]:checked').val();
             if (value != 'smv') {
                 this._switchDisabled(true);
             }
@@ -39,10 +39,20 @@ define([
          * @param {Bool} disabled
          */
         _switchDisabled: function (disabled) {
-            $('[name=magictoolbox\\[viewer_contents\\]]').prop('disabled', disabled);
-            $('[name=magictoolbox\\[product_assets_folder\\]]').prop('disabled', disabled);
-            $('[name=magictoolbox\\[smv_js_options\\]]').prop('disabled', disabled);
-            $('[name=magictoolbox\\[smv_max_height\\]]').prop('disabled', disabled);
+            var options = [
+                'viewer_contents',
+                'product_assets_folder',
+                'smv_js_options',
+                'smv_max_height',
+                'assets-cache'
+            ];
+            var i, l, selector, display;
+            l = options.length;
+            display = disabled ? 'none' : 'block';
+            for (i = 0; i < l; i++) {
+                selector = 'div[data-ui-id$="-' + options[i].replace(/_/g, '-') + '"]';
+                $(selector).css('display', display);
+            }
         }
     });
 

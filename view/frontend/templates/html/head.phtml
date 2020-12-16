@@ -24,10 +24,14 @@ $sirvDomain = parse_url($sirvUrl, PHP_URL_HOST) ?: '';
 $staticDomain = parse_url($baseStaticUrl, PHP_URL_HOST) ?: '';
 ?>
 
-<?php if ($block->useSirvMediaViewer()) : ?>
+<?php if ($block->useSirvMediaViewer() || $block->isLazyLoadEnabled()) : ?>
 <link rel="preconnect" href="https://scripts.sirv.com" crossorigin/>
 <link rel="dns-prefetch" href="https://scripts.sirv.com"/>
-<script src="https://scripts.sirv.com/sirvjs/v3/sirv.js"></script>
+<?php if ($block->useAllComponents()) : ?>
+<script type="text/javascript" src="https://scripts.sirv.com/sirvjs/v3/sirv.full.js"></script>
+<?php else: ?>
+<script type="text/javascript" src="https://scripts.sirv.com/sirvjs/v3/sirv.js" data-components="<?= /* @escapeNotVerified */ $block->getComponents() ?>"></script>
+<?php endif; ?>
 <?php endif; ?>
 <link rel="preconnect" href="<?= /* @escapeNotVerified */ $sirvUrl ?>" crossorigin/>
 <link rel="dns-prefetch" href="<?= /* @escapeNotVerified */ $sirvUrl ?>"/>

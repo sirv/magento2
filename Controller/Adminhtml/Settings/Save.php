@@ -13,30 +13,6 @@ namespace MagicToolbox\Sirv\Controller\Adminhtml\Settings;
 class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 {
     /**
-     * Data helper
-     *
-     * @var \MagicToolbox\Sirv\Helper\Data\Backend
-     */
-    protected $dataHelper = null;
-
-    /**
-     * Constructor
-     *
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
-     * @return void
-     */
-    public function __construct(
-        \Magento\Backend\App\Action\Context $context,
-        \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
-    ) {
-        parent::__construct($context, $resultPageFactory);
-        $this->dataHelper = $dataHelper;
-    }
-
-    /**
      * Save action
      *
      * @return \Magento\Backend\Model\View\Result\Redirect
@@ -48,16 +24,36 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         $resultRedirect = $this->resultRedirectFactory->create();
 
         $data = $this->getRequest()->getPostValue();
-        $config = isset($data['magictoolbox']) && is_array($data['magictoolbox']) ? $data['magictoolbox'] : [];
+        $config = isset($data['mt-config']) && is_array($data['mt-config']) ? $data['mt-config'] : [];
+        $scopeData = isset($data['scope-switcher']) && is_array($data['scope-switcher']) ? $data['scope-switcher'] : [];
 
-        if (empty($config)) {
+        /** @var \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper */
+        $dataHelper = $this->getDataHelper();
+
+        $configScope = $dataHelper->getConfigScope();
+        $configScopeId = $dataHelper->getConfigScopeId();
+
+        if (empty($config) && empty($scopeData)) {
             $this->messageManager->addWarningMessage(__('There is nothing to save!'));
-            $resultRedirect->setPath('sirv/*/edit');
+            $resultRedirect->setPath('sirv/*/edit', ($configScope == 'default' ? [] : [$configScope => $configScopeId]));
             return $resultRedirect;
         }
 
+        if (isset($config['js_components'])) {
+            $config['js_components'] = implode(',', $config['js_components']);
+        }
+
+        foreach ($scopeData as $name => $v) {
+            if ($v == 'on') {
+                $dataHelper->saveConfig($name, $config[$name]);
+            } elseif ($v == 'off') {
+                $dataHelper->deleteConfig($name);
+            }
+            unset($config[$name]);
+        }
+
         foreach ($config as $name => $value) {
-            $this->dataHelper->saveConfig($name, $value);
+            $dataHelper->saveConfig($name, $value);
         }
 
         $addSuccessMessage = true;
@@ -70,6 +66,14 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 
         if ($isNewAccount) {
             $valid = true;
+
+            if (strlen($password) < 8) {
+                $this->messageManager->addWarningMessage(
+                    __('Password is invalid. It must be at least 8 characters.')
+                );
+                $valid = false;
+            }
+
             $words = isset($config['first_and_last_name']) ? $config['first_and_last_name'] : '';
             $words = preg_replace('#\s{2,}#', ' ', trim($words));
             $words = explode(' ', $words);
@@ -81,26 +85,51 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             } else {
                 $lastName = array_pop($words);
                 $firstName = implode(' ', $words);
+                if (!preg_match('#^[a-z ]{2,35}$#i', $firstName)) {
+                    $this->messageManager->addWarningMessage(
+                        __('First name is invalid. It must be 2-35 characters. It can contain letters and spaces.')
+                    );
+                    $valid = false;
+                }
+                if (!preg_match('#^[a-z]{2,35}$#i', $lastName)) {
+                    $this->messageManager->addWarningMessage(
+                        __('Last name is invalid. It must be 2-35 characters. It can contain letters only.')
+                    );
+                    $valid = false;
+                }
             }
 
             $alias = isset($config['alias']) ? trim($config['alias']) : '';
-            if (!preg_match('#^[a-z0-9_]{6,32}$#i', $alias)) {
+            $matches = [];
+            if (!preg_match('#^[a-z0-9-]{6,32}$#', $alias)) {
                 $this->messageManager->addWarningMessage(
-                    __('Wrong account name. Account name must be 6-32 characters. It can contain letters, numbers and hyphens (no spaces).')
+                    __('Account name is invalid. Account name must be 6-32 characters. It can contain lowercase characters, numbers and hyphens (no spaces).')
                 );
+                $valid = false;
+            } elseif (preg_match('#\-(?:cdn|direct)$#i', $alias, $matches)) {
+                $this->messageManager->addWarningMessage(__(
+                    'Account name cannot end with "%1". You could try %2 instead.',
+                    $matches[0],
+                    preg_replace('#\-(cdn|direct)$#i', '$1', $alias)
+                ));
+                $valid = false;
+            } elseif (preg_match('#\-srv\d+$#i', $alias)) {
+                $this->messageManager->addWarningMessage(__(
+                    'This name is reserved. Please choose another.'
+                ));
                 $valid = false;
             }
 
             if ($valid) {
-                /** @var MagicToolbox_Sirv_Model_Api_Sirv $apiClient */
-                $apiClient = $this->dataHelper->getSirvClient();
+                /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
+                $apiClient = $dataHelper->getSirvClient();
                 $registered = $apiClient->registerAccount($email, $password, $firstName, $lastName, $alias);
                 if ($registered) {
                     $account = $alias;
-                    $this->dataHelper->saveConfig('account', $account);
-                    $this->dataHelper->deleteConfig('account_exists');
-                    $this->dataHelper->deleteConfig('alias');
-                    $this->dataHelper->deleteConfig('first_and_last_name');
+                    $dataHelper->saveConfig('account', $account);
+                    $dataHelper->deleteConfig('account_exists');
+                    $dataHelper->deleteConfig('alias');
+                    $dataHelper->deleteConfig('first_and_last_name');
                     $apiClient->init(['account' => $account]);
                 } else {
                     $errorMsg = $apiClient->getErrorMsg();
@@ -116,7 +145,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             }
 
             if (!$valid) {
-                $this->dataHelper->saveConfig('password', '');
+                $dataHelper->saveConfig('password', '');
                 $password = null;
                 $addSuccessMessage = false;
             }
@@ -124,10 +153,10 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 
         //NOTE: check email and password
         if ($email && $password) {
-            $accounts = $this->dataHelper->getSirvUsersList(true);
+            $accounts = $dataHelper->getSirvUsersList(true);
 
             if (empty($accounts)) {
-                $this->dataHelper->saveConfig('password', '');
+                $dataHelper->saveConfig('password', '');
                 $this->messageManager->addWarningMessage(
                     __('Your Sirv access credentials were rejected. Please check and try again.')
                 );
@@ -136,12 +165,15 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         }
 
         if ($account) {
-            $accounts = $this->dataHelper->getSirvUsersList();
+            $accounts = $dataHelper->getSirvUsersList();
 
             if (in_array($account, $accounts)) {
                 $doGetCredentials = true;
+                $dataHelper->deleteConfig('account_exists');
+                $dataHelper->deleteConfig('first_and_last_name');
+                $dataHelper->deleteConfig('alias');
             } else {
-                $this->dataHelper->saveConfig('account', '');
+                $dataHelper->saveConfig('account', '');
                 $this->messageManager->addWarningMessage(
                     __('It seems that your Sirv account "%1" does not exist. Please select an account from the list.', $account)
                 );
@@ -151,16 +183,16 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 
         if ($doGetCredentials) {
             /** @var MagicToolbox_Sirv_Model_Api_Sirv $apiClient */
-            $apiClient = $this->dataHelper->getSirvClient();
+            $apiClient = $dataHelper->getSirvClient();
 
             if ($clientCredentials = $apiClient->getClientCredentials()) {
                 foreach ($clientCredentials as $key => $value) {
-                    $this->dataHelper->saveConfig($key, $value);
+                    $dataHelper->saveConfig($key, $value);
                 }
 
                 if ($s3Credentials = $apiClient->getS3Credentials()) {
                     foreach ($s3Credentials as $key => $value) {
-                        $this->dataHelper->saveConfig($key, $value);
+                        $dataHelper->saveConfig($key, $value);
                     }
                 } else {
                     $this->messageManager->addWarningMessage(__('Unable to receive S3 credentials.'));
@@ -172,32 +204,35 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             }
         }
 
-        $network = isset($config['network']) ? $config['network'] : null;
-        $autoFetch = isset($config['auto_fetch']) ? $config['auto_fetch'] : null;
-        $urlPrefix = isset($config['url_prefix']) ? $config['url_prefix'] : '';
-        if ($network !== null || $autoFetch !== null) {
-            $this->dataHelper->setAccountConfig(
-                $network == 'cdn',
-                $autoFetch == 'all' || $autoFetch == 'custom',
-                $urlPrefix
-            );
-        }
+        if ($configScopeId === 0) {
+            $autoFetch = isset($config['auto_fetch']) ? $config['auto_fetch'] : null;
+            $urlPrefix = isset($config['url_prefix']) ? $config['url_prefix'] : '';
+            $network = isset($config['network']) ? $config['network'] : null;
+            if ($autoFetch !== null || $network !== null) {
+                $dataHelper->setAccountConfig(
+                    $network == 'cdn',
+                    $autoFetch == 'all' || $autoFetch == 'custom',
+                    $urlPrefix
+                );
+            }
 
-        $imageFolder = isset($config['image_folder']) ? $config['image_folder'] : null;
-        if ($imageFolder !== null) {
-            $this->dataHelper->disableSpinScanning($imageFolder);
+            $imageFolder = isset($config['image_folder']) ? $config['image_folder'] : null;
+            if ($imageFolder !== null) {
+                $dataHelper->disableSpinScanning($imageFolder);
+            }
         }
 
         $smvJsOptions = isset($config['smv_js_options']) ? $config['smv_js_options'] : '';
+        $matches = [];
         if (preg_match('#</?script[^>]*+>#', $smvJsOptions, $matches)) {
             $smvJsOptions = preg_replace('#</?script[^>]*+>#', '', $smvJsOptions);
-            $this->dataHelper->saveConfig('smv_js_options', $smvJsOptions);
+            $dataHelper->saveConfig('smv_js_options', $smvJsOptions);
         }
 
         $smvMaxHeight = isset($config['smv_max_height']) ? $config['smv_max_height'] : '';
         $smvMaxHeightValid = preg_replace('#[^0-9]#', '', $smvMaxHeight);
         if ($smvMaxHeight != $smvMaxHeightValid) {
-            $this->dataHelper->saveConfig('smv_max_height', $smvMaxHeightValid);
+            $dataHelper->saveConfig('smv_max_height', $smvMaxHeightValid);
         }
 
         if ($addSuccessMessage) {
@@ -207,7 +242,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             $this->messageManager->addSuccess($message);
         }
 
-        $resultRedirect->setPath('sirv/*/edit');
+        $resultRedirect->setPath('sirv/*/edit', ($configScope == 'default' ? [] : [$configScope => $configScopeId]));
 
         return $resultRedirect;
     }
