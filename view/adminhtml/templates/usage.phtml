@@ -45,7 +45,23 @@ $disconnectUrl = $this->getUrl('*/*/disconnect');
             <?php */ ?>
             <div class="row">
                 <div class="col-sm-3"><label>User</label></div>
-                <div class="col-sm-9"><?= $data['email'] ?>&nbsp;&nbsp;<a href="<?= $disconnectUrl ?>">Disconnect</a></div>
+                <div class="col-sm-9"><?= $data['email'] ?>&nbsp;&nbsp;
+                    <a href="#" onclick="return false"
+                        data-mage-init='{
+                            "sirvButton": {
+                                "showLoader": true,
+                                "event": "sirv-sync",
+                                "target": "[data-role=sirv-synchronizer]",
+                                "eventData": {
+                                    "action": "disconnect-account",
+                                    "actionUrl": "<?= $disconnectUrl ?>"
+                                }
+                            }
+                        }'
+                        title="Disconnect account">
+                        Disconnect
+                    </a>
+                </div>
             </div>
         </div>
         <?php endif; ?>

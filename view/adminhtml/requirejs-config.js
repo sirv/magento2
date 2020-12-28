@@ -16,6 +16,7 @@ var config = {
             sirvButton: 'MagicToolbox_Sirv/js/button',
             sirvAdvancedButton: 'MagicToolbox_Sirv/js/advanced-button',
             sirvEditFolderOption: 'MagicToolbox_Sirv/js/edit-folder-option',
+            sirvAssets: 'MagicToolbox_Sirv/js/assets',
             sirvTooltip: 'MagicToolbox_Sirv/js/tooltip',
             sirvChangelog: 'MagicToolbox_Sirv/js/changelog',
             sirvSynchronizer: 'MagicToolbox_Sirv/js/synchronizer',

@@ -116,22 +116,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             ]);
         }
 
-        $requiredVersion = '1.6.6';
-        $outdatedModules = $this->getOutdatedModules($requiredVersion);
-        if (!empty($outdatedModules)) {
-            $fieldset = $form->addFieldset('sirv_group_fieldset_outdated_notice', ['legend' => '']);
-            $messages = [];
-            foreach ($outdatedModules as $name => $version) {
-                $messages[] = 'Notice: you have installed ' . $name .' module by version ' . $version . '.' .
-                    ' Please, update it at least to version ' . $requiredVersion;
-            }
-            $messages = '<span class="mt-outdated-error-notice">' . implode('</span><br/><span class="mt-outdated-error-notice">', $messages) . '</span>';
-            $fieldset->addField('mt-outdated-notice', 'label', [
-                'label' => null,
-                'after_element_html' => $messages
-            ]);
-        }
-
         $email = isset($config['email']) ? $config['email'] : '';
         $password = isset($config['password']) ? $config['password'] : '';
         $account = isset($config['account']) ? $config['account'] : '';
@@ -378,6 +362,26 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     case 'smv_max_height':
                         $fieldConfig['after_element_html'] = ' px';
                         break;
+                    case 'assets_cache':
+                        $fieldConfig['note'] = str_replace(
+                            '{{URL}}',
+                            $this->getUrl('sirv/ajax/assets', []),
+                            $fieldConfig['note']
+                        );
+                        break;
+                    case 'delete_cached_images':
+                        $data = $this->dataHelper->getMagentoCatalogImagesCacheData();
+                        $fieldConfig['note'] = str_replace(
+                            '{{COUNT}}',
+                            $data['count'] . ' image' . ($data['count'] != 1 ? 's' : ''),
+                            $fieldConfig['note']
+                        );
+                        $fieldConfig['note'] = str_replace(
+                            '{{URL}}',
+                            $this->getUrl('*/*/flushmagentoimagescache', []),
+                            $fieldConfig['note']
+                        );
+                        break;
                 }
 
                 $fieldConfig['parent_scope'] = $parentScope;
@@ -407,71 +411,5 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         );
 
         return parent::_prepareForm();
-    }
-
-    /**
-     * Get enabled module's data (name and version)
-     *
-     * @return array
-     */
-    protected function getModulesData()
-    {
-        static $data = null;
-
-        if ($data !== null) {
-            return $data;
-        }
-
-        $cache = $this->dataHelper->getAppCache();
-        $cacheId = 'magictoolbox_modules_data';
-
-        $data = $cache->load($cacheId);
-        if (false !== $data) {
-            $data = $this->dataHelper->getUnserializer()->unserialize($data);
-            return $data;
-        }
-
-        $data = [];
-
-        $mtModules = [
-            'MagicToolbox_Magic360',
-            'MagicToolbox_MagicZoomPlus',
-            'MagicToolbox_MagicZoom',
-            'MagicToolbox_MagicThumb',
-            'MagicToolbox_MagicScroll',
-            'MagicToolbox_MagicSlideshow',
-        ];
-
-        $enabledModules = $this->objectManager->create(\Magento\Framework\Module\ModuleList::class)->getNames();
-
-        foreach ($mtModules as $name) {
-            if (in_array($name, $enabledModules)) {
-                $data[$name] = $this->dataHelper->getModuleVersion($name);
-            }
-        }
-
-        $serializer = $this->dataHelper->getSerializer();
-        //NOTE: cache lifetime (in seconds)
-        $cache->save($serializer->serialize($data), $cacheId, [], 600);
-
-        return $data;
-    }
-
-    /**
-     * Check for outdated modules
-     *
-     * @param string $requiredVersion
-     * @return array
-     */
-    protected function getOutdatedModules($requiredVersion)
-    {
-        $outdatedModules = [];
-        $modules = $this->getModulesData();
-        foreach ($modules as $name => $version) {
-            if (version_compare($version, $requiredVersion, '<')) {
-                $outdatedModules[$name] = $version;
-            }
-        }
-        return $outdatedModules;
     }
 }

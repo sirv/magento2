@@ -208,6 +208,18 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             $autoFetch = isset($config['auto_fetch']) ? $config['auto_fetch'] : null;
             $urlPrefix = isset($config['url_prefix']) ? $config['url_prefix'] : '';
             $network = isset($config['network']) ? $config['network'] : null;
+
+            //NOTE: to set default values for the first time
+            if ($doGetCredentials && isset($s3Credentials)) {
+                if ($autoFetch == null) {
+                    $autoFetch = 'custom';
+                }
+                if ($urlPrefix == '') {
+                    $domains = $dataHelper->getDomains();
+                    $urlPrefix = reset($domains);
+                }
+            }
+
             if ($autoFetch !== null || $network !== null) {
                 $dataHelper->setAccountConfig(
                     $network == 'cdn',

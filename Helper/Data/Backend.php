@@ -116,6 +116,52 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
     }
 
     /**
+     * Get Magento Catalog Images Cache data
+     *
+     * @return array
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
+    public function getMagentoCatalogImagesCacheData()
+    {
+        static $data = null;
+
+        if ($data === null) {
+            $data = ['count' => 0];
+            /** @var \Magento\Framework\Filesystem $filesystem */
+            $filesystem = $this->objectManager->get(\Magento\Framework\Filesystem::class);
+            /** @var \Magento\Framework\Filesystem\Directory\ReadInterface $mediaDirectory */
+            $mediaDirectory = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+
+            $mediaDirAbsPath = $mediaDirectory->getAbsolutePath();
+            $cacheDirAbsPath = rtrim($mediaDirAbsPath, '\\/') . '/catalog/product/cache';
+
+            $count = 0;
+            if (is_dir($cacheDirAbsPath)) {
+                $flags = \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::UNIX_PATHS;
+                try {
+                    $iterator = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($cacheDirAbsPath, $flags),
+                        \RecursiveIteratorIterator::CHILD_FIRST
+                    );
+                    foreach ($iterator as $item) {
+                        if ($item->isFile()) {
+                            $count++;
+                        }
+                    }
+                    $data['count'] = $count;
+                } catch (\Exception $e) {
+                    throw new \Magento\Framework\Exception\FileSystemException(
+                        new \Magento\Framework\Phrase($e->getMessage()),
+                        $e
+                    );
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
      * Get list of user accounts
      *
      * @param bool $force
@@ -248,7 +294,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                         $apiClient->getErrorMsg();
                     $this->_logger->error($message);
                     throw new \Magento\Framework\Exception\LocalizedException(
-                        $message
+                        new \Magento\Framework\Phrase($message)
                     );
                 }
 

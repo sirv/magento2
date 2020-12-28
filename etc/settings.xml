@@ -99,7 +99,7 @@
         </fields>
     </group>
     <group id="general">
-        <label>General settings</label>
+        <label>CDN settings</label>
         <fields>
             <field>
                 <name>enabled</name>
@@ -151,61 +151,17 @@
                 <install/>
             </field>
             <field>
-                <name>profile</name>
-                <label>Image profile</label>
-                <tooltip><![CDATA[Choose one of your <a target="_blank" href="https://my.sirv.com/#/profiles/">profiles</a> if you wish to apply some settings to all images (e.g. watermarks, text overlays, effects). <a target="_blank" href="https://sirv.com/help/articles/dynamic-imaging/profiles/">Learn more</a>.]]></tooltip>
-                <type>select</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
-                <options>
-                    <option>
-                        <label>Default</label>
-                        <value>Default</value>
-                    </option>
-                </options>
-                <value>Default</value>
-                <install/>
-            </field>
-            <field>
-                <name>image_quality</name>
-                <label>Image quality</label>
-                <tooltip><![CDATA[JPEG image quality. The default JPEG image quality is set on your <a target="_blank" href="{{URL}}">Magento Stores Configuration page</a>.]]></tooltip>
-                <type>select</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
-                <options>
-                    <option>
-                        <label>Default (Magento default)</label>
-                        <value>0</value>
-                    </option>
-                </options>
-                <value>0</value>
-            </field>
-            <field>
-                <name>magento_watermark</name>
-                <label>Use Magento watermark</label>
-                <tooltip><![CDATA[Use the standard Magento <a target="_blank" href="{{URL}}">watermark settings</a> or apply advanced watermarks with a <a target="_blank" href="https://my.sirv.com/#/profiles/">Sirv profile</a>.]]></tooltip>
-                <type>radios</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
-                <options>
-                    <option>
-                        <label>Yes</label>
-                        <value>true</value>
-                    </option>
-                    <option>
-                        <label>No</label>
-                        <value>false</value>
-                    </option>
-                </options>
-                <value>true</value>
-                <install/>
-            </field>
-            <field>
                 <name>auto_fetch</name>
-                <label>Serve static files</label>
+                <label>Serve other files from Sirv CDN</label>
                 <notice><![CDATA[Sirv will fetch files from this domain:]]></notice>
                 <tooltip><![CDATA[Sirv CDN can serve your JS, CSS and static theme files too. It minifies JS & CSS and uses multiplexing to accelerate file loading. <a target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#how-to-set-up-a-cdn-in-magento-2">Learn more</a>.]]></tooltip>
                 <type>radios</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>
+                    <option>
+                        <label>No other files</label>
+                        <value>none</value>
+                    </option>
                     <option>
                         <label>JS, CSS &amp; associated files (recommended)</label>
                         <value>custom</value>
@@ -214,12 +170,8 @@
                         <label>JS, CSS &amp; all static files</label>
                         <value>all</value>
                     </option>
-                    <option>
-                        <label>None</label>
-                        <value>none</value>
-                    </option>
                 </options>
-                <value>none</value>
+                <value>custom</value>
             </field>
             <field>
                 <name>url_prefix</name>
@@ -231,6 +183,11 @@
                 <placeholder></placeholder>
                 <can_hide_select/>
             </field>
+        </fields>
+    </group>
+    <group id="display_settings">
+        <label>Display settings</label>
+        <fields>
             <field>
                 <name>lazy_load</name>
                 <label>Lazy loading</label>
@@ -279,6 +236,54 @@
                     </option>
                 </options>
                 <value>image,spin,zoom,video</value>
+                <install/>
+            </field>
+            <field>
+                <name>profile</name>
+                <label>Image profile</label>
+                <tooltip><![CDATA[Choose one of your <a target="_blank" href="https://my.sirv.com/#/profiles/">profiles</a> if you wish to apply some settings to all images (e.g. watermarks, text overlays, effects). <a target="_blank" href="https://sirv.com/help/articles/dynamic-imaging/profiles/">Learn more</a>.]]></tooltip>
+                <type>select</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
+                <options>
+                    <option>
+                        <label>Default</label>
+                        <value>Default</value>
+                    </option>
+                </options>
+                <value>Default</value>
+                <install/>
+            </field>
+            <field>
+                <name>image_quality</name>
+                <label>Image quality</label>
+                <tooltip><![CDATA[JPEG image quality. The default JPEG image quality is set on your <a target="_blank" href="{{URL}}">Magento Stores Configuration page</a>.]]></tooltip>
+                <type>select</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
+                <options>
+                    <option>
+                        <label>Default (Magento default)</label>
+                        <value>0</value>
+                    </option>
+                </options>
+                <value>0</value>
+            </field>
+            <field>
+                <name>magento_watermark</name>
+                <label>Use Magento watermark</label>
+                <tooltip><![CDATA[Use the standard Magento <a target="_blank" href="{{URL}}">watermark settings</a> or apply advanced watermarks with a <a target="_blank" href="https://my.sirv.com/#/profiles/">Sirv profile</a>.]]></tooltip>
+                <type>radios</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>true</value>
                 <install/>
             </field>
         </fields>
@@ -344,7 +349,7 @@
             <field>
                 <name>smv_js_options</name>
                 <label>Sirv Media Viewer options</label>
-                <notice><![CDATA[<a target="_blank" href="https://sirv.com/help/viewer/">Choose your options here</a>, then copy and paste the Script tab content.]]></notice>
+                <notice><![CDATA[<a target="_blank" href="https://sirv.com/help/viewer/">Choose your options here</a>, then paste the code from the Script tab.]]></notice>
                 <type>textarea</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
                 <value>SirvOptions = {&#xa;  viewer: {&#xa;    zoom: {&#xa;      mode: 'inner',&#xa;    }&#xa;  }&#xa;}</value>
@@ -362,6 +367,7 @@
                 <label>Product gallery cache</label>
                 <type>button</type>
                 <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushAssets</type_class>
+                <notice><![CDATA[<a href="#" data-mage-init='{"sirvAssets": {"assetsUrl":"{{URL}}"}}'>View assets</a>]]></notice>
             </field>
         </fields>
     </group>
@@ -417,16 +423,25 @@
                     <br/><br/>
                     If required, you can regenerate the Magento image cache with the Magento CLI command: <b>php bin/magento catalog:images:resize</b>
                 ]]></tooltip>
+                <notice><![CDATA[
+                    Magento image cache: {{COUNT}}.
+                    <a href="#"
+                        onclick="return false"
+                        data-mage-init='{
+                            "sirvButton": {
+                                "showLoader": true,
+                                "event": "sirv-sync",
+                                "target": "[data-role=sirv-synchronizer]",
+                                "eventData": {
+                                    "action": "flush-magento-images-cache",
+                                    "actionUrl": "{{URL}}"
+                                }
+                            }
+                        }'
+                        title="Delete pregenerated product images files"
+                        >Delete</a>
+                ]]></notice>
                 <value>false</value>
-            </field>
-            <field>
-                <name>flush_magento_images_cache</name>
-                <label>Flush Magento Catalog Images Cache</label>
-                <type>button</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushMagentoImagesCache</type_class>
-                <value>Flush Cache</value>
-                <title>Flush Cache</title>
-                <tooltip><![CDATA[Delete pregenerated product images files]]></tooltip>
             </field>
             <field>
                 <name>synchronizer</name>

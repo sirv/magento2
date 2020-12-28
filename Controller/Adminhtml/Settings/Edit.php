@@ -70,6 +70,20 @@ class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             }
         }
 
+        $requiredVersion = '1.6.6';
+        $outdatedModules = $this->getOutdatedModules($requiredVersion);
+        if (!empty($outdatedModules)) {
+            foreach ($outdatedModules as $name => $version) {
+                $this->messageManager->addWarning(__(
+                    'Your extension %1 v%2 should be updated to work with the Sirv extension. <a target="_blank" href="%3">Download here</a>.',
+                    $name,
+                    $version,
+                    /*'https://www.magictoolbox.com/my-account/'*/
+                    'https://www.magictoolbox.com/magiczoom/modules/magento/'
+                ));
+            }
+        }
+
         /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
         $resultPage = $this->resultPageFactory->create();
         $resultPage->setActiveMenu('Magento_Backend::system');
@@ -78,5 +92,77 @@ class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         $title->prepend('Configuration');
 
         return $resultPage;
+    }
+
+    /**
+     * Check for outdated modules
+     *
+     * @param string $requiredVersion
+     * @return array
+     */
+    protected function getOutdatedModules($requiredVersion)
+    {
+        $outdatedModules = [];
+        $modules = $this->getModulesData();
+        foreach ($modules as $name => $version) {
+            if (version_compare($version, $requiredVersion, '<')) {
+                $outdatedModules[$name] = $version;
+            }
+        }
+
+        return $outdatedModules;
+    }
+
+    /**
+     * Get enabled module's data (name and version)
+     *
+     * @return array
+     */
+    protected function getModulesData()
+    {
+        static $data = null;
+
+        if ($data !== null) {
+            return $data;
+        }
+
+        /** @var \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper */
+        $dataHelper = $this->getDataHelper();
+
+        $cache = $dataHelper->getAppCache();
+        $cacheId = 'magictoolbox_modules_data';
+
+        $data = $cache->load($cacheId);
+        if (false !== $data) {
+            $data = $dataHelper->getUnserializer()->unserialize($data);
+            return $data;
+        }
+
+        $data = [];
+
+        $mtModules = [
+            'MagicToolbox_Magic360',
+            'MagicToolbox_MagicZoomPlus',
+            'MagicToolbox_MagicZoom',
+            'MagicToolbox_MagicThumb',
+            'MagicToolbox_MagicScroll',
+            'MagicToolbox_MagicSlideshow',
+        ];
+
+        $enabledModules = \Magento\Framework\App\ObjectManager::getInstance()->get(
+            \Magento\Framework\Module\ModuleList::class
+        )->getNames();
+
+        foreach ($mtModules as $name) {
+            if (in_array($name, $enabledModules)) {
+                $data[$name] = $dataHelper->getModuleVersion($name);
+            }
+        }
+
+        $serializer = $dataHelper->getSerializer();
+        //NOTE: cache lifetime (in seconds)
+        $cache->save($serializer->serialize($data), $cacheId, [], 600);
+
+        return $data;
     }
 }

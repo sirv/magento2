@@ -797,6 +797,77 @@ a.save-message {
 .scope-switcher input[type="checkbox"]:checked + .scope-switcher-label:after {
   background-position: -34px 0;
 }
+/* assets view CSS ------------------------------------------------------ */
+
+.sirv-assets-modal .modal-title {
+  font-weight: 800;
+  text-align: center;
+}
+.sirv-assets-modal .modal-content::-webkit-scrollbar {
+  width: 10px;
+}
+.sirv-assets-modal .modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.sirv-assets-modal .modal-content::-webkit-scrollbar-thumb {
+  background: #888;
+}
+.sirv-assets-modal .modal-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.sirv-assets-wraper {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+.sirv-assets-wraper .admin__table-primary th {
+  border-top: 0;
+  padding: 0.6rem 1.5rem;
+}
+.sirv-assets-wraper > .admin__table-primary th:nth-child(1) {
+  width: 10%;
+}
+.sirv-assets-wraper > .admin__table-primary th:nth-child(2) {
+  width: 35%;
+}
+.sirv-assets-wraper > .admin__table-primary th:nth-child(3) {
+  width: 55%;
+}
+.sirv-assets-wraper .admin__table-primary td {
+  padding: 0.6rem 1.5rem;
+}
+.sirv-assets-wraper .sirv-assets-product-items-action-link {
+  margin-left: 3rem;
+}
+.sirv-assets-wraper .sirv-assets-product-items.hidden-element {
+  display: none;
+}
+.sirv-assets-wraper .sirv-assets-product-items td {
+  padding: 0.6rem;
+  text-align: center;
+  vertical-align: middle;
+}
+.sirv-assets-wraper .sirv-assets-product-item-preview {
+  max-width: 60px;
+  max-height: 60px;
+}
+.sirv-assets-wraper .sirv-assets-product-item-preview img {
+  max-width: 60px;
+  max-height: 60px;
+  vertical-align: middle;
+}
+.sirv-assets-wraper td.sirv-assets-product-item-info {
+  text-align: left;
+}
+.sirv-assets-wraper .sirv-assets-product-item-info div {
+  padding: 0.3rem;
+}
+.sirv-assets-wraper .sirv-assets-product-item-name {
+  font-weight: 600;
+  font-size: 1.6rem;
+}
+
 /* cache validator CSS ------------------------------------------------------ */
 .sirv-validator-content .progress-completed-label {
   float: right;

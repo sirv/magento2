@@ -177,6 +177,9 @@ define([
                 case 'flush-magento-images-cache':
                     setLocation(data.actionUrl);
                     break;
+                case 'disconnect-account':
+                    setLocation(data.actionUrl);
+                    break;
                 default:
                     if (console && console.warn) console.warn($.mage.__('Unknown action!'));
             }

@@ -52,6 +52,7 @@ class Flush extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         switch ($action) {
             case 'empty':
                 $cleanEmptyItems = true;
+                // no break
             case 'notempty':
                 $ids = [];
                 $assetsModel = $this->assetsModelFactory->create();
