@@ -27,11 +27,11 @@ class Store
     protected $isAutoFetchDisabled = true;
 
     /**
-     * Sirv CDN URL
+     * Sirv host
      *
      * @var string
      */
-    protected $cdnUrl = '';
+    protected $sirvHost = '';
 
     /**
      * URL prefix
@@ -58,11 +58,16 @@ class Store
     ) {
         $this->dataHelper = $dataHelper;
         if ($dataHelper->isSirvEnabled()) {
-            $this->cdnUrl = $dataHelper->getConfig('cdn_url');
-            $this->cdnUrl = is_string($this->cdnUrl) ? trim($this->cdnUrl) : '';
+            $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
+            $this->sirvHost = $bucket . '.sirv.com';
+            $cdn = $dataHelper->getConfig('cdn_url');
+            $cdn = is_string($cdn) ? trim($cdn) : '';
+            if (!empty($cdn)) {
+                $this->sirvHost = $cdn;
+            }
             $this->urlPrefix = $dataHelper->getConfig('url_prefix');
             $this->urlPrefix = is_string($this->urlPrefix) ? trim($this->urlPrefix) : '';
-            if ($this->cdnUrl && $this->urlPrefix) {
+            if ($this->urlPrefix) {
                 //$this->urlPrefix = preg_replace('#^(?:https?\:)?//#', '', $this->urlPrefix);
                 $autoFetch = $dataHelper->getConfig('auto_fetch');
                 $this->isAutoFetchDisabled = $autoFetch != 'custom' && $autoFetch != 'all';
@@ -88,10 +93,10 @@ class Store
         $cacheKey = $type . '/' . ($secure === null ? 'null' : ($secure ? 'true' : 'false'));
         if (!isset(self::$baseUrlCache[$cacheKey])) {
             $secure = $secure === null ? $store->isCurrentlySecure() : (bool)$secure;
-            $cdnUrl = ($secure ? 'https://' : 'http://') . $this->cdnUrl . '/';
-            //$baseUrl = preg_replace('#^(?:https?\:)?//' . preg_quote($this->urlPrefix, '#') . '#', $cdnUrl, $baseUrl);
+            $sirvUrl = ($secure ? 'https://' : 'http://') . $this->sirvHost . '/';
+            //$baseUrl = preg_replace('#^(?:https?\:)?//' . preg_quote($this->urlPrefix, '#') . '#', $sirvUrl, $baseUrl);
             $this->dataHelper->baseStaticUrl($baseUrl);
-            $baseUrl = preg_replace('#^(?:https?\:)?//[^/]++/#', $cdnUrl, $baseUrl);
+            $baseUrl = preg_replace('#^(?:https?\:)?//[^/]++/#', $sirvUrl, $baseUrl);
             self::$baseUrlCache[$cacheKey] = $baseUrl;
         }
 

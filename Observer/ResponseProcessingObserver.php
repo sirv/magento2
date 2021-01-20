@@ -27,11 +27,11 @@ class ResponseProcessingObserver implements \Magento\Framework\Event\ObserverInt
     protected $isLazyLoadEnabled = false;
 
     /**
-     * Sirv CDN URL
+     * Sirv host
      *
      * @var string
      */
-    protected $cdnUrl = '';
+    protected $sirvHost = '';
 
     /**
      * URL prefix
@@ -68,11 +68,16 @@ class ResponseProcessingObserver implements \Magento\Framework\Event\ObserverInt
         \Magento\Store\Model\StoreManagerInterface $storeManager
     ) {
         if ($dataHelper->isSirvEnabled()) {
-            $this->cdnUrl = $dataHelper->getConfig('cdn_url');
-            $this->cdnUrl = is_string($this->cdnUrl) ? trim($this->cdnUrl) : '';
+            $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
+            $this->sirvHost = $bucket . '.sirv.com';
+            $cdn = $dataHelper->getConfig('cdn_url');
+            $cdn = is_string($cdn) ? trim($cdn) : '';
+            if (!empty($cdn)) {
+                $this->sirvHost = $cdn;
+            }
             $this->urlPrefix = $dataHelper->getConfig('url_prefix');
             $this->urlPrefix = is_string($this->urlPrefix) ? trim($this->urlPrefix) : '';
-            if ($this->cdnUrl && $this->urlPrefix) {
+            if ($this->urlPrefix) {
                 //$this->urlPrefix = preg_replace('#^(?:https?\:)?//#', '', $this->urlPrefix);
                 $autoFetch = $dataHelper->getConfig('auto_fetch');
                 $this->isAutoFetchEnabled = $autoFetch == 'custom' || $autoFetch == 'all';
@@ -165,7 +170,7 @@ class ResponseProcessingObserver implements \Magento\Framework\Event\ObserverInt
 
                 $replace = preg_replace(
                     '#^("|\')' . $baseMediaUrlPattern . '#',
-                    '\1https://' . $this->cdnUrl . $baseMediaPath,
+                    '\1https://' . $this->sirvHost . $baseMediaPath,
                     $match[0]
                 );
 

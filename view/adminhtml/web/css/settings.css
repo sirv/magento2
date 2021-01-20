@@ -627,33 +627,29 @@ a.save-message {
   font-weight: 600;
   margin-left: -5px;
 }
-.sirv-usage-wraper .sirv-progress-bar-holder {
+.sirv-usage-wraper .progress-bar-holder {
   position: relative;
+  border-radius: 1rem;
+  height: 1rem;
+  overflow: hidden;
+  margin: 0.7rem;
+  background-color: #bbe0c5;
 }
-.sirv-usage-wraper .sirv-progress-bar {
-  border: 1px solid #ddd;
-  height: 100%;
-  width: 100%;
+.sirv-usage-wraper .progress-bar {
   position: absolute;
-  min-height: 18px;
-}
-.sirv-usage-wraper .sirv-progress-bar > div {
-  width: 100%;
+  border-radius: 1rem;
+  background-color: #65ba79;
   height: 100%;
-  background: #2ce02c;
-  background: -moz-linear-gradient(left, #2ce02c 0%, #ff0000 100%);
-  background: -webkit-linear-gradient(left, #2ce02c 0%,#ff0000 100%);
-  background: linear-gradient(to right, #2ce02c 0%,#ff0000 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2ce02c', endColorstr='#ff0000', GradientType=1 );
+  transition: width .6s ease;
+  width: 0;
+  z-index: 0;
 }
-.sirv-usage-wraper .sirv-progress-bar > div > div {
-  position: absolute;
-  height: 100%;
-  max-width: calc(100% - 3px);
-  right: 0;
-  background: #fff;
+.sirv-usage-wraper .progress-bar:not(.progress-bar-empty) {
+  min-width: 1%;
 }
-
+.sirv-usage-wraper .progress-bar.progress-bar-exceeded {
+  background-color: #e65444;
+}
 .sirv-usage-wraper > .col-sm-6:first-child {
   padding-right: 10px;
 }

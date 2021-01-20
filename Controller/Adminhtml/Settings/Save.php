@@ -156,10 +156,18 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             $accounts = $dataHelper->getSirvUsersList(true);
 
             if (empty($accounts)) {
+                $responseCode = $dataHelper->getSirvClient()->getResponseCode();
+                if ($responseCode == 200) {
+                    $errorMsg = __(
+                        'Sirv user %1 does not have permission to connect. Your role must be either Admin or Owner.',
+                        $email
+                    );
+                } else {
+                    $errorMsg = __('Your Sirv access credentials were rejected. Please check and try again.');
+                }
+
                 $dataHelper->saveConfig('password', '');
-                $this->messageManager->addWarningMessage(
-                    __('Your Sirv access credentials were rejected. Please check and try again.')
-                );
+                $this->messageManager->addWarningMessage($errorMsg);
             }
             $addSuccessMessage = false;
         }
@@ -207,7 +215,6 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         if ($configScopeId === 0) {
             $autoFetch = isset($config['auto_fetch']) ? $config['auto_fetch'] : null;
             $urlPrefix = isset($config['url_prefix']) ? $config['url_prefix'] : '';
-            $network = isset($config['network']) ? $config['network'] : null;
 
             //NOTE: to set default values for the first time
             if ($doGetCredentials && isset($s3Credentials)) {
@@ -220,9 +227,8 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 }
             }
 
-            if ($autoFetch !== null || $network !== null) {
+            if ($autoFetch !== null) {
                 $dataHelper->setAccountConfig(
-                    $network == 'cdn',
                     $autoFetch == 'all' || $autoFetch == 'custom',
                     $urlPrefix
                 );

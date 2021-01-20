@@ -142,7 +142,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         'cdn_url' => true,
         'auto_fetch' => true,
         'url_prefix' => true,
-        'network' => true,
         'image_folder' => true,
         'sirv_rate_limit_data' => true,
         's3_rate_limit_data' => true,

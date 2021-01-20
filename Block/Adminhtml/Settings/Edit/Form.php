@@ -263,9 +263,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             $fieldConfig['values'][] = ['value' => $account, 'label' => $account];
                         }
                         break;
-                    // case 'network':
-                    //     $fieldConfig['value'] = $this->dataHelper->syncConfig('network');
-                    //     break;
                     case 'profile':
                         $profiles = $this->dataHelper->getProfiles();
                         if (!in_array($fieldConfig['value'], $profiles)) {
@@ -334,16 +331,19 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $fieldConfig['value'] = empty($urlPrefix) ? reset($domains) : $urlPrefix;
                         break;
                     case 'image_folder':
-                        //NOTE: for auto sync 'network' option
-                        $this->dataHelper->syncConfig('network');
+                        //NOTE: for sync 'cdn_url' option
+                        $config['cdn_url'] = $this->dataHelper->syncConfig('cdn_url');
                     case 'product_assets_folder':
                         $valuePrefix = isset($config['bucket']) ? $config['bucket'] : $config['account'];
                         $valuePrefix = '//' . $valuePrefix . '.sirv.com/';
-                        if ($config['network'] == 'cdn' && isset($config['cdn_url']) && is_string($config['cdn_url'])) {
-                            $valuePrefix = trim($config['cdn_url']);
-                            if (!empty($valuePrefix)) {
-                                $valuePrefix = rtrim($valuePrefix, '/') . '/';
-                            }
+                        if (isset($config['cdn_url']) && is_string($config['cdn_url'])) {
+                            $cdn = trim($config['cdn_url']);
+                        } else {
+                            $cdn = '';
+                        }
+                        if (!empty($cdn)) {
+                            $valuePrefix = '//' . preg_replace('#^[^/]*//#', '', $cdn);
+                            $valuePrefix = rtrim($valuePrefix, '/') . '/';
                         }
                         /* $fieldConfig['before_element_html'] = $valuePrefix; */
                         $fieldConfig['value_prefix'] = $valuePrefix;

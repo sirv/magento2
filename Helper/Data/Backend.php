@@ -274,7 +274,13 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                 if ($info) {
                     $data['alias'] = $alias = isset($info->alias) ? $info->alias : '';
                     $data['cdn_url'] = isset($info->cdnURL) ? $info->cdnURL : '';
-                    $data['cdn_enabled'] = isset($info->aliases->{$alias}, $info->aliases->{$alias}->cdn) ? $info->aliases->{$alias}->cdn : false;
+                    $data['cdn_enabled'] = false;
+                    if (isset($info->aliases->{$alias})) {
+                        $data['cdn_enabled'] = isset($info->aliases->{$alias}->cdn) ? $info->aliases->{$alias}->cdn : false;
+                        if ($data['cdn_enabled']) {
+                            $data['cdn_url'] = isset($info->aliases->{$alias}->customDomain) ? $info->aliases->{$alias}->customDomain : $data['cdn_url'];
+                        }
+                    }
                     $data['fetching_enabled'] = false;
                     $data['fetching_url'] = '';
                     if (isset($info->fetching)) {
@@ -310,25 +316,14 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
     /**
      * Set account config
      *
-     * @param bool $cdn
      * @param bool $fetching
      * @param string $url
      * @return void
      */
-    public function setAccountConfig($cdn, $fetching, $url)
+    public function setAccountConfig($fetching, $url)
     {
         $config = $this->getAccountConfig();
         $data = [];
-
-        /*
-        if ($cdn != $config['cdn_enabled']) {
-            $data['aliases'] = [
-                $config['alias'] => [
-                    'cdn' => $cdn
-                ]
-            ];
-        }
-        */
 
         if ($fetching != $config['fetching_enabled'] || $url != $config['fetching_url']) {
             $data['fetching'] = [
@@ -367,7 +362,6 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                 $account = $this->getConfig('account');
                 $cacheId = 'sirv_account_info_' . hash('md5', $account);
                 $cache = $this->getAppCache();
-                //$config['cdn_enabled'] = $cdn;
                 $config['fetching_enabled'] = $fetching;
                 if (!empty($url)) {
                     $config['fetching_url'] = $url;
@@ -387,10 +381,9 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
     {
         $config = $this->getAccountConfig();
         switch ($name) {
-            case 'network':
-                $value = $config['cdn_enabled'] ? 'cdn' : 'direct';
-                $this->saveConfig('network', $value);
-                $this->saveConfig('cdn_url', $config['cdn_url']);
+            case 'cdn_url':
+                $value = $config['cdn_url'];
+                $this->saveConfig('cdn_url', $value);
                 break;
             case 'auto_fetch':
                 //NOTE: auto_fetch: custom|all|none
@@ -466,7 +459,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
     {
         static $data = null;
 
-        if ($data === null) {
+        if ($data === null || $force) {
             $account = $this->getConfig('account');
             $cacheId = 'sirv_account_usage_' . hash('md5', $account);
             $cache = $this->getAppCache();
@@ -559,20 +552,18 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                 break;
             }
 
-            $data['traffic']['traffic'][$label] = [
-                'size' => '0 Bytes',
-                'size_percent_reverse' => '100',
-            ];
-
             $traffic = get_object_vars($traffic);
             $size = 0;
             foreach ($traffic as $v) {
                 $size += (isset($v->total->size) ? (int)$v->total->size : 0);
             }
             $sizePercent = ($size / $dataTransferLimit) * 100;
+            $trafficAttr = $sizePercent > 100 ? 'exceeded' : ($sizePercent ? 'normal' : 'empty');
+
             $data['traffic']['traffic'][$label] = [
                 'size' => $this->getFormatedSize($size),
-                'size_percent_reverse' => number_format(100 - $sizePercent, 2, '.', ''),
+                'size_percent' => number_format($sizePercent, 2, '.', ''),
+                'traffic_attr' => $trafficAttr
             ];
         }
 

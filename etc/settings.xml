@@ -120,27 +120,6 @@
                 <value>false</value>
                 <install/>
             </field>
-            <!--
-            <field>
-                <name>network</name>
-                <label>Network</label>
-                <tooltip><![CDATA[Sirv CDN will rapidly serve files from Sirv's global network. Sirv Direct is better while testing - it will serve all files from Sirv's primary datacentre in Germany.]]></tooltip>
-                <type>radios</type>
-                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
-                <options>
-                    <option>
-                        <label>Sirv CDN</label>
-                        <value>cdn</value>
-                    </option>
-                    <option>
-                        <label>Sirv Direct</label>
-                        <value>direct</value>
-                    </option>
-                </options>
-                <value>cdn</value>
-                <install/>
-            </field>
-            -->
             <field>
                 <name>image_folder</name>
                 <label>Folder name on Sirv</label>

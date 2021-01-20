@@ -203,24 +203,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
 
         $cdnUrl = $dataHelper->getConfig('cdn_url');
         $cdnUrl = is_string($cdnUrl) ? trim($cdnUrl) : '';
-        if ($dataHelper->getConfig('network') == 'cdn') {
-            if (!empty($cdnUrl)) {
-                $this->baseUrl = 'https://' . $cdnUrl;
-            } else {
-                $customDomain = $dataHelper->getConfig('custom_domain');
-                if (is_string($customDomain)) {
-                    $customDomain = trim($customDomain);
-                    //NOTE: cut protocol
-                    $customDomain = preg_replace('#^(?:[a-zA-Z0-9]+:)?//#', '', $customDomain);
-                    //NOTE: cut path with query
-                    $customDomain = preg_replace('#^([^/]+)/.*$#', '$1', $customDomain);
-                    //NOTE: cut query without path
-                    $customDomain = preg_replace('#^([^\?]+)\?.*$#', '$1', $customDomain);
-                    if (!empty($customDomain)) {
-                        $this->baseUrl = 'https://' . $customDomain;
-                    }
-                }
-            }
+        if (!empty($cdnUrl)) {
+            $this->baseUrl = 'https://' . $cdnUrl;
         }
 
         $imageFolder = $dataHelper->getConfig('image_folder');

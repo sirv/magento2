@@ -54,7 +54,6 @@ class Disconnect extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 
         $names = [
             'enabled' => 'false',
-            'network' => 'cdn',
             'image_folder' => 'magento',
             'profile' => 'Default',
             'magento_watermark' => 'false',
