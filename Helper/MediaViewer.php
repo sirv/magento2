@@ -192,6 +192,16 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Get configured CSS
+     *
+     * @return string
+     */
+    public function getViewerCss()
+    {
+        return $this->dataHelper->getConfig('smv_custom_css') ?: '';
+    }
+
+    /**
      * Get runtime options
      *
      * @return string

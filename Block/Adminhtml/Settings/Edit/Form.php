@@ -357,6 +357,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         }
                         break;
                     case 'smv_js_options':
+                    case 'smv_custom_css':
                         $fieldConfig['rows'] = 7;
                         break;
                     case 'smv_max_height':

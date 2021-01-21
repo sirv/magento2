@@ -79,6 +79,7 @@ class Disconnect extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             'bucket' => null,
             'cdn_url' => null,
             'smv_js_options' => null,
+            'smv_custom_css' => null,
             'sirv_rate_limit_data' => null,
             's3_rate_limit_data' => null,
         ];

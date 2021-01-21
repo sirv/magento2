@@ -2,7 +2,7 @@
     "name": "magictoolbox/sirv",
     "description": "Sirv module for Magento 2",
     "type": "magento2-module",
-    "version": "3.3.2",
+    "version": "3.3.3",
     "license": [
         "OSL-3.0",
         "AFL-3.0"

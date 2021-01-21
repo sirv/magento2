@@ -241,10 +241,14 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         }
 
         $smvJsOptions = isset($config['smv_js_options']) ? $config['smv_js_options'] : '';
-        $matches = [];
-        if (preg_match('#</?script[^>]*+>#', $smvJsOptions, $matches)) {
+        if (preg_match('#</?script[^>]*+>#', $smvJsOptions)) {
             $smvJsOptions = preg_replace('#</?script[^>]*+>#', '', $smvJsOptions);
             $dataHelper->saveConfig('smv_js_options', $smvJsOptions);
+        }
+        $smvCss = isset($config['smv_custom_css']) ? $config['smv_custom_css'] : '';
+        if (preg_match('#</?style[^>]*+>#', $smvCss)) {
+            $smvCss = preg_replace('#</?style[^>]*+>#', '', $smvCss);
+            $dataHelper->saveConfig('smv_custom_css', $smvCss);
         }
 
         $smvMaxHeight = isset($config['smv_max_height']) ? $config['smv_max_height'] : '';

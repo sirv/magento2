@@ -342,6 +342,14 @@
                 <value></value>
             </field>
             <field>
+                <name>smv_custom_css</name>
+                <label>Custom CSS</label>
+                <notice><![CDATA[Add styles to fix any rendering conflicts caused by other CSS.]]></notice>
+                <type>textarea</type>
+                <type_class>\MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
+                <value></value>
+            </field>
+            <field>
                 <name>assets_cache</name>
                 <label>Product gallery cache</label>
                 <type>button</type>

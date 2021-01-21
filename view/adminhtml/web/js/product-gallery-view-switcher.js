@@ -44,6 +44,7 @@ define([
                 'product_assets_folder',
                 'smv_js_options',
                 'smv_max_height',
+                'smv_custom_css',
                 'assets-cache'
             ];
             var i, l, selector, display;

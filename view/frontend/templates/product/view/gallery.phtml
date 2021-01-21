@@ -22,6 +22,7 @@ $viewerSlides = $viewerHelper->getViewerSlides();
 $jsonConfig = $block->escapeHtmlAttr($viewerHelper->getJsonConfig());
 $jsOptions = $viewerHelper->getViewerJsOptions();
 $maxHeight = $viewerHelper->getMaxHeight();
+$customCss = $viewerHelper->getViewerCss();
 $dataOptions = $viewerHelper->getViewerDataOptions();
 ?>
 <?= $jsOptions ?>
@@ -37,6 +38,7 @@ $dataOptions = $viewerHelper->getViewerDataOptions();
     max-height: <?= $maxHeight ?>px;
 }
 <?php endif; ?>
+<?= $customCss ?>
 </style>
 <div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>">
     <div class="Sirv" data-options="<?= $dataOptions ?>">
