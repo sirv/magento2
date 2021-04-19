@@ -1,0 +1,53 @@
+<!--
+/**
+ * Validator template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+-->
+
+<div class="sirv-validator-container" style="display:none">
+  <div class="sirv-validator-content">
+    <div class="row">
+      <p class="progress-label">
+        <span class="progress-completed-label">
+          <b><span class="progress-percent-value">0</span>%</b> items processed
+        </span>
+      </p>
+    </div>
+    <div class="row">
+      <div class="progress-bar-holder">
+        <div class="progress-bar progress-bar-valid" role="progressbar" style="width: 0%"></div>
+        <div class="progress-bar progress-bar-invalid" role="progressbar" style="width: 0%"></div>
+        <div class="progress-bar progress-bar-failed" role="progressbar" style="width: 0%"></div>
+      </div>
+    </div>
+    <div class="row">
+      <ul class="progress-counters-list">
+        <li class="list-item list-item-valid">
+          <span class="list-item-style-type"></span>
+          <span class="list-item-title">Valid</span>
+          <span class="list-item-value">0</span>
+        </li>
+        <li class="list-item list-item-invalid">
+          <span class="list-item-style-type"></span>
+          <span class="list-item-title">Invalid</span>
+          <span class="list-item-value">0</span>
+        </li>
+        <li class="list-item list-item-failed">
+          <span class="list-item-style-type"></span>
+          <span class="list-item-title">Failed</span>
+          <span class="list-item-value">0</span>
+        </li>
+      </ul>
+    </div>
+    <div class="row">
+      <div class="sirv-validator-messages messages"></div>
+    </div>
+  </div>
+</div>

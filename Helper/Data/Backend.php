@@ -13,6 +13,66 @@ namespace MagicToolbox\Sirv\Helper\Data;
 class Backend extends \MagicToolbox\Sirv\Helper\Data
 {
     /**
+     * Get config scope
+     *
+     * @return string
+     */
+    public function getConfigScope()
+    {
+        return static::$configScope;
+    }
+
+    /**
+     * Get config scope id
+     *
+     * @return integer
+     */
+    public function getConfigScopeId()
+    {
+        return static::$configScopeId;
+    }
+
+    /**
+     * Get config parent scope
+     *
+     * @return string|false
+     */
+    public function getParentConfigScope()
+    {
+        return static::$configScope == self::SCOPE_STORE ? self::SCOPE_WEBSITE : (static::$configScope == self::SCOPE_WEBSITE ? self::SCOPE_DEFAULT : false);
+    }
+
+    /**
+     * Get default profile option names
+     *
+     * @return array
+     */
+    public function getDefaultProfileOptions()
+    {
+        return $this->defaultProfileOptions;
+    }
+
+    /**
+     * Get config
+     *
+     * @param string $name
+     * @param string $scope
+     * @return mixed
+     */
+    public function getConfig($name = null, $scope = null)
+    {
+        if ($scope === null) {
+            $config =& static::$sirvConfig;
+        } elseif (isset(static::$fullConfig[$scope])) {
+            $config =& static::$fullConfig[$scope];
+        } else {
+            $config = [];
+        }
+
+        return $name ? (isset($config[$name]) ? $config[$name] : null) : $config;
+    }
+
+    /**
      * Delete config
      *
      * @param string $name
@@ -20,15 +80,85 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
      */
     public function deleteConfig($name)
     {
-        $model = $this->getConfigModel();
-        $model->load($name, 'name');
+        if (isset($this->defaultProfileOptions[$name])) {
+            $scope = self::SCOPE_DEFAULT;
+            $scopeId = 0;
+        } else {
+            $scope = static::$configScope;
+            $scopeId = static::$configScopeId;
+        }
+
+        $collection = $this->getConfigModel()->getCollection();
+        $collection->addFieldToFilter('scope', $scope);
+        $collection->addFieldToFilter('scope_id', $scopeId);
+        $collection->addFieldToFilter('name', $name);
+
+        $model = $collection->getFirstItem();
         $id = $model->getId();
         if ($id !== null) {
             $model->delete();
         }
-        if (isset($this->sirvConfig[$name])) {
-            unset($this->sirvConfig[$name]);
+
+        if (isset(static::$fullConfig[$scope][$name])) {
+            unset(static::$fullConfig[$scope][$name]);
+            if (isset(static::$sirvConfig[$name])) {
+                unset(static::$sirvConfig[$name]);
+                /*if (isset(static::$fullConfig[self::SCOPE_STORE][$name])) {
+                    static::$sirvConfig[$name] = static::$fullConfig[self::SCOPE_STORE][$name];
+                } else */
+                if (isset(static::$fullConfig[self::SCOPE_WEBSITE][$name])) {
+                    static::$sirvConfig[$name] = static::$fullConfig[self::SCOPE_WEBSITE][$name];
+                } elseif (isset(static::$fullConfig[self::SCOPE_DEFAULT][$name])) {
+                    static::$sirvConfig[$name] = static::$fullConfig[self::SCOPE_DEFAULT][$name];
+                }
+            }
         }
+    }
+
+    /**
+     * Get Magento Catalog Images Cache data
+     *
+     * @return array
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
+    public function getMagentoCatalogImagesCacheData()
+    {
+        static $data = null;
+
+        if ($data === null) {
+            $data = ['count' => 0];
+            /** @var \Magento\Framework\Filesystem $filesystem */
+            $filesystem = $this->objectManager->get(\Magento\Framework\Filesystem::class);
+            /** @var \Magento\Framework\Filesystem\Directory\ReadInterface $mediaDirectory */
+            $mediaDirectory = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+
+            $mediaDirAbsPath = $mediaDirectory->getAbsolutePath();
+            $cacheDirAbsPath = rtrim($mediaDirAbsPath, '\\/') . '/catalog/product/cache';
+
+            $count = 0;
+            if (is_dir($cacheDirAbsPath)) {
+                $flags = \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::UNIX_PATHS;
+                try {
+                    $iterator = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($cacheDirAbsPath, $flags),
+                        \RecursiveIteratorIterator::CHILD_FIRST
+                    );
+                    foreach ($iterator as $item) {
+                        if ($item->isFile()) {
+                            $count++;
+                        }
+                    }
+                    $data['count'] = $count;
+                } catch (\Exception $e) {
+                    throw new \Magento\Framework\Exception\FileSystemException(
+                        new \Magento\Framework\Phrase($e->getMessage()),
+                        $e
+                    );
+                }
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -144,7 +274,13 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                 if ($info) {
                     $data['alias'] = $alias = isset($info->alias) ? $info->alias : '';
                     $data['cdn_url'] = isset($info->cdnURL) ? $info->cdnURL : '';
-                    $data['cdn_enabled'] = isset($info->aliases->{$alias}, $info->aliases->{$alias}->cdn) ? $info->aliases->{$alias}->cdn : false;
+                    $data['cdn_enabled'] = false;
+                    if (isset($info->aliases->{$alias})) {
+                        $data['cdn_enabled'] = isset($info->aliases->{$alias}->cdn) ? $info->aliases->{$alias}->cdn : false;
+                        if ($data['cdn_enabled']) {
+                            $data['cdn_url'] = isset($info->aliases->{$alias}->customDomain) ? $info->aliases->{$alias}->customDomain : $data['cdn_url'];
+                        }
+                    }
                     $data['fetching_enabled'] = false;
                     $data['fetching_url'] = '';
                     if (isset($info->fetching)) {
@@ -154,6 +290,18 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                             $data['fetching_url'] = rtrim($data['fetching_url'], '/') . '/';
                         }
                     }
+                    $data['minify'] = false;
+                    if (isset($info->minify)) {
+                        $data['minify'] = isset($info->minify->enabled) ? $info->minify->enabled : false;
+                    }
+                } else {
+                    $message = 'Can\'t get Sirv account info. ' .
+                        'Code: ' . $apiClient->getResponseCode() . ' ' .
+                        $apiClient->getErrorMsg();
+                    $this->_logger->error($message);
+                    throw new \Magento\Framework\Exception\LocalizedException(
+                        new \Magento\Framework\Phrase($message)
+                    );
                 }
 
                 $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 60);
@@ -168,23 +316,14 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
     /**
      * Set account config
      *
-     * @param bool $cdn
      * @param bool $fetching
      * @param string $url
      * @return void
      */
-    public function setAccountConfig($cdn, $fetching, $url)
+    public function setAccountConfig($fetching, $url)
     {
         $config = $this->getAccountConfig();
         $data = [];
-
-        if ($cdn != $config['cdn_enabled']) {
-            $data['aliases'] = [
-                $config['alias'] => [
-                    'cdn' => $cdn
-                ]
-            ];
-        }
 
         if ($fetching != $config['fetching_enabled'] || $url != $config['fetching_url']) {
             $data['fetching'] = [
@@ -199,6 +338,12 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
             }
         }
 
+        if ($fetching && $config['minify']) {
+            $data['minify'] = [
+                'enabled' => false
+            ];
+        }
+
         /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
         $apiClient = null;
 
@@ -211,12 +356,12 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
             if ($apiClient === null) {
                 $apiClient = $this->getSirvClient();
             }
+
             $updated = $apiClient->updateAccountInfo($data);
             if ($updated) {
                 $account = $this->getConfig('account');
                 $cacheId = 'sirv_account_info_' . hash('md5', $account);
                 $cache = $this->getAppCache();
-                $config['cdn_enabled'] = $cdn;
                 $config['fetching_enabled'] = $fetching;
                 if (!empty($url)) {
                     $config['fetching_url'] = $url;
@@ -236,10 +381,9 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
     {
         $config = $this->getAccountConfig();
         switch ($name) {
-            case 'network':
-                $value = $config['cdn_enabled'] ? 'cdn' : 'direct';
-                $this->saveConfig('network', $value);
-                $this->saveConfig('cdn_url', $config['cdn_url']);
+            case 'cdn_url':
+                $value = $config['cdn_url'];
+                $this->saveConfig('cdn_url', $value);
                 break;
             case 'auto_fetch':
                 //NOTE: auto_fetch: custom|all|none
@@ -315,7 +459,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
     {
         static $data = null;
 
-        if ($data === null) {
+        if ($data === null || $force) {
             $account = $this->getConfig('account');
             $cacheId = 'sirv_account_usage_' . hash('md5', $account);
             $cache = $this->getAppCache();
@@ -408,20 +552,18 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
                 break;
             }
 
-            $data['traffic']['traffic'][$label] = [
-                'size' => '0 Bytes',
-                'size_percent_reverse' => '100',
-            ];
-
             $traffic = get_object_vars($traffic);
             $size = 0;
             foreach ($traffic as $v) {
                 $size += (isset($v->total->size) ? (int)$v->total->size : 0);
             }
             $sizePercent = ($size / $dataTransferLimit) * 100;
+            $trafficAttr = $sizePercent > 100 ? 'exceeded' : ($sizePercent ? 'normal' : 'empty');
+
             $data['traffic']['traffic'][$label] = [
                 'size' => $this->getFormatedSize($size),
-                'size_percent_reverse' => number_format(100 - $sizePercent, 2, '.', ''),
+                'size_percent' => number_format($sizePercent, 2, '.', ''),
+                'traffic_attr' => $trafficAttr
             ];
         }
 

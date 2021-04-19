@@ -166,6 +166,13 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     protected $logger = null;
 
     /**
+     * Media directory object
+     *
+     * @var \Magento\Framework\Filesystem\Directory\WriteInterface
+     */
+    protected $mediaDirectory;
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\App\Helper\Context $context
@@ -196,24 +203,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
 
         $cdnUrl = $dataHelper->getConfig('cdn_url');
         $cdnUrl = is_string($cdnUrl) ? trim($cdnUrl) : '';
-        if ($dataHelper->getConfig('network') == 'cdn') {
-            if (!empty($cdnUrl)) {
-                $this->baseUrl = 'https://' . $cdnUrl;
-            } else {
-                $customDomain = $dataHelper->getConfig('сustom_domain');
-                if (is_string($customDomain)) {
-                    $customDomain = trim($customDomain);
-                    //NOTE: cut protocol
-                    $customDomain = preg_replace('#^(?:[a-zA-Z0-9]+:)?//#', '', $customDomain);
-                    //NOTE: cut path with query
-                    $customDomain = preg_replace('#^([^/]+)/.*$#', '$1', $customDomain);
-                    //NOTE: cut query without path
-                    $customDomain = preg_replace('#^([^\?]+)\?.*$#', '$1', $customDomain);
-                    if (!empty($customDomain)) {
-                        $this->baseUrl = 'https://' . $customDomain;
-                    }
-                }
-            }
+        if (!empty($cdnUrl)) {
+            $this->baseUrl = 'https://' . $cdnUrl;
         }
 
         $imageFolder = $dataHelper->getConfig('image_folder');
@@ -279,6 +270,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         $this->joinWithMySQL = $dataHelper->getConfig('join_with_mysql') === 'true' ? true : false;
+        $this->mediaDirectory = $filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
     }
 
     /**
@@ -588,7 +580,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($this->imagesToFetch as $image) {
             $imagesData[] = [
                 //NOTE: source link
-                'url' => $this->mediaBaseUrl . $image,
+                'url' => $this->mediaBaseUrl . str_replace('%2F', '/', rawurlencode($image)),
                 //NOTE: destination path
                 'filename' => $this->imageFolder . $image,
                 //NOTE: wait flag
@@ -600,7 +592,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($chunkedData as $imagesData) {
             if (($result = $this->sirvClient->fetchImages($imagesData)) && is_array($result)) {
                 foreach ($result as $data) {
-                    $relPath = preg_replace('#^'.preg_quote($this->imageFolder, '#').'#', '', $data->filename);
+                    $relPath = preg_replace('#^' . preg_quote($this->imageFolder, '#') . '#', '', $data->filename);
                     $pathType = self::UNKNOWN_PATH;
                     if (strpos($relPath, $this->productMediaRelPath . '/') === 0 ||
                         strpos($relPath, $this->categoryMediaRelPath . '/') === 0 ||
@@ -1305,9 +1297,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      * Method to synchronize media gallery
      *
      * @param int $stage
+     * @param bool $doClean
      * @return array
      */
-    public function syncMediaGallery($stage)
+    public function syncMediaGallery($stage, $doClean = false)
     {
         if (!$this->isAuth) {
             return ['error' => 'Not authenticated!'];
@@ -1345,9 +1338,9 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         if ($this->isLocalHost) {
-            $result = $this->syncWithUploading($images, $breakTime);
+            $result = $this->syncWithUploading($images, $breakTime, $doClean);
         } else {
-            $result = $this->syncWithFetching($images, $breakTime);
+            $result = $this->syncWithFetching($images, $breakTime, $doClean);
         }
 
         $data = array_merge($data, $result);
@@ -1364,9 +1357,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @param array $images
      * @param int $breakTime
+     * @param bool $doClean
      * @return array
      */
-    protected function syncWithUploading($images, $breakTime)
+    protected function syncWithUploading($images, $breakTime, $doClean = false)
     {
         $synced = 0;
         $failed = 0;
@@ -1416,6 +1410,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 $modificationTime = filemtime($absPath);
                 $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_SYNCED, $modificationTime);
                 $synced++;
+
+                if ($doClean) {
+                    $this->cleanMagentoImagesCache($imagePath);
+                }
             } else {
                 $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_FAILED, 0);
                 $failed++;
@@ -1440,9 +1438,10 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @param array $images
      * @param int $breakTime
+     * @param bool $doClean
      * @return array
      */
-    protected function syncWithFetching($images, $breakTime)
+    protected function syncWithFetching($images, $breakTime, $doClean = false)
     {
         $synced = 0;
         $failed = 0;
@@ -1461,7 +1460,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 if (is_file($absPath)) {
                     $fetchData[] = [
                         //NOTE: source link
-                        'url' => $this->mediaBaseUrl . $relPath,
+                        'url' => $this->mediaBaseUrl . str_replace('%2F', '/', rawurlencode($relPath)),
                         //NOTE: destination path
                         'filename' => $this->imageFolder . $relPath,
                         //NOTE: wait flag
@@ -1523,6 +1522,12 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                         $modificationTime = filemtime($absPath);
                         $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_SYNCED, $modificationTime);
                         $synced++;
+
+                        if ($doClean) {
+                            $this->cleanMagentoImagesCache(
+                                preg_replace('#^' . preg_quote($this->productMediaRelPath, '#') . '#', '', $relPath)
+                            );
+                        }
                     } else {
                         $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_FAILED, 0);
                         $failed++;
@@ -1554,6 +1559,21 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Method to clean Magento images cache
+     *
+     * @param string $imagePath
+     * @return bool
+     */
+    protected function cleanMagentoImagesCache($imagePath)
+    {
+        $pattern = $this->productMediaRelPath . '/cache/*' . $imagePath;
+        $foundFiles = $this->mediaDirectory->search($pattern);
+        foreach ($foundFiles as $foundFile) {
+            $this->mediaDirectory->delete($foundFile);
+        }
+    }
+
+    /**
      * Method to flush cache
      *
      * @param string $flushMethod
@@ -1568,6 +1588,11 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             case 'failed':
                 //NOTE: clear cached data with failed status from DB table
                 $resource->deleteByStatus(self::IS_FAILED);
+                $result = true;
+                break;
+            case 'queued':
+                $resource->deleteByStatus(self::IS_NEW);
+                $resource->deleteByStatus(self::IS_PROCESSING);
                 $result = true;
                 break;
             case 'all':

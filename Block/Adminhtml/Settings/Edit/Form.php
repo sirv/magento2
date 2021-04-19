@@ -72,10 +72,17 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     'id' => 'edit_form',
                     'action' => $this->getData('action'),
                     'method' => 'post',
-                    'class' => 'magictoolbox-config',
+                    'class' => 'mt-config',
                 ]
             ]
         );
+
+        /** @var \Magento\Backend\Block\Widget\Form\Renderer\Element $elementRenderer */
+        //$elementRenderer = \Magento\Framework\Data\Form::getElementRenderer();
+
+        /** @var \Magento\Backend\Block\Widget\Form\Renderer\Fieldset\Element $fieldsetElementRenderer */
+        $fieldsetElementRenderer = \Magento\Framework\Data\Form::getFieldsetElementRenderer();
+        $fieldsetElementRenderer->setTemplate('MagicToolbox_Sirv::widget/form/renderer/fieldset/element.phtml');
 
         $form->setUseContainer(true);//NOTE: to display form tag
 
@@ -95,6 +102,12 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             return parent::_prepareForm();
         }
 
+        $config = $this->dataHelper->getConfig();
+
+        $currentScope = $this->dataHelper->getConfigScope();
+        $currentScopeId = $this->dataHelper->getConfigScopeId();
+        $parentScope = $this->dataHelper->getParentConfigScope();
+
         if (isset($xml->notice)) {
             $fieldset = $form->addFieldset('sirv_group_fieldset_notice', ['legend' => '']);
             $fieldset->addField('mt-config-notice', 'label', [
@@ -102,24 +115,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 'after_element_html' => (string)$xml->notice
             ]);
         }
-
-        $requiredVersion = '1.6.6';
-        $outdatedModules = $this->getOutdatedModules($requiredVersion);
-        if (!empty($outdatedModules)) {
-            $fieldset = $form->addFieldset('sirv_group_fieldset_outdated_notice', ['legend' => '']);
-            $messages = [];
-            foreach ($outdatedModules as $name => $version) {
-                $messages[] = 'Notice: you have installed ' . $name .' module by version ' . $version . '.' .
-                    ' Please, update it at least to version ' . $requiredVersion;
-            }
-            $messages = '<span class="mt-outdated-error-notice">' . implode('</span><br/><span class="mt-outdated-error-notice">', $messages) . '</span>';
-            $fieldset->addField('mt-outdated-notice', 'label', [
-                'label' => null,
-                'after_element_html' => $messages
-            ]);
-        }
-
-        $config = $this->dataHelper->getConfig();
 
         $email = isset($config['email']) ? $config['email'] : '';
         $password = isset($config['password']) ? $config['password'] : '';
@@ -149,6 +144,15 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             $xpaths[] = '/settings/group[@id="user"]';
         }
 
+        if ($currentScope != 'default') {
+            $defaultProfileOptions = $this->dataHelper->getDefaultProfileOptions();
+            $defaultProfileOptions = array_keys($defaultProfileOptions);
+            $fieldNames = 'name="' . implode('" or name="', $defaultProfileOptions) . '"';
+            $xpaths[] = '/settings/group/fields/field[' . $fieldNames . ']';
+            $xpaths[] = '/settings/group[@id="synchronization"]';
+            $xpaths[] = '/settings/group[@id="usage"]';
+        }
+
         $support = $this->getRequest()->getParam('support');
         if ($support !== 'true') {
             $xpaths[] = '/settings/group[@id="support"]';
@@ -164,7 +168,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         }
 
         foreach ($xml->group as $group) {
-            $fieldset = $form->addFieldset('sirv_group_fieldset_' . (string)$group['id'], ['legend' => __((string)$group->label)]);
+            $fieldset = $form->addFieldset(
+                'sirv_group_fieldset_' . (string)$group['id'],
+                ['legend' => __((string)$group->label)]
+            );
 
             if (isset($group->notice)) {
                 $field = $fieldset->addField('mt-' . (string)$group['id'] . '-notice', 'label', [
@@ -181,17 +188,22 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 $value = isset($config[$name]) ? $config[$name] : (isset($field->value) ? (string)$field->value : null);
                 $required = isset($field->required) && ((string)$field->required == 'true') ? true : false;
 
+                $suffix = $type == 'checkboxes' ? '[]' : '';
                 $fieldConfig = [
                     'label'    => $label,
                     'title'    => $title,
-                    'name'     => 'magictoolbox[' . $name . ']',
+                    'name'     => 'mt-config[' . $name . ']' . $suffix,
                     'note'     => (string)$field->notice,
                     'class'    => 'mt-option',
                     'required' => $required,
                 ];
 
                 if ($value !== null) {
-                    $fieldConfig['value'] = $value;
+                    if ($type == 'checkboxes') {
+                        $fieldConfig['checked'] = explode(',', $value);
+                    } else {
+                        $fieldConfig['value'] = $value;
+                    }
                 }
 
                 if (isset($field->tooltip)) {
@@ -219,7 +231,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     $fieldset->addType($type, $typeClass);
                 }
 
-                if ($type == 'select' || $type == 'radios') {
+                if ($type == 'select' || $type == 'radios' || $type == 'checkboxes') {
                     $fieldConfig['values'] = [];
                     foreach ($field->options->option as $option) {
                         $fieldConfig['values'][] = [
@@ -250,9 +262,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         foreach ($accounts as $account) {
                             $fieldConfig['values'][] = ['value' => $account, 'label' => $account];
                         }
-                        break;
-                    case 'network':
-                        $fieldConfig['value'] = $this->dataHelper->syncConfig('network');
                         break;
                     case 'profile':
                         $profiles = $this->dataHelper->getProfiles();
@@ -297,6 +306,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             ];
                         }
                         break;
+                    case 'magento_watermark':
+                        $url = $this->getUrl('theme/design_config', []);
+                        $fieldConfig['tooltip'] = str_replace('{{URL}}', $url, $fieldConfig['tooltip']);
+                        break;
                     case 'auto_fetch':
                         $fieldConfig['value'] = $this->dataHelper->syncConfig('auto_fetch');
                         break;
@@ -304,32 +317,83 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $urlPrefix = $this->dataHelper->syncConfig('url_prefix');
                         $domains = $this->dataHelper->getDomains();
                         if (!empty($urlPrefix) && !in_array($urlPrefix, $domains)) {
-                            $fieldConfig['values'][] = ['value' => $urlPrefix, 'label' => $urlPrefix];
+                            $fieldConfig['values'][] = [
+                                'value' => $urlPrefix,
+                                'label' => preg_replace('#https?://#i', '', rtrim($urlPrefix, '/'))
+                            ];
                         }
                         foreach ($domains as $domain) {
-                            $fieldConfig['values'][] = ['value' => $domain, 'label' => $domain];
+                            $fieldConfig['values'][] = [
+                                'value' => $domain,
+                                'label' => preg_replace('#https?://#i', '', rtrim($domain, '/'))
+                            ];
                         }
                         $fieldConfig['value'] = empty($urlPrefix) ? reset($domains) : $urlPrefix;
                         break;
                     case 'image_folder':
+                        //NOTE: for sync 'cdn_url' option
+                        $config['cdn_url'] = $this->dataHelper->syncConfig('cdn_url');
                     case 'product_assets_folder':
                         $valuePrefix = isset($config['bucket']) ? $config['bucket'] : $config['account'];
-                        $valuePrefix = 'https://' . $valuePrefix . '.sirv.com/';
-                        if ($config['network'] == 'cdn' && isset($config['cdn_url']) && is_string($config['cdn_url'])) {
-                            $valuePrefix = trim($config['cdn_url']);
-                            if (!empty($valuePrefix)) {
-                                $valuePrefix = 'https://' . rtrim($valuePrefix, '/') . '/';
-                            }
+                        $valuePrefix = '//' . $valuePrefix . '.sirv.com/';
+                        if (isset($config['cdn_url']) && is_string($config['cdn_url'])) {
+                            $cdn = trim($config['cdn_url']);
+                        } else {
+                            $cdn = '';
+                        }
+                        if (!empty($cdn)) {
+                            $valuePrefix = '//' . preg_replace('#^[^/]*//#', '', $cdn);
+                            $valuePrefix = rtrim($valuePrefix, '/') . '/';
                         }
                         /* $fieldConfig['before_element_html'] = $valuePrefix; */
                         $fieldConfig['value_prefix'] = $valuePrefix;
                         break;
+                    case 'viewer_contents':
+                        $data = $this->dataHelper->getAccountUsageData();
+                        if (!isset($data['plan']) ||
+                            !isset($data['plan']['name']) ||
+                            preg_match('#beta|free|demo#i', $data['plan']['name'])) {
+                            $fieldConfig['note'] .= '<span style="color: red;">Sirv assets cannot be used with Free plan!</span>';
+                        }
+                        break;
                     case 'smv_js_options':
+                    case 'smv_custom_css':
                         $fieldConfig['rows'] = 7;
                         break;
                     case 'smv_max_height':
                         $fieldConfig['after_element_html'] = ' px';
                         break;
+                    case 'assets_cache':
+                        $fieldConfig['note'] = str_replace(
+                            '{{URL}}',
+                            $this->getUrl('sirv/ajax/assets', []),
+                            $fieldConfig['note']
+                        );
+                        break;
+                    case 'delete_cached_images':
+                        $data = $this->dataHelper->getMagentoCatalogImagesCacheData();
+                        $fieldConfig['note'] = str_replace(
+                            '{{COUNT}}',
+                            $data['count'] . ' image' . ($data['count'] != 1 ? 's' : ''),
+                            $fieldConfig['note']
+                        );
+                        $fieldConfig['note'] = str_replace(
+                            '{{URL}}',
+                            $this->getUrl('*/*/flushmagentoimagescache', []),
+                            $fieldConfig['note']
+                        );
+                        break;
+                }
+
+                $fieldConfig['parent_scope'] = $parentScope;
+                if ($fieldConfig['parent_scope']) {
+                    $currentScopeValue = $this->dataHelper->getConfig($name, $currentScope);
+                    if ($currentScopeValue !== null) {
+                        $fieldConfig['has_own_value'] = true;
+                    } else {
+                        $fieldConfig['has_own_value'] = false;
+                        $fieldConfig['disabled'] = true;
+                    }
                 }
 
                 $field = $fieldset->addField('mt-' . $name, $type, $fieldConfig);
@@ -340,72 +404,13 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
         $this->setForm($form);
 
+        $this->setChild(
+            'form_after',
+            $this->getLayout()->createBlock(
+                \Magento\Framework\View\Element\Template::class
+            )->setTemplate('MagicToolbox_Sirv::widget/form/form_after.phtml')
+        );
+
         return parent::_prepareForm();
-    }
-
-    /**
-     * Get enabled module's data (name and version)
-     *
-     * @return array
-     */
-    protected function getModulesData()
-    {
-        static $data = null;
-
-        if ($data !== null) {
-            return $data;
-        }
-
-        $cache = $this->dataHelper->getAppCache();
-        $cacheId = 'magictoolbox_modules_data';
-
-        $data = $cache->load($cacheId);
-        if (false !== $data) {
-            $data = $this->dataHelper->getUnserializer()->unserialize($data);
-            return $data;
-        }
-
-        $data = [];
-
-        $mtModules = [
-            'MagicToolbox_Magic360',
-            'MagicToolbox_MagicZoomPlus',
-            'MagicToolbox_MagicZoom',
-            'MagicToolbox_MagicThumb',
-            'MagicToolbox_MagicScroll',
-            'MagicToolbox_MagicSlideshow',
-        ];
-
-        $enabledModules = $this->objectManager->create(\Magento\Framework\Module\ModuleList::class)->getNames();
-
-        foreach ($mtModules as $name) {
-            if (in_array($name, $enabledModules)) {
-                $data[$name] = $this->dataHelper->getModuleVersion($name);
-            }
-        }
-
-        $serializer = $this->dataHelper->getSerializer();
-        //NOTE: cache lifetime (in seconds)
-        $cache->save($serializer->serialize($data), $cacheId, [], 600);
-
-        return $data;
-    }
-
-    /**
-     * Check for outdated modules
-     *
-     * @param string $requiredVersion
-     * @return array
-     */
-    protected function getOutdatedModules($requiredVersion)
-    {
-        $outdatedModules = [];
-        $modules = $this->getModulesData();
-        foreach ($modules as $name => $version) {
-            if (version_compare($version, $requiredVersion, '<')) {
-                $outdatedModules[$name] = $version;
-            }
-        }
-        return $outdatedModules;
     }
 }

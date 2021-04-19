@@ -34,8 +34,8 @@ define([
             buttons: {
                 save: '#sirv-save-config-button',
                 sync: '#sirv-sync-media-button',
-                flushUrl: '#mt-urls-cache',
-                flushAsset: '#mt-assets-cache'
+                flushUrl: '#mt-urls_cache-button',
+                flushAsset: '#mt-assets_cache-button'
             },
             bars: {
                 holder: '.sirv-sync-content .progress-bar-holder',
@@ -102,7 +102,10 @@ define([
                     '</span>' +
                     '<ul>' +
                     '<% _.each(data.items, function(item, i) { %>' +
-                    '<li><a target="_blank" href="<%- item.url %>"><%- item.path %></a></li>' +
+                    '<li><a target="_blank" href="<%- item.url %>" title="' +
+                    '<% if (item.exists) { %>file exists' +
+                    '<% } else { %>file does not exist<% } %>"' +
+                    '><%- item.path %></a></li>' +
                     '<% }); %>' +
                     '</ul>' +
                     '</div>'
@@ -115,6 +118,8 @@ define([
 
         timerId: null,
         timeIsLeft: 0,
+
+        doDeleteCachedImages: false,
 
         /** @inheritdoc */
         _create: function () {
@@ -152,6 +157,9 @@ define([
                 case 'flush-failed':
                     this._flushCache('failed');
                     break;
+                case 'flush-queued':
+                    this._flushCache('queued');
+                    break;
                 case 'flush-all':
                     this._flushCache('all');
                     break;
@@ -162,8 +170,15 @@ define([
                     this._viewFailed();
                     break;
                 case 'flush-empty-assets':
+                case 'flush-notempty-assets':
                 case 'flush-all-assets':
                     this._flushAssetCache('empty', data.actionUrl);
+                    break;
+                case 'flush-magento-images-cache':
+                    setLocation(data.actionUrl);
+                    break;
+                case 'disconnect-account':
+                    setLocation(data.actionUrl);
                     break;
                 default:
                     if (console && console.warn) console.warn($.mage.__('Unknown action!'));
@@ -222,6 +237,8 @@ define([
                 /* NOTE: all images must be in cache, so we can skip stage 1 */
                 this.syncStage = 2;
             }
+
+            this.doDeleteCachedImages = $('[name=mt-config\\[delete_cached_images\\]]:checked').val();
 
             this._doSync();
         },
@@ -311,7 +328,7 @@ define([
          */
         _doSync: function () {
             if (this.isSyncCanceled) {
-                this._syncСompleted();
+                this._syncCompleted();
                 return;
             }
 
@@ -319,7 +336,12 @@ define([
                 this._getSimulator().start();
             }
 
-            this._doRequest('synchronize', {'syncStage': this.syncStage}, this._syncSuccessed, this._syncFailed);
+            this._doRequest(
+                'synchronize',
+                {'syncStage': this.syncStage, 'doClean': this.doDeleteCachedImages},
+                this._syncSuccessed,
+                this._syncFailed
+            );
         },
 
         /**
@@ -445,7 +467,7 @@ define([
 
                 //NOTE: protector
                 if (data.completed) {
-                    this._syncСompleted();
+                    this._syncCompleted();
                     return;
                 }
 
@@ -462,11 +484,11 @@ define([
                 }
             }
 
-            this._syncСompleted();
+            this._syncCompleted();
         },
 
         /**
-         * Update progress view
+         * Calculate percents
          */
         _calculatePercents: function () {
             var counters = this.counters,
@@ -484,7 +506,7 @@ define([
                 if (restPercent > 0) {
                     if (percents.synced) {
                         percents.synced += restPercent;
-                    } else if ($percents.queued) {
+                    } else if (percents.queued) {
                         percents.queued += restPercent;
                     } else {
                         percents.failed += restPercent;
@@ -634,7 +656,7 @@ define([
             this._displayNotification({
                 id: 'rate_limit_exceeded_message',
                 type: 'notice',
-                message: data.message
+                message: this._improveRateLimitMessage(data.message, timeIsLeft)
             });
 
             if (this.timerId !== null) {
@@ -647,6 +669,35 @@ define([
                 $.proxy(this._updateRateLimitTimer, this),
                 1000
             );
+        },
+
+        /**
+         * Improve rate limit message
+         * @param {String} message
+         * @param {Integer} timeIsLeft
+         */
+        _improveRateLimitMessage: function (message, timeIsLeft) {
+            var matches, fph, h, m, s;
+
+            matches = message.match(/\((\d+)\)\.\s+Retry\s+after/);
+            if (matches && timeIsLeft > 0) {
+                fph = matches[1].replace(/(\d)(\d\d\d)$/, '$1,$2');
+
+                s = Math.floor(timeIsLeft / 1000);
+                h = Math.floor(s / 3600);
+                s -= h * 3600;
+                m = Math.floor(s / 60);
+                s -= m * 60;
+
+                h = h == 0 ? '' : (' ' + h + ' hour' + (h == 1 ? '' : 's'));
+                m = m == 0 ? '' : (' ' + m + ' min');
+                s = s == 0 ? '' : (' ' + s + ' sec');
+                s = h == '' && m == '' && s == '' ? ' 0 sec' : s;
+
+                message = 'Rate limit exceeded (' + fph + ' files per hour). Sync will resume in' + h + m + s + '.';
+            }
+
+            return message;
         },
 
         /**
@@ -665,7 +716,7 @@ define([
                 $(this.selectors.notificationContainer).html('');
 
                 if (this.isSyncCanceled) {
-                    this._syncСompleted();
+                    this._syncCompleted();
                 } else {
                     this.syncStage = 1;
                     this._doSync();
@@ -705,7 +756,7 @@ define([
         /**
          * Sync completed
          */
-         _syncСompleted: function () {
+         _syncCompleted: function () {
             this._removeStripes();
 
             $(this.selectors.texts.progressLabel).addClass('hidden-element');
@@ -783,6 +834,9 @@ define([
             switch (data.method) {
                 case 'failed':
                     counters.failed = 0;
+                    break;
+                case 'queued':
+                    counters.queued = 0;
                     break;
                 case 'all':
                 case 'master':
@@ -867,11 +921,11 @@ define([
          * @param {Object} data
          */
         _getFailedSuccessed: function (data) {
-            if (data && data.pathes) {
-                var message = data.pathes.length + ' image' +
-                    (data.pathes.length > 1 ? 's' : '') +
+            if (data && data.failed) {
+                var message = data.failed.length + ' image' +
+                    (data.failed.length > 1 ? 's' : '') +
                     ' could not be synced to Sirv because ' +
-                    (data.pathes.length > 1 ? 'they are' : 'it is') +
+                    (data.failed.length > 1 ? 'they are' : 'it is') +
                     ' missing from your server.';
 
                 this._displayNotification({
@@ -883,7 +937,7 @@ define([
                     id: 'failed_list_items',
                     type: 'list',
                     message: 'List of images:',
-                    items: data.pathes
+                    items: data.failed
                 });
             }
 

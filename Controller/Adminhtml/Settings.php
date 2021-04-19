@@ -43,4 +43,22 @@ abstract class Settings extends \Magento\Backend\App\Action
     {
         return $this->_authorization->isAllowed('MagicToolbox_Sirv::sirv_settings_edit');
     }
+
+    /**
+     * Get data helper
+     *
+     * @return \MagicToolbox\Sirv\Helper\Data\Backend
+     */
+    protected function getDataHelper()
+    {
+        static $helper = null;
+
+        if ($helper == null) {
+            $helper = \Magento\Framework\App\ObjectManager::getInstance()->get(
+                \MagicToolbox\Sirv\Helper\Data\Backend::class
+            );
+        }
+
+        return $helper;
+    }
 }

@@ -107,6 +107,38 @@ class Head extends \Magento\Framework\View\Element\Template
     }
 
     /**
+     * If lazy load is enabled
+     *
+     * @return bool
+     */
+    public function isLazyLoadEnabled()
+    {
+        return $this->dataHelper->getConfig('lazy_load') == 'true';
+    }
+
+    /**
+     * Are all components used?
+     *
+     * @return bool
+     */
+    public function useAllComponents()
+    {
+        $components = $this->dataHelper->getConfig('js_components');
+        $components = explode(',', $components);
+        return count($components) == 4;
+    }
+
+    /**
+     * Get components
+     *
+     * @return string
+     */
+    public function getComponents()
+    {
+        return $this->dataHelper->getConfig('js_components');
+    }
+
+    /**
      * Check block visibility
      *
      * @return bool

@@ -23,6 +23,18 @@ $failedBarWidth = $queuedBarWidth + $data['failed-percent'];
 $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidden-element');
 
 $ajaxUrl = $block->escapeUrl($block->getAjaxUrl());
+
+$speed = 2000;//images per hour
+$timeUnits = 'hour';
+$estimatedDuration = ($data['total'] - $data['synced'] - $data['failed']) / $speed;
+$estimatedDuration = ceil($estimatedDuration);
+if ($estimatedDuration == 0) {
+    $estimatedDuration = 1;
+}
+if ($estimatedDuration > 1) {
+    $timeUnits .= 's';
+}
+$estimatedDurationMessage = "Estimated duration up to {$estimatedDuration} {$timeUnits} at {$speed} images/hour.";
 ?>
 <div class="sirv-sync-container">
   <div class="sirv-sync-status" data-role="sirv-synchronizer">
@@ -30,10 +42,10 @@ $ajaxUrl = $block->escapeUrl($block->getAjaxUrl());
       <div class="row visible-in-modal-view">
         <h1 class="sync-status-header">
           <span class="sync-progress-label">
-            <?= __('Synchronization...') ?>
+            <?= __('Synchronizing...') ?>
           </span>
           <span class="sync-completed-label hidden-element">
-            <?= __('Synchronization completed') ?>
+            <?= __('Synchronization complete') ?>
           </span>
           <span class="sync-failed-label hidden-element">
             <?= __('Synchronization failed') ?>
@@ -43,8 +55,7 @@ $ajaxUrl = $block->escapeUrl($block->getAjaxUrl());
       <div class="row visible-in-modal-view">
         <p class="sync-status-notice">
         <?= __('Keep this page open while images copy to Sirv.') ?><br/>
-        <?= __('It can take many minutes or even hours (for large libraries).') ?><br/>
-        <?= __('If sync is interrupted, please restart it to continue.') ?><br/>
+        <?= __($estimatedDurationMessage) ?><br/>
         </p>
       </div>
       <div class="row">

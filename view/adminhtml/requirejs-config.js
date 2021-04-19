@@ -14,8 +14,9 @@ var config = {
     map: {
         '*': {
             sirvButton: 'MagicToolbox_Sirv/js/button',
-            sirvMultiSwitchButton: 'MagicToolbox_Sirv/js/multiswitchbutton',
+            sirvAdvancedButton: 'MagicToolbox_Sirv/js/advanced-button',
             sirvEditFolderOption: 'MagicToolbox_Sirv/js/edit-folder-option',
+            sirvAssets: 'MagicToolbox_Sirv/js/assets',
             sirvTooltip: 'MagicToolbox_Sirv/js/tooltip',
             sirvChangelog: 'MagicToolbox_Sirv/js/changelog',
             sirvSynchronizer: 'MagicToolbox_Sirv/js/synchronizer',

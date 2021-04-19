@@ -49,7 +49,7 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     /**
      * Synchronize action
      *
-     * @return \Magento\Backend\Model\View\Result\Redirect
+     * @return \Magento\Framework\Controller\Result\Json
      */
     public function execute()
     {
@@ -66,7 +66,8 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             case 'synchronize':
                 $stage = isset($postData['syncStage']) ? (int)$postData['syncStage'] : 0;
                 if ($stage) {
-                    $data = $this->syncHelper->syncMediaGallery($stage);
+                    $doClean = isset($postData['doClean']) ? $postData['doClean'] == 'true' : false;
+                    $data = $this->syncHelper->syncMediaGallery($stage, $doClean);
                 } else {
                     $data = $this->syncHelper->getSyncData(true);
                 }
@@ -82,20 +83,23 @@ class Synchronize extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 }
                 break;
             case 'get_failed':
-                $pathes = $this->syncHelper->getFailedPathes();
+                $failedData = $this->syncHelper->getFailedPathes();
                 $productMediaRelPath = $this->syncHelper->getProductMediaRelPath();
                 $mediaDirAbsPath = $this->syncHelper->getMediaDirAbsPath();
                 $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
                 $storeManager = $objectManager->get(\Magento\Store\Model\StoreManagerInterface::class);
                 $mediaBaseUrl = $storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
                 $mediaBaseUrl = rtrim($mediaBaseUrl, '\\/');
-                foreach ($pathes as $i => $path) {
-                    $pathes[$i] = [
-                        'path' => $mediaDirAbsPath . $productMediaRelPath . '/' . ltrim($path, '\\/'),
-                        'url' => $mediaBaseUrl . $productMediaRelPath . '/' . ltrim($path, '\\/'),
+                foreach ($failedData as $i => $path) {
+                    $relPath = $productMediaRelPath . '/' . ltrim($path, '\\/');
+                    $absPath = $mediaDirAbsPath . $relPath;
+                    $failedData[$i] = [
+                        'path' => $absPath,
+                        'exists' => is_file($absPath),
+                        'url' => $mediaBaseUrl . $relPath,
                     ];
                 }
-                $data = ['pathes' => $pathes];
+                $data = ['failed' => $failedData];
                 $result['success'] = true;
                 break;
             default:

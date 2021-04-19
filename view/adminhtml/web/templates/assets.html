@@ -1,0 +1,71 @@
+<!--
+/**
+ * Assets template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+-->
+
+<div class="sirv-assets-wraper">
+    <% if (error) { %>
+    <span class="sirv-assets-error">
+        <%= error %>
+    </span>
+    <% } %>
+
+    <% if (products) { %>
+    <table class="admin__table-primary">
+        <thead>
+        <tr>
+            <th class="data-grid-th no-link"><span>Id</span></th>
+            <th class="data-grid-th no-link"><span>Sku</span></th>
+            <th class="data-grid-th no-link"><span>Content</span></th>
+        </tr>
+        </thead>
+        <tbody>
+        <% _.each(products, function(product, id) { %>
+        <tr class="sirv-assets-product<% if (product.sku) { %> sirv-assets-product-has-sku<% } %>">
+            <td class="sirv-assets-product-id col-number"><%- id %></td>
+            <td class="sirv-assets-product-sku"><% if (product.sku) { %><%- product.sku %><% } %></td>
+            <td class="sirv-assets-product-items-count">
+                <%- product.items.length %> item<% if (product.items.length != 1) { %>s<% } %>
+                <% if (product.items.length) { %>
+                <a href="#" class="action sirv-assets-product-items-action-link" title="Show/hide items">
+                    <span>Show</span>
+                </a>
+                <% } %>
+                <table class="admin__table-primary sirv-assets-product-items hidden-element">
+                <tbody>
+                    <% _.each(product.items, function(item, i) { %>
+                    <tr class="sirv-assets-product-item">
+                        <td class="sirv-assets-product-item-preview">
+                            <a href="<%- item.url %>" target="_blank"><img src="<%- item.url %>" alt="<%- item.name %>" /></a>
+                        </td>
+                        <td class="sirv-assets-product-item-info">
+                            <div class="sirv-assets-product-item-name"><%- item.name %></div>
+                            <div class="">
+                                <%- item.mtime %>
+                                <% if (item.type == 'image') { %>
+                                - <%- item.size %> - <%- item.width %> x <%- item.height %>
+                                <% } %>
+                            </div>
+                        </tr>
+                    <% }); %>
+                </tbody>
+                </table>
+            </td>
+        </tr>
+        <% }); %>
+        </tbody>
+    </table>
+    <% } else { %>
+    <span class="sirv-assets-message">
+        There is no cached content found.
+    </span>
+    <% } %>
+</div>

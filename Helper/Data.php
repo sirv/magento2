@@ -12,12 +12,13 @@ namespace MagicToolbox\Sirv\Helper;
  */
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
-    /**
-     * Backend flag
-     *
-     * @var bool
+    /**#@+
+     * Config scopes
      */
-    protected $isBackend = false;
+    const SCOPE_STORE = 'store';
+    const SCOPE_WEBSITE = 'website';
+    const SCOPE_DEFAULT = 'default';
+    /**#@-*/
 
     /**
      * Config model factory
@@ -25,34 +26,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \MagicToolbox\Sirv\Model\ConfigFactory
      */
     protected $configModelFactory = null;
-
-    /**
-     * Config
-     *
-     * @var array
-     */
-    protected $sirvConfig = [];
-
-    /**
-     * Is Sirv enabled flag
-     *
-     * @var bool
-     */
-    protected $isSirvEnabled = false;
-
-    /**
-     * Base static URL
-     *
-     * @var string
-     */
-    protected $baseStaticUrl = '';
-
-    /**
-     * Whether to use Sirv Media Viewer
-     *
-     * @var bool
-     */
-    protected $useSirvMediaViewer = false;
 
     /**
      * Sirv client factory
@@ -76,6 +49,120 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected $objectManager;
 
     /**
+     * Store manager
+     *
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
+     * Determine if the data has been initialized or not
+     *
+     * @var bool
+     */
+    protected static $isInitialized = false;
+
+    /**
+     * Base static URL
+     *
+     * @var string
+     */
+    protected $baseStaticUrl = '';
+
+    /**
+     * Backend flag
+     *
+     * @var bool
+     */
+    protected static $isBackend = false;
+
+    /**
+     * Config scope
+     *
+     * @var string
+     */
+    protected static $configScope = self::SCOPE_DEFAULT;
+
+    /**
+     * Config scope id
+     *
+     * @var integer
+     */
+    protected static $configScopeId = 0;
+
+    /**
+     * Website id
+     *
+     * @var integer
+     */
+    protected static $websiteId = 0;
+
+    /**
+     * Store id
+     *
+     * @var integer
+     */
+    protected static $storeId = 0;
+
+    /**
+     * Config
+     *
+     * @var array
+     */
+    protected static $fullConfig = [];
+
+    /**
+     * Config
+     *
+     * @var array
+     */
+    protected static $sirvConfig = [];
+
+    /**
+     * Option names for default profile only
+     *
+     * @var array
+     */
+    protected $defaultProfileOptions = [
+        'account_exists' => true,
+        'email' => true,
+        'password' => true,
+        'first_and_last_name' => true,
+        'alias' => true,
+        'connect' => true,
+        'register' => true,
+        'token' => true,
+        'token_expire_time' => true,
+        'account' => true,
+        'client_id' => true,
+        'client_secret' => true,
+        'key' => true,
+        'secret' => true,
+        'bucket' => true,
+        'cdn_url' => true,
+        'auto_fetch' => true,
+        'url_prefix' => true,
+        'image_folder' => true,
+        'sirv_rate_limit_data' => true,
+        's3_rate_limit_data' => true,
+        'assets_cache' => true
+    ];
+
+    /**
+     * Is Sirv enabled flag
+     *
+     * @var bool
+     */
+    protected static $isSirvEnabled = false;
+
+    /**
+     * Whether to use Sirv Media Viewer
+     *
+     * @var bool
+     */
+    protected static $useSirvMediaViewer = false;
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\App\Helper\Context $context
@@ -84,6 +171,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \MagicToolbox\Sirv\Model\Api\SirvFactory $sirvClientFactory
      * @param \MagicToolbox\Sirv\Model\Api\S3Factory $s3ClientFactory
      * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @return void
      */
     public function __construct(
@@ -92,15 +180,57 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \MagicToolbox\Sirv\Model\ConfigFactory $configModelFactory,
         \MagicToolbox\Sirv\Model\Api\SirvFactory $sirvClientFactory,
         \MagicToolbox\Sirv\Model\Api\S3Factory $s3ClientFactory,
-        \Magento\Framework\ObjectManagerInterface $objectManager
+        \Magento\Framework\ObjectManagerInterface $objectManager,
+        \Magento\Store\Model\StoreManagerInterface $storeManager
     ) {
         parent::__construct($context);
-        $this->isBackend = ($appState->getAreaCode() == \Magento\Framework\App\Area::AREA_ADMINHTML);
+
         $this->configModelFactory = $configModelFactory;
         $this->sirvClientFactory = $sirvClientFactory;
         $this->s3ClientFactory = $s3ClientFactory;
-        $this->loadConfig();
         $this->objectManager = $objectManager;
+        $this->storeManager = $storeManager;
+
+        if (static::$isInitialized === false) {
+            static::$isBackend = ($appState->getAreaCode() == \Magento\Framework\App\Area::AREA_ADMINHTML);
+            $this->initializeData();
+        }
+    }
+
+    /**
+     * Initialize the data
+     *
+     * @return void
+     */
+    protected function initializeData()
+    {
+        static::$isInitialized = true;
+
+        if (static::$isBackend) {
+            $storeId = $this->_request->getParam('store', null);
+            $websiteId = $this->_request->getParam('website', null);
+
+            if ($storeId) {
+                static::$storeId = (int)$storeId;
+                $store = $this->storeManager->getStore(static::$storeId);
+                static::$websiteId = $store->getWebsiteId();
+                static::$configScope = self::SCOPE_STORE;
+                static::$configScopeId = static::$storeId;
+            } elseif ($websiteId) {
+                //static::$storeId = 0;
+                static::$websiteId = (int)$websiteId;
+                static::$configScope = self::SCOPE_WEBSITE;
+                static::$configScopeId = static::$websiteId;
+            }
+        } else {
+            $store = $this->storeManager->getStore();
+            static::$storeId = $store->getId();
+            static::$websiteId = $store->getWebsiteId();
+            static::$configScope = self::SCOPE_STORE;
+            static::$configScopeId = static::$storeId;
+        }
+
+        $this->loadConfig();
     }
 
     /**
@@ -108,15 +238,40 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return void
      */
-    public function loadConfig()
+    protected function loadConfig()
     {
-        $this->sirvConfig = [];
+        static::$sirvConfig = [];
+
         $collection = $this->getConfigModel()->getCollection();
-        foreach ($collection->getData() as $data) {
-            $this->sirvConfig[$data['name']] = $data['value'];
+
+        if (static::$configScope == self::SCOPE_STORE) {
+            $scopeFilter = '(`scope` = \'' . self::SCOPE_DEFAULT . '\' AND `scope_id` = 0) OR ' .
+                '(`scope` = \'' . self::SCOPE_WEBSITE . '\' AND `scope_id` = ' . static::$websiteId . ') OR ' .
+                '(`scope` = \'' . self::SCOPE_STORE . '\' AND `scope_id` = ' . static::$storeId . ')';
+        } elseif (static::$configScope == self::SCOPE_WEBSITE) {
+            $scopeFilter = '(`scope` = \'' . self::SCOPE_DEFAULT . '\' AND `scope_id` = 0) OR ' .
+                '(`scope` = \'' . self::SCOPE_WEBSITE . '\' AND `scope_id` = ' . static::$websiteId . ')';
+        } elseif (static::$configScope == self::SCOPE_DEFAULT) {
+            $scopeFilter = '(`scope` = \'' . self::SCOPE_DEFAULT . '\' AND `scope_id` = 0)';
         }
-        $this->isSirvEnabled = isset($this->sirvConfig['enabled']) ? $this->sirvConfig['enabled'] == 'true' : false;
-        $this->useSirvMediaViewer = isset($this->sirvConfig['product_gallery_view']) ? $this->sirvConfig['product_gallery_view'] == 'smv' : false;
+
+        $collection->addFilter('scope_filter', $scopeFilter, 'string');
+        $collection->load();
+
+        $config = [
+            self::SCOPE_DEFAULT => [],
+            self::SCOPE_WEBSITE => [],
+            self::SCOPE_STORE => []
+        ];
+        foreach ($collection->getData() as $data) {
+            $config[$data['scope']][$data['name']] = $data['value'];
+        }
+
+        static::$sirvConfig = array_merge($config[self::SCOPE_DEFAULT], $config[self::SCOPE_WEBSITE], $config[self::SCOPE_STORE]);
+        static::$fullConfig = $config;
+
+        static::$isSirvEnabled = isset(static::$sirvConfig['enabled']) ? static::$sirvConfig['enabled'] == 'true' : false;
+        static::$useSirvMediaViewer = isset(static::$sirvConfig['product_gallery_view']) ? static::$sirvConfig['product_gallery_view'] == 'smv' : false;
     }
 
     /**
@@ -124,7 +279,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return \MagicToolbox\Sirv\Model\Config
      */
-    protected function getConfigModel()
+    public function getConfigModel()
     {
         return $this->configModelFactory->create();
     }
@@ -137,7 +292,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getConfig($name = null)
     {
-        return $name ? (isset($this->sirvConfig[$name]) ? $this->sirvConfig[$name] : null) : $this->sirvConfig;
+        return $name ? (isset(static::$sirvConfig[$name]) ? static::$sirvConfig[$name] : null) : static::$sirvConfig;
     }
 
     /**
@@ -149,15 +304,32 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function saveConfig($name, $value)
     {
-        $model = $this->getConfigModel();
-        $model->load($name, 'name');
+        if (isset($this->defaultProfileOptions[$name])) {
+            $scope = self::SCOPE_DEFAULT;
+            $scopeId = 0;
+        } else {
+            $scope = static::$configScope;
+            $scopeId = static::$configScopeId;
+        }
+
+        $collection = $this->getConfigModel()->getCollection();
+
+        $collection->addFieldToFilter('scope', $scope);
+        $collection->addFieldToFilter('scope_id', $scopeId);
+        $collection->addFieldToFilter('name', $name);
+
+        $model = $collection->getFirstItem();
         $data = $model->getData();
+
         if (empty($data)) {
+            $model->setData('scope', $scope);
+            $model->setData('scope_id', $scopeId);
             $model->setData('name', $name);
         }
         $model->setData('value', $value);
         $model->save();
-        $this->sirvConfig[$name] = $value;
+        static::$sirvConfig[$name] = $value;
+        static::$fullConfig[$scope][$name] = $value;
     }
 
     /**
@@ -167,7 +339,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function isBackend()
     {
-        return $this->isBackend;
+        return static::$isBackend;
     }
 
     /**
@@ -177,7 +349,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function isSirvEnabled()
     {
-        return $this->isSirvEnabled;
+        return static::$isSirvEnabled;
     }
 
     /**
@@ -187,7 +359,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function useSirvMediaViewer()
     {
-        return $this->useSirvMediaViewer;
+        return static::$useSirvMediaViewer;
     }
 
     /**

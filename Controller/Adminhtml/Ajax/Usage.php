@@ -39,7 +39,7 @@ class Usage extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     /**
      * Synchronize action
      *
-     * @return \Magento\Backend\Model\View\Result\Redirect
+     * @return \Magento\Framework\Controller\Result\Json
      */
     public function execute()
     {

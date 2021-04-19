@@ -46,7 +46,7 @@ class Changelog extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     /**
      * Synchronize action
      *
-     * @return \Magento\Backend\Model\View\Result\Redirect
+     * @return \Magento\Framework\Controller\Result\Json
      */
     public function execute()
     {
@@ -86,16 +86,16 @@ class Changelog extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     }
 
     /**
-     * Get сhangelog
+     * Get changelog
      *
      * @return object|bool
      */
     protected function getChangelog()
     {
-        static $сhangelog = null;
+        static $changelog = null;
 
-        if ($сhangelog === null) {
-            $сhangelog = false;
+        if ($changelog === null) {
+            $changelog = false;
             $cacheId = 'sirv_module_changelog_json';
             $cache = $this->dataHelper->getAppCache();
             $json = $cache->load($cacheId);
@@ -118,17 +118,17 @@ class Changelog extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                     }
                     fclose($handle);
                     $response = substr($response, strpos($response, "\r\n\r\n") + 4);
-                    $сhangelog = json_decode($response);
-                    if (is_object($сhangelog)) {
+                    $changelog = json_decode($response);
+                    if (is_object($changelog)) {
                         $cache->save($response, $cacheId, [], 600);
                     }
                 }
-                $сhangelog = $сhangelog ?: null;
+                $changelog = $changelog ?: null;
             } else {
-                $сhangelog = json_decode($json);
+                $changelog = json_decode($json);
             }
         }
 
-        return $сhangelog;
+        return $changelog;
     }
 }

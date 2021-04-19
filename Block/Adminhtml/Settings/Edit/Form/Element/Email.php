@@ -39,7 +39,7 @@ class Email extends \Magento\Framework\Data\Form\Element\AbstractElement
      */
     public function getHtml()
     {
-        $this->addClass('input-text admin__control-text');
+        $this->addClass('input-text admin__control-text validate-email');
         return parent::getHtml();
     }
 

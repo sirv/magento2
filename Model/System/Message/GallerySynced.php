@@ -74,6 +74,10 @@ class GallerySynced implements \Magento\Framework\Notification\MessageInterface
 
         $data = $this->syncHelper->getSyncData();
         $total = $data['total'] ?: 0;
+        if (!$total) {
+            return false;
+        }
+
         $synced = $data['synced'] ?: 0;
         $unsynced = $total - $synced;
         $unsyncedPercent = $unsynced * 100 / $total;

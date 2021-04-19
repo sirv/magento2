@@ -24,11 +24,6 @@ class InstallData implements InstallDataInterface
     const SIRV_CONFIG_TABLE = 'sirv_config';
 
     /**
-     * Cache table name
-     */
-    const SIRV_CACHE_TABLE = 'sirv_cache';
-
-    /**
      * Module configuration file reader
      *
      * @var \Magento\Framework\Module\Dir\Reader

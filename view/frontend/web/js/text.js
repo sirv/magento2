@@ -13,6 +13,11 @@ define(['module', 'mageText'], function (module, mageText) {
     var config, sirvDomain, staticDomain, fetchMode, loadContentOriginal;
 
     config = module.config && module.config() || {};
+
+    if (!config.domains) {
+        return mageText;
+    }
+
     sirvDomain = config.domains.sirv || '';
     staticDomain = config.domains.static || '';
     fetchMode = config.fetchMode || '';
@@ -29,7 +34,7 @@ define(['module', 'mageText'], function (module, mageText) {
             req.toUrl = function(moduleNamePlusExt) {
                 var url = toUrlOriginal.apply(this, arguments);
 
-                if (url.replace(/^(https?:)?\/\//, '').indexOf(sirvDomain) === 0) {
+                if (/*url.match(/\.html$/) &&*/ url.replace(/^(https?:)?\/\//, '').indexOf(sirvDomain) === 0) {
                     url = url.replace(sirvDomain, staticDomain);
                 }
 

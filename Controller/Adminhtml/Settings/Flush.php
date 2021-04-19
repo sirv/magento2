@@ -46,13 +46,14 @@ class Flush extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         $resultRedirect = $this->resultRedirectFactory->create();
 
         $action = $this->getRequest()->getParam('flush-action');
+        $cleanEmptyItems = false;
+        $message = '<a class="save-message" href="' . $this->getUrl('adminhtml/cache') . '">Clear your page cache</a> to see the changes.';
+
         switch ($action) {
-            case 'all':
-                $assetsModel = $this->assetsModelFactory->create();
-                $assetsModel->getResource()->deleteAll();
-                $message = 'The asset\'s data cache was flushed.';
-                break;
             case 'empty':
+                $cleanEmptyItems = true;
+                // no break
+            case 'notempty':
                 $ids = [];
                 $assetsModel = $this->assetsModelFactory->create();
                 $collection = $assetsModel->getCollection();
@@ -64,10 +65,10 @@ class Flush extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                     foreach ($collection as $item) {
                         $contents = $item->getData('contents');
                         $contents = json_decode($contents);
-                        if (is_object($contents) && isset($contents->assets) && is_array($contents->assets) && !empty($contents->assets)) {
-                            continue;
+                        $notEmpty = is_object($contents) && isset($contents->assets) && is_array($contents->assets) && !empty($contents->assets);
+                        if ($notEmpty xor $cleanEmptyItems) {
+                            $ids[] = $item->getData('product_id');
                         }
-                        $ids[] = $item->getData('product_id');
                     }
                     $collection->clear();
                     $currentPage++;
@@ -76,14 +77,19 @@ class Flush extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                     $message = 'No data found for cleaning.';
                 } else {
                     $assetsModel->getResource()->deleteByIds($ids);
-                    $message = count($ids) . ' item(s) was cleaned.';
+                    $message = count($ids) . ' item(s) was cleaned. ' . $message;
                 }
+                break;
+            case 'all':
+                $assetsModel = $this->assetsModelFactory->create();
+                $assetsModel->getResource()->deleteAll();
+                $message = 'The asset\'s data cache was flushed. ' . $message;
                 break;
             default:
                 $message = 'Error: wrong action!';
         }
 
-        $this->messageManager->addSuccess(__($message));
+        $this->messageManager->addSuccess($message);
 
         $resultRedirect->setPath('sirv/*/edit');
 

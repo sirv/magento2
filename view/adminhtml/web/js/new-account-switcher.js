@@ -30,11 +30,11 @@ define([
          */
         _updatePlaceholders: function (isNewAccount) {
             if (isNewAccount) {
-                $('[name=magictoolbox\\[email\\]]').attr('placeholder', 'Your email address');
-                $('[name=magictoolbox\\[password\\]]').attr('placeholder', 'Choose a password');
+                $('[name=mt-config\\[email\\]]').attr('placeholder', 'Your email address');
+                $('[name=mt-config\\[password\\]]').attr('placeholder', 'Choose a password');
             } else {
-                $('[name=magictoolbox\\[email\\]]').attr('placeholder', 'Sirv account email');
-                $('[name=magictoolbox\\[password\\]]').attr('placeholder', 'Sirv account password');
+                $('[name=mt-config\\[email\\]]').attr('placeholder', 'Sirv account email');
+                $('[name=mt-config\\[password\\]]').attr('placeholder', 'Sirv account password');
             }
         },
 
@@ -61,8 +61,8 @@ define([
                 $('.field-mt-' + name).css('display', display);
             }
 
-            $('[name=magictoolbox\\[first_and_last_name\\]]').prop('disabled', disabled);
-            $('[name=magictoolbox\\[alias\\]]').prop('disabled', disabled);
+            $('[name=mt-config\\[first_and_last_name\\]]').prop('disabled', disabled);
+            $('[name=mt-config\\[alias\\]]').prop('disabled', disabled);
         }
     });
 

@@ -88,6 +88,57 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     AdapterInterface::INDEX_TYPE_UNIQUE
                 );
             }
+
+            //NOTE: fix for 'schema_version' <= 3.0.0
+            if (version_compare($schemaVersion, '3.0.0', '<=')) {
+                if (!$connection->tableColumnExists($tableName, 'scope')) {
+                    $connection->addColumn(
+                        $tableName,
+                        'scope',
+                        [
+                            'type' => Table::TYPE_TEXT,
+                            'length' => 8,
+                            'nullable' => false,
+                            'default' => 'default',
+                            'comment' => 'Config Scope',
+                            'after' => 'id'
+                        ]
+                    );
+                }
+
+                if (!$connection->tableColumnExists($tableName, 'scope_id')) {
+                    $connection->addColumn(
+                        $tableName,
+                        'scope_id',
+                        [
+                            'type' => Table::TYPE_INTEGER,
+                            'nullable' => false,
+                            'default' => 0,
+                            'comment' => 'Config Scope ID',
+                            'after' => 'scope'
+                        ]
+                    );
+                }
+
+                $indexName = $setup->getIdxName(
+                    $tableName,
+                    ['name'],
+                    AdapterInterface::INDEX_TYPE_UNIQUE
+                );
+                $connection->dropIndex($tableName, $indexName);
+
+                $indexName = $setup->getIdxName(
+                    $tableName,
+                    ['scope', 'scope_id', 'name'],
+                    AdapterInterface::INDEX_TYPE_UNIQUE
+                );
+                $connection->addIndex(
+                    $tableName,
+                    $indexName,
+                    ['scope', 'scope_id', 'name'],
+                    AdapterInterface::INDEX_TYPE_UNIQUE
+                );
+            }
         } else {
             //NOTE: create table if it doesn't exist
             $table = $connection->newTable(
@@ -98,6 +149,18 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 null,
                 ['identity' => true, 'unsigned' => true, 'nullable' => false, 'primary' => true],
                 'ID'
+            )->addColumn(
+                'scope',
+                Table::TYPE_TEXT,
+                8,
+                ['nullable' => false, 'default' => 'default'],
+                'Config Scope'
+            )->addColumn(
+                'scope_id',
+                Table::TYPE_INTEGER,
+                null,
+                [/*'identity' => false, 'unsigned' => true, */'nullable' => false, 'default' => 0],
+                'Config Scope ID'
             )->addColumn(
                 'name',
                 Table::TYPE_TEXT,
@@ -113,10 +176,10 @@ class UpgradeSchema implements UpgradeSchemaInterface
             )->addIndex(
                 $setup->getIdxName(
                     $tableName,
-                    ['name'],
+                    ['scope', 'scope_id', 'name'],
                     AdapterInterface::INDEX_TYPE_UNIQUE
                 ),
-                ['name'],
+                ['scope', 'scope_id', 'name'],
                 ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
             )->setComment(
                 'Sirv configuration'
