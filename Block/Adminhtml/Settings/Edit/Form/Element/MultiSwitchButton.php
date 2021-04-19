@@ -135,7 +135,7 @@ class MultiSwitchButton extends \Magento\Framework\Data\Form\Element\AbstractEle
     protected function getButtonConfig()
     {
         return [
-            'label' => 'Press mes',
+            'label' => 'Press me',
             'options' => []
         ];
     }

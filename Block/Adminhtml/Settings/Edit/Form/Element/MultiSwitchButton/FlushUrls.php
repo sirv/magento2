@@ -34,6 +34,16 @@ class FlushUrls extends \MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\El
                         'action' => 'flush-failed',
                     ]
                 ],
+                'queued' => [
+                    'label' => __('Queued images'),
+                    'title' => __('Clear queued images from the Sirv extension database cache'),
+                    'showLoader' => true,
+                    'event' => 'sirv-sync',
+                    'target' => '[data-role=sirv-synchronizer]',
+                    'eventData' => [
+                        'action' => 'flush-queued',
+                    ]
+                ],
                 'all' => [
                     'label' => __('All'),
                     'title' => __('Clear all images from the Sirv extension database cache'),
