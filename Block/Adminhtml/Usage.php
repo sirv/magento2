@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml;
+namespace Sirv\Magento2\Block\Adminhtml;
 
 /**
  * Sirv usage block
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -17,7 +17,7 @@ class Usage extends \Magento\Framework\View\Element\Template
      *
      * @var string
      */
-    protected $_template = 'MagicToolbox_Sirv::usage.phtml';
+    protected $_template = 'Sirv_Magento2::usage.phtml';
 
     /**
      * Usage data
@@ -36,7 +36,7 @@ class Usage extends \Magento\Framework\View\Element\Template
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data\Backend
+     * @var \Sirv\Magento2\Helper\Data\Backend
      */
     protected $dataHelper = null;
 
@@ -48,7 +48,7 @@ class Usage extends \Magento\Framework\View\Element\Template
     protected function _construct()
     {
         $this->objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $this->dataHelper = $this->objectManager->get(\MagicToolbox\Sirv\Helper\Data\Backend::class);
+        $this->dataHelper = $this->objectManager->get(\Sirv\Magento2\Helper\Data\Backend::class);
     }
 
     /**

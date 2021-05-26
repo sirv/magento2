@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml;
+namespace Sirv\Magento2\Block\Adminhtml;
 
 /**
  * Synchronizer block
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -17,12 +17,12 @@ class Synchronizer extends \Magento\Backend\Block\Template
      *
      * @var string
      */
-    protected $_template = 'MagicToolbox_Sirv::synchronizer.phtml';
+    protected $_template = 'Sirv_Magento2::synchronizer.phtml';
 
     /**
      * Sync helper factory
      *
-     * @var \MagicToolbox\Sirv\Helper\SyncFactory
+     * @var \Sirv\Magento2\Helper\Sync\BackendFactory
      */
     protected $syncHelperFactory = null;
 
@@ -37,13 +37,13 @@ class Synchronizer extends \Magento\Backend\Block\Template
      * Constructor
      *
      * @param \Magento\Backend\Block\Template\Context $context
-     * @param \MagicToolbox\Sirv\Helper\SyncFactory $syncHelperFactory
+     * @param \Sirv\Magento2\Helper\Sync\BackendFactory $syncHelperFactory
      * @param array $data
      * @return void
      */
     public function __construct(
         \Magento\Backend\Block\Template\Context $context,
-        \MagicToolbox\Sirv\Helper\SyncFactory $syncHelperFactory,
+        \Sirv\Magento2\Helper\Sync\BackendFactory $syncHelperFactory,
         array $data = []
     ) {
         parent::__construct($context, $data);

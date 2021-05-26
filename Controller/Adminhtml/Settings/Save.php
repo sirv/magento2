@@ -1,16 +1,16 @@
 <?php
 
-namespace MagicToolbox\Sirv\Controller\Adminhtml\Settings;
+namespace Sirv\Magento2\Controller\Adminhtml\Settings;
 
 /**
  * Settings backend controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
+class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
     /**
      * Save action
@@ -27,7 +27,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         $config = isset($data['mt-config']) && is_array($data['mt-config']) ? $data['mt-config'] : [];
         $scopeData = isset($data['scope-switcher']) && is_array($data['scope-switcher']) ? $data['scope-switcher'] : [];
 
-        /** @var \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper */
+        /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
         $dataHelper = $this->getDataHelper();
 
         $configScope = $dataHelper->getConfigScope();
@@ -74,29 +74,21 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 $valid = false;
             }
 
-            $words = isset($config['first_and_last_name']) ? $config['first_and_last_name'] : '';
-            $words = preg_replace('#\s{2,}#', ' ', trim($words));
-            $words = explode(' ', $words);
-            if (count($words) < 2) {
-                $this->messageManager->addWarningMessage(
-                    __('Please specify first and last name separated by a space.')
-                );
+            $firstName = isset($config['first_name']) ? $config['first_name'] : '';
+            $firstName = preg_replace('#\s{2,}#', ' ', trim($firstName));
+            if (!preg_match('#^\p{L}\p{L}(?:\p{L}|\-| |\.(?= )){0,33}$#u', $firstName)) {
+                $this->messageManager->addWarningMessage(__(
+                    'First name is invalid. It must be 2-35 characters. First name cannot contain punctuation, digits or mathematical symbols.'
+                ));
                 $valid = false;
-            } else {
-                $lastName = array_pop($words);
-                $firstName = implode(' ', $words);
-                if (!preg_match('#^[a-z ]{2,35}$#i', $firstName)) {
-                    $this->messageManager->addWarningMessage(
-                        __('First name is invalid. It must be 2-35 characters. It can contain letters and spaces.')
-                    );
-                    $valid = false;
-                }
-                if (!preg_match('#^[a-z]{2,35}$#i', $lastName)) {
-                    $this->messageManager->addWarningMessage(
-                        __('Last name is invalid. It must be 2-35 characters. It can contain letters only.')
-                    );
-                    $valid = false;
-                }
+            }
+            $lastName = isset($config['last_name']) ? $config['last_name'] : '';
+            $lastName = preg_replace('#\s{2,}#', ' ', trim($lastName));
+            if (!preg_match('#^\p{L}\p{L}(?:\p{L}|\-| |\.(?= )){0,33}$#u', $lastName)) {
+                $this->messageManager->addWarningMessage(__(
+                    'Last name is invalid. It must be 2-35 characters. Last name cannot contain punctuation, digits or mathematical symbols.'
+                ));
+                $valid = false;
             }
 
             $alias = isset($config['alias']) ? trim($config['alias']) : '';
@@ -121,7 +113,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             }
 
             if ($valid) {
-                /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
+                /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
                 $apiClient = $dataHelper->getSirvClient();
                 $registered = $apiClient->registerAccount($email, $password, $firstName, $lastName, $alias);
                 if ($registered) {
@@ -129,7 +121,8 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                     $dataHelper->saveConfig('account', $account);
                     $dataHelper->deleteConfig('account_exists');
                     $dataHelper->deleteConfig('alias');
-                    $dataHelper->deleteConfig('first_and_last_name');
+                    $dataHelper->deleteConfig('first_name');
+                    $dataHelper->deleteConfig('last_name');
                     $apiClient->init(['account' => $account]);
                 } else {
                     $errorMsg = $apiClient->getErrorMsg();
@@ -147,6 +140,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             if (!$valid) {
                 $dataHelper->saveConfig('password', '');
                 $password = null;
+                $account = null;
                 $addSuccessMessage = false;
             }
         }
@@ -168,7 +162,16 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 
                 $dataHelper->saveConfig('password', '');
                 $this->messageManager->addWarningMessage($errorMsg);
+            } else {
+                if (count($accounts) == 1) {
+                    $account = reset($accounts);
+                    $dataHelper->saveConfig('account', $account);
+                    /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
+                    $apiClient = $dataHelper->getSirvClient();
+                    $apiClient->init(['account' => $account]);
+                }
             }
+
             $addSuccessMessage = false;
         }
 
@@ -178,7 +181,8 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             if (in_array($account, $accounts)) {
                 $doGetCredentials = true;
                 $dataHelper->deleteConfig('account_exists');
-                $dataHelper->deleteConfig('first_and_last_name');
+                $dataHelper->deleteConfig('first_name');
+                $dataHelper->deleteConfig('last_name');
                 $dataHelper->deleteConfig('alias');
             } else {
                 $dataHelper->saveConfig('account', '');
@@ -190,7 +194,7 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         }
 
         if ($doGetCredentials) {
-            /** @var MagicToolbox_Sirv_Model_Api_Sirv $apiClient */
+            /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
             $apiClient = $dataHelper->getSirvClient();
 
             if ($clientCredentials = $apiClient->getClientCredentials()) {
@@ -238,6 +242,22 @@ class Save extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             if ($imageFolder !== null) {
                 $dataHelper->disableSpinScanning($imageFolder);
             }
+        }
+
+        foreach (['excluded_pages', 'excluded_files'] as $optionId) {
+            $excludedList = isset($config[$optionId]) ? $config[$optionId] : '';
+            $excludedList = trim($excludedList);
+            if (!empty($excludedList)) {
+                $excludedList = explode("\r\n", $excludedList);
+                foreach ($excludedList as &$excludedUrl) {
+                    $excludedUrl = preg_replace('#^(?:https?\:)?//[^/]+/#', '/', $excludedUrl);
+                    $excludedUrl = preg_replace('#\*++#', '*', $excludedUrl);
+                    $excludedUrl = '/' . preg_replace('#^/#', '', $excludedUrl);
+                }
+                $excludedList = array_unique($excludedList);
+                $excludedList = implode("\n", $excludedList);
+            }
+            $dataHelper->saveConfig($optionId, $excludedList);
         }
 
         $smvJsOptions = isset($config['smv_js_options']) ? $config['smv_js_options'] : '';

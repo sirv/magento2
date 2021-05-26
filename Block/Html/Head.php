@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Html;
+namespace Sirv\Magento2\Block\Html;
 
 /**
  * Head block
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -15,14 +15,14 @@ class Head extends \Magento\Framework\View\Element\Template
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data
+     * @var \Sirv\Magento2\Helper\Data
      */
     protected $dataHelper = null;
 
     /**
      * Sync helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Sync
+     * @var \Sirv\Magento2\Helper\Sync
      */
     protected $syncHelper = null;
 
@@ -35,14 +35,14 @@ class Head extends \Magento\Framework\View\Element\Template
 
     /**
      * @param \Magento\Framework\View\Element\Template\Context $context
-     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
-     * @param \MagicToolbox\Sirv\Helper\Sync $syncHelper
+     * @param \Sirv\Magento2\Helper\Data $dataHelper
+     * @param \Sirv\Magento2\Helper\Sync $syncHelper
      * @param array $data
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
-        \MagicToolbox\Sirv\Helper\Data $dataHelper,
-        \MagicToolbox\Sirv\Helper\Sync $syncHelper,
+        \Sirv\Magento2\Helper\Data $dataHelper,
+        \Sirv\Magento2\Helper\Sync $syncHelper,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -78,9 +78,12 @@ class Head extends \Magento\Framework\View\Element\Template
      */
     public function getBaseStaticUrl()
     {
-        $url = $this->dataHelper->baseStaticUrl();
+        $store = $this->dataHelper->getStoreManager()->getStore();
+        $url = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC, false);
+        //NOTE: protocol://host/path_to_magento/pub/static/version{id}/
         if (empty($url)) {
             $url = $this->getViewFileUrl('/');
+            //NOTE: protocol://host/path_to_magento/pub/static/version{id}/frontend/Magento/luma/en_US
         }
 
         return $url;
@@ -94,48 +97,6 @@ class Head extends \Magento\Framework\View\Element\Template
     public function getFetchMode()
     {
         return $this->dataHelper->getConfig('auto_fetch');
-    }
-
-    /**
-     * Whether to use Sirv Media Viewer
-     *
-     * @return bool
-     */
-    public function useSirvMediaViewer()
-    {
-        return $this->dataHelper->useSirvMediaViewer();
-    }
-
-    /**
-     * If lazy load is enabled
-     *
-     * @return bool
-     */
-    public function isLazyLoadEnabled()
-    {
-        return $this->dataHelper->getConfig('lazy_load') == 'true';
-    }
-
-    /**
-     * Are all components used?
-     *
-     * @return bool
-     */
-    public function useAllComponents()
-    {
-        $components = $this->dataHelper->getConfig('js_components');
-        $components = explode(',', $components);
-        return count($components) == 4;
-    }
-
-    /**
-     * Get components
-     *
-     * @return string
-     */
-    public function getComponents()
-    {
-        return $this->dataHelper->getConfig('js_components');
     }
 
     /**

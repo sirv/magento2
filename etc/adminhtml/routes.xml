@@ -4,7 +4,7 @@
  * Routers maps config
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -12,7 +12,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
     <router id="admin">
         <route id="sirv" frontName="sirv">
-            <module name="MagicToolbox_Sirv" before="Magento_Backend" />
+            <module name="Sirv_Magento2" before="Magento_Backend" />
         </route>
     </router>
 </config>

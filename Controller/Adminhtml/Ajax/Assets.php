@@ -1,28 +1,21 @@
 <?php
 
-namespace MagicToolbox\Sirv\Controller\Adminhtml\Ajax;
+namespace Sirv\Magento2\Controller\Adminhtml\Ajax;
 
 /**
  * Assets ajax controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class Assets extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
+class Assets extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
-    /**
-     * Data helper
-     *
-     * @var \MagicToolbox\Sirv\Helper\Data\Backend
-     */
-    protected $dataHelper = null;
-
     /**
      * Assets model factory
      *
-     * @var \MagicToolbox\Sirv\Model\AssetsFactory
+     * @var \Sirv\Magento2\Model\AssetsFactory
      */
     protected $assetsModelFactory = null;
 
@@ -31,18 +24,17 @@ class Assets extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      *
      * @param \Magento\Backend\App\Action\Context $context
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
-     * @param \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory
+     * @param \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory
+     * @param \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory
      * @return void
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper,
-        \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory
+        \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory,
+        \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory
     ) {
-        parent::__construct($context, $resultPageFactory);
-        $this->dataHelper = $dataHelper;
+        parent::__construct($context, $resultPageFactory, $dataHelperFactory);
         $this->assetsModelFactory = $assetsModelFactory;
     }
 
@@ -58,10 +50,10 @@ class Assets extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             'products' => []
         ];
 
-        /** @var \MagicToolbox\Sirv\Model\Assets $assetsModel */
+        /** @var \Sirv\Magento2\Model\Assets $assetsModel */
         $assetsModel = $this->assetsModelFactory->create();
 
-        /** @var \MagicToolbox\Sirv\Model\ResourceModel\Assets $resource */
+        /** @var \Sirv\Magento2\Model\ResourceModel\Assets $resource */
         $resource = $assetsModel->getResource();
         /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
         $connection = $resource->getConnection();
@@ -97,7 +89,10 @@ class Assets extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
                 );
             $skus = $connection->fetchPairs($select, []);
 
-            $bucket = $this->dataHelper->getConfig('bucket') ?: $this->dataHelper->getConfig('account');
+            /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
+            $dataHelper = $this->getDataHelper();
+
+            $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
             $baseUrl = 'https://' . $bucket . '.sirv.com';
 
             foreach ($assetsData as $id => $contents) {

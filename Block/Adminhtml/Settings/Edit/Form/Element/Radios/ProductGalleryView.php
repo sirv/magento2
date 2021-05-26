@@ -1,16 +1,16 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios;
+namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios;
 
 /**
  * Form product gallery view element
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class ProductGalleryView extends \MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios
+class ProductGalleryView extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher
 {
     /**
      * Get the element HTML
@@ -35,7 +35,7 @@ class ProductGalleryView extends \MagicToolbox\Sirv\Block\Adminhtml\Settings\Edi
             <script type="text/x-magento-init">
                 {
                     "[data-role=product-gallery-view-switcher]": {
-                        "MagicToolbox_Sirv/js/product-gallery-view-switcher": {}
+                        "Sirv_Magento2/js/product-gallery-view-switcher": {}
                     }
                 }
             </script>';

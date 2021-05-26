@@ -1,16 +1,16 @@
 <?php
 
-namespace MagicToolbox\Sirv\Controller\Adminhtml\Settings;
+namespace Sirv\Magento2\Controller\Adminhtml\Settings;
 
 /**
  * Settings backend controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
+class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
     /**
      * Edit action
@@ -19,14 +19,15 @@ class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      */
     public function execute()
     {
-        /** @var \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper */
+        /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
         $dataHelper = $this->getDataHelper();
+
         $config = $dataHelper->getConfig();
 
         $account = isset($config['account']) ? $config['account'] : '';
         if ($account) {
             $unauthorized = false;
-            /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
+            /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
             $apiClient = $dataHelper->getSirvClient();
             $accountInfo = $apiClient->getAccountInfo();
             $alias = $accountInfo && $accountInfo->alias ? $accountInfo->alias : false;
@@ -70,18 +71,15 @@ class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             }
         }
 
-        $requiredVersion = '1.6.6';
-        $outdatedModules = $this->getOutdatedModules($requiredVersion);
-        if (!empty($outdatedModules)) {
-            foreach ($outdatedModules as $name => $version) {
-                $this->messageManager->addWarning(__(
-                    'Your extension %1 v%2 should be updated to work with the Sirv extension. <a target="_blank" href="%3">Download here</a>.',
-                    $name,
-                    $version,
-                    /*'https://www.magictoolbox.com/my-account/'*/
-                    'https://www.magictoolbox.com/magiczoom/modules/magento/'
-                ));
-            }
+        $outdatedModules = $this->getOutdatedModules();
+        foreach ($outdatedModules as $name => $version) {
+            $this->messageManager->addWarning(__(
+                'Your extension %1 v%2 should be updated to work with the Sirv extension. <a target="_blank" href="%3">Download here</a>.',
+                $name,
+                $version,
+                /*'https://www.magictoolbox.com/my-account/'*/
+                'https://www.magictoolbox.com/' . strtolower(substr($name, 13)) .'/modules/magento/'
+            ));
         }
 
         /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
@@ -97,16 +95,26 @@ class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     /**
      * Check for outdated modules
      *
-     * @param string $requiredVersion
      * @return array
      */
-    protected function getOutdatedModules($requiredVersion)
+    protected function getOutdatedModules()
     {
+        $requiredVersions = [
+            'MagicToolbox_Magic360' => '1.7.0',
+            'MagicToolbox_MagicZoomPlus' => '1.6.11',
+            'MagicToolbox_MagicZoom' => '1.6.11',
+            'MagicToolbox_MagicThumb' => '1.6.11',
+            'MagicToolbox_MagicScroll' => '1.6.11',
+            'MagicToolbox_MagicSlideshow' => '1.6.11',
+        ];
+        $modulesData = $this->getModulesData();
         $outdatedModules = [];
-        $modules = $this->getModulesData();
-        foreach ($modules as $name => $version) {
-            if (version_compare($version, $requiredVersion, '<')) {
-                $outdatedModules[$name] = $version;
+
+        foreach ($requiredVersions as $module => $requiredVersion) {
+            if (isset($modulesData[$module]) && $modulesData[$module]) {
+                if (version_compare($modulesData[$module], $requiredVersion, '<')) {
+                    $outdatedModules[$module] = $modulesData[$module];
+                }
             }
         }
 
@@ -126,11 +134,11 @@ class Edit extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             return $data;
         }
 
-        /** @var \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper */
+        /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
         $dataHelper = $this->getDataHelper();
 
         $cache = $dataHelper->getAppCache();
-        $cacheId = 'magictoolbox_modules_data';
+        $cacheId = 'cache_id_modules_version';
 
         $data = $cache->load($cacheId);
         if (false !== $data) {

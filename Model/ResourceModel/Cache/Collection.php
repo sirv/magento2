@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model\ResourceModel\Cache;
+namespace Sirv\Magento2\Model\ResourceModel\Cache;
 
 /**
  * Cache collection
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -19,7 +19,7 @@ class Collection extends \Magento\Framework\Model\ResourceModel\Db\Collection\Ab
      */
     protected function _construct()
     {
-        $this->_init('MagicToolbox\Sirv\Model\Cache', 'MagicToolbox\Sirv\Model\ResourceModel\Cache');
+        $this->_init('Sirv\Magento2\Model\Cache', 'Sirv\Magento2\Model\ResourceModel\Cache');
     }
 
     /**

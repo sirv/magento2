@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model\Product;
+namespace Sirv\Magento2\Model\Product;
 
 /**
  * Product image model
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -15,14 +15,14 @@ class Image extends \Magento\Catalog\Model\Product\Image
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data
+     * @var \Sirv\Magento2\Helper\Data
      */
     protected $dataHelper = null;
 
     /**
      * Sync helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Sync
+     * @var \Sirv\Magento2\Helper\Sync
      */
     protected $syncHelper = null;
 
@@ -43,8 +43,8 @@ class Image extends \Magento\Catalog\Model\Product\Image
         parent::_construct();
 
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $this->dataHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Data::class);
-        $this->syncHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Sync::class);
+        $this->dataHelper = $objectManager->get(\Sirv\Magento2\Helper\Data::class);
+        $this->syncHelper = $objectManager->get(\Sirv\Magento2\Helper\Sync::class);
         $this->isSirvEnabled = $this->dataHelper->isSirvEnabled();
     }
 
@@ -60,10 +60,12 @@ class Image extends \Magento\Catalog\Model\Product\Image
 
         $absPath = $this->_getWatermarkFilePath();
         if ($absPath) {
-            $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH;
-            $relPath = $this->syncHelper->getRelativePath($absPath, $pathType);
-            if (!$this->syncHelper->isCached($relPath)) {
-                $this->syncHelper->save($absPath, $pathType);
+            if ($this->syncHelper->isNotExcluded($absPath)) {
+                $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
+                $relPath = $this->syncHelper->getRelativePath($absPath, $pathType);
+                if (!$this->syncHelper->isCached($relPath)) {
+                    $this->syncHelper->save($absPath, $pathType);
+                }
             }
         }
 
@@ -102,16 +104,18 @@ class Image extends \Magento\Catalog\Model\Product\Image
             $baseFile = $this->getBaseFile();
             $absPath = $baseFile ? $this->_mediaDirectory->getAbsolutePath($baseFile) : null;
 
-            $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH;
-            $relPath = $this->syncHelper->getRelativePath($absPath, $pathType);
-            if (!$this->syncHelper->isCached($relPath)) {
-                $pathTypeOld = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_PRODUCT_MEDIA_PATH;
-                $relPathOld = $this->syncHelper->getRelativePath($absPath, $pathTypeOld);
-                if (!$this->syncHelper->isCached($relPathOld)) {
-                    $isFileSynced = $this->syncHelper->save($absPath, $pathType);
-                    if ($isFileSynced) {
-                        //NOTICE: check case when file is synced but not exists in Magento cache
-                        return $this;
+            if ($this->syncHelper->isNotExcluded($absPath)) {
+                $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
+                $relPath = $this->syncHelper->getRelativePath($absPath, $pathType);
+                if (!$this->syncHelper->isCached($relPath)) {
+                    $pathTypeOld = \Sirv\Magento2\Helper\Sync::MAGENTO_PRODUCT_MEDIA_PATH;
+                    $relPathOld = $this->syncHelper->getRelativePath($absPath, $pathTypeOld);
+                    if (!$this->syncHelper->isCached($relPathOld)) {
+                        $isFileSynced = $this->syncHelper->save($absPath, $pathType);
+                        if ($isFileSynced) {
+                            //NOTICE: check case when file is synced but not exists in Magento cache
+                            return $this;
+                        }
                     }
                 }
             }
@@ -137,10 +141,10 @@ class Image extends \Magento\Catalog\Model\Product\Image
         $isFileCached = true;
         $isFileSynced = false;
 
-        $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH;
+        $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
         $relPath = $this->syncHelper->getRelativePath($absPath, $pathType);
         if (!$this->syncHelper->isCached($relPath)) {
-            $pathTypeOld = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_PRODUCT_MEDIA_PATH;
+            $pathTypeOld = \Sirv\Magento2\Helper\Sync::MAGENTO_PRODUCT_MEDIA_PATH;
             $relPathOld = $this->syncHelper->getRelativePath($absPath, $pathTypeOld);
             if ($this->syncHelper->isCached($relPathOld)) {
                 $pathType = $pathTypeOld;
@@ -151,10 +155,12 @@ class Image extends \Magento\Catalog\Model\Product\Image
             }
         }
 
-        if ($isFileCached) {
-            $isFileSynced = $this->syncHelper->isSynced($relPath);
-        } else {
-            $isFileSynced = $this->syncHelper->save($absPath, $pathType);
+        if ($this->syncHelper->isNotExcluded($absPath)) {
+            if ($isFileCached) {
+                $isFileSynced = $this->syncHelper->isSynced($relPath);
+            } else {
+                $isFileSynced = $this->syncHelper->save($absPath, $pathType);
+            }
         }
 
         if (!$isFileSynced) {
@@ -176,7 +182,7 @@ class Image extends \Magento\Catalog\Model\Product\Image
     protected function getUrlQuery($absPath)
     {
         try {
-            /** @var \MagicToolbox\Sirv\Model\Image $processor */
+            /** @var \Sirv\Magento2\Model\Image $processor */
             $processor = $this->_imageFactory->create($absPath, 'SIRV');
         } catch (\Exception $e) {
             $this->_logger->critical($e);

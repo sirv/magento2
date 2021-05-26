@@ -1,16 +1,16 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton;
+namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton;
 
 /**
  * Flush URLs button
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class FlushUrls extends \MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton
+class FlushUrls extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton
 {
     /**
      * Get button config

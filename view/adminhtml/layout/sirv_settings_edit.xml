@@ -4,26 +4,26 @@
  * Settings page layout config
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="admin-1column" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
-        <css src="MagicToolbox_Sirv::css/settings.css"/>
+        <css src="Sirv_Magento2::css/settings.css"/>
     </head>
     <body>
         <referenceBlock name="page.title">
             <action method="setTemplate">
-                <argument name="template" xsi:type="string">MagicToolbox_Sirv::title.phtml</argument>
+                <argument name="template" xsi:type="string">Sirv_Magento2::title.phtml</argument>
             </action>
         </referenceBlock>
         <referenceBlock name="page.title">
-            <block class="MagicToolbox\Sirv\Block\Adminhtml\Version" name="sirv.version" template="MagicToolbox_Sirv::version.phtml" />
+            <block class="Sirv\Magento2\Block\Adminhtml\Version" name="sirv.version" template="Sirv_Magento2::version.phtml" />
         </referenceBlock>
         <referenceContainer name="page.wrapper">
-            <block class="MagicToolbox\Sirv\Block\Adminhtml\Upgrade" name="sirv.upgrade.banner" template="MagicToolbox_Sirv::upgrade.phtml" after="header" />
+            <block class="Sirv\Magento2\Block\Adminhtml\Upgrade" name="sirv.upgrade.banner" template="Sirv_Magento2::upgrade.phtml" after="header" />
         </referenceContainer>
         <referenceContainer name="page.main.actions">
             <block class="Magento\Backend\Block\Store\Switcher" name="sirv.system.config.switcher" template="Magento_Backend::store/switcher.phtml">
@@ -37,7 +37,7 @@
             </block>
         </referenceContainer>
         <referenceContainer name="content">
-            <block class="MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit" name="sirv.settings.edit" />
+            <block class="Sirv\Magento2\Block\Adminhtml\Settings\Edit" name="sirv.settings.edit" />
         </referenceContainer>
     </body>
 </page>

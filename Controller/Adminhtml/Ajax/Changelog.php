@@ -1,47 +1,23 @@
 <?php
 
-namespace MagicToolbox\Sirv\Controller\Adminhtml\Ajax;
+namespace Sirv\Magento2\Controller\Adminhtml\Ajax;
 
 /**
  * Changelog ajax controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class Changelog extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
+class Changelog extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
-    /**
-     * Data helper
-     *
-     * @var \MagicToolbox\Sirv\Helper\Data\Backend
-     */
-    protected $dataHelper = null;
-
     /**
      * Changelog URL
      *
      * @var string
      */
     protected $changelogUrl = 'https://sirv.com/help/articles/magento-cdn-sirv-extension/#changelog';
-
-    /**
-     * Constructor
-     *
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
-     * @return void
-     */
-    public function __construct(
-        \Magento\Backend\App\Action\Context $context,
-        \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
-    ) {
-        parent::__construct($context, $resultPageFactory);
-        $this->dataHelper = $dataHelper;
-    }
 
     /**
      * Synchronize action
@@ -58,12 +34,14 @@ class Changelog extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
 
         $changelog = $this->getChangelog();
         if ($changelog) {
-            $currentVersion = $this->dataHelper->getModuleVersion('MagicToolbox_Sirv');
+            /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
+            $dataHelper = $this->getDataHelper();
+            $currentVersion = $dataHelper->getModuleVersion('Sirv_Magento2');
             $list = [];
             foreach ($changelog as $version => $data) {
-                $new = version_compare($currentVersion, $version, '<');
                 $list[] = [
-                    'new' => $new,
+                    'new' => version_compare($currentVersion, $version, '<'),
+                    'current' => version_compare($currentVersion, $version, '='),
                     'version' => $version,
                     'date' => $data->date,
                     'changes' => $data->changes
@@ -97,7 +75,9 @@ class Changelog extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
         if ($changelog === null) {
             $changelog = false;
             $cacheId = 'sirv_module_changelog_json';
-            $cache = $this->dataHelper->getAppCache();
+            /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
+            $dataHelper = $this->getDataHelper();
+            $cache = $dataHelper->getAppCache();
             $json = $cache->load($cacheId);
             if (false === $json) {
                 $hostname = 'www.magictoolbox.com';

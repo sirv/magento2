@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element;
+namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element;
 
 /**
  * Form synchronizer element
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -39,7 +39,7 @@ class Synchronizer extends \Magento\Framework\Data\Form\Element\AbstractElement
     public function getElementHtml()
     {
         $layout = $this->getForm()->getParent()->getLayout();
-        $syncBlock = $layout->createBlock(\MagicToolbox\Sirv\Block\Adminhtml\Synchronizer::class);
+        $syncBlock = $layout->createBlock(\Sirv\Magento2\Block\Adminhtml\Synchronizer::class);
         $html = $syncBlock->toHtml();
 
         return $html;

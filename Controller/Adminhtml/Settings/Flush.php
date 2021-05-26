@@ -1,21 +1,21 @@
 <?php
 
-namespace MagicToolbox\Sirv\Controller\Adminhtml\Settings;
+namespace Sirv\Magento2\Controller\Adminhtml\Settings;
 
 /**
  * Settings backend controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class Flush extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
+class Flush extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
     /**
      * Assets model factory
      *
-     * @var \MagicToolbox\Sirv\Model\AssetsFactory
+     * @var \Sirv\Magento2\Model\AssetsFactory
      */
     protected $assetsModelFactory = null;
 
@@ -24,14 +24,16 @@ class Flush extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      *
      * @param \Magento\Backend\App\Action\Context $context
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory
+     * @param \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory
+     * @param \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory
+        \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory,
+        \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory
     ) {
-        parent::__construct($context, $resultPageFactory);
+        parent::__construct($context, $resultPageFactory, $dataHelperFactory);
         $this->assetsModelFactory = $assetsModelFactory;
     }
 

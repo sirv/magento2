@@ -2,7 +2,7 @@
  * Changelog widget
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -16,6 +16,8 @@ define([
 ], function ($, mageTemplate, changelogTpl) {
     'use strict';
 
+    var changelogData = null;
+
     $.widget('sirv.changelog', {
 
         options: {
@@ -24,7 +26,6 @@ define([
 
         isDisplayed: false,
         modalWindow: null,
-        changelogData: null,
 
         /** @inheritdoc */
         _create: function () {
@@ -38,8 +39,8 @@ define([
         _displayChangelog: function () {
             if (!this.isDisplayed) {
                 this.isDisplayed = true;
-                if (this.changelogData) {
-                    this._getChangelogSuccessed(this.changelogData);
+                if (changelogData) {
+                    this._getChangelogSuccessed(changelogData);
                 } else {
                     this._getChangelog();
                 }
@@ -77,7 +78,7 @@ define([
                         'items': []
                     };
                     if ($.type(response) === 'object' && !$.isEmptyObject(response)) {
-                        this.changelogData = data = response;
+                        changelogData = data = response;
                     }
                     this._getChangelogSuccessed(data);
                 },

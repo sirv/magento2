@@ -2,25 +2,25 @@
  * Config for RequireJS
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
 
 var config = {
     paths: {
-        'sirv/template': 'MagicToolbox_Sirv/templates'
+        'sirv/template': 'Sirv_Magento2/templates'
     },
     map: {
         '*': {
-            sirvButton: 'MagicToolbox_Sirv/js/button',
-            sirvAdvancedButton: 'MagicToolbox_Sirv/js/advanced-button',
-            sirvEditFolderOption: 'MagicToolbox_Sirv/js/edit-folder-option',
-            sirvAssets: 'MagicToolbox_Sirv/js/assets',
-            sirvTooltip: 'MagicToolbox_Sirv/js/tooltip',
-            sirvChangelog: 'MagicToolbox_Sirv/js/changelog',
-            sirvSynchronizer: 'MagicToolbox_Sirv/js/synchronizer',
-            sirvUsage: 'MagicToolbox_Sirv/js/usage'
+            sirvButton: 'Sirv_Magento2/js/button',
+            sirvAdvancedButton: 'Sirv_Magento2/js/advanced-button',
+            sirvEditFolderOption: 'Sirv_Magento2/js/edit-folder-option',
+            sirvAssets: 'Sirv_Magento2/js/assets',
+            sirvTooltip: 'Sirv_Magento2/js/tooltip',
+            sirvChangelog: 'Sirv_Magento2/js/changelog',
+            sirvSynchronizer: 'Sirv_Magento2/js/synchronizer',
+            sirvUsage: 'Sirv_Magento2/js/usage'
         }
     }
 };

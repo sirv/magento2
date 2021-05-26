@@ -4,68 +4,68 @@
  * Frontend module configuration
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!-- NOTE: for Sirv image processor factory replace image adapter factory with Sirv one -->
-    <type name="MagicToolbox\Sirv\Model\Image\Factory">
+    <type name="Sirv\Magento2\Model\Image\Factory">
         <arguments>
-            <argument name="adapterFactory" xsi:type="object">MagicToolbox\Sirv\Model\Image\AdapterFactory</argument>
+            <argument name="adapterFactory" xsi:type="object">Sirv\Magento2\Model\Image\AdapterFactory</argument>
         </arguments>
     </type>
     <!-- NOTE: for Sirv product image model replace image processor factory with Sirv one -->
-    <type name="MagicToolbox\Sirv\Model\Product\Image">
+    <type name="Sirv\Magento2\Model\Product\Image">
         <arguments>
-            <argument name="imageFactory" xsi:type="object">MagicToolbox\Sirv\Model\Image\Factory</argument>
+            <argument name="imageFactory" xsi:type="object">Sirv\Magento2\Model\Image\Factory</argument>
         </arguments>
     </type>
     <!-- NOTE: define virtual factory for creation Sirv product image model object -->
-    <virtualType name="MagicToolbox\Sirv\Model\Product\ImageFactory" type="Magento\Catalog\Model\Product\ImageFactory">
+    <virtualType name="Sirv\Magento2\Model\Product\ImageFactory" type="Magento\Catalog\Model\Product\ImageFactory">
         <arguments>
-            <argument name="instanceName" xsi:type="string">MagicToolbox\Sirv\Model\Product\Image</argument>
+            <argument name="instanceName" xsi:type="string">Sirv\Magento2\Model\Product\Image</argument>
         </arguments>
     </virtualType>
     <!-- NOTE: for Sirv image helper replace product image model factory with virtual one -->
-    <type name="MagicToolbox\Sirv\Helper\Image">
+    <type name="Sirv\Magento2\Helper\Image">
         <arguments>
-            <argument name="productImageFactory" xsi:type="object">MagicToolbox\Sirv\Model\Product\ImageFactory</argument>
+            <argument name="productImageFactory" xsi:type="object">Sirv\Magento2\Model\Product\ImageFactory</argument>
         </arguments>
     </type>
     <!-- NOTE: override Catalog image helper with Sirv one -->
-    <preference for="Magento\Catalog\Helper\Image" type="MagicToolbox\Sirv\Helper\Image" />
+    <preference for="Magento\Catalog\Helper\Image" type="Sirv\Magento2\Helper\Image" />
 
     <!-- NOTE: define virtual factory for creation Sirv image asset object -->
-    <virtualType name="MagicToolbox\Sirv\Model\View\Asset\ImageFactory" type="Magento\Catalog\Model\View\Asset\ImageFactory">
+    <virtualType name="Sirv\Magento2\Model\View\Asset\ImageFactory" type="Magento\Catalog\Model\View\Asset\ImageFactory">
         <arguments>
-            <argument name="instanceName" xsi:type="string">MagicToolbox\Sirv\Model\View\Asset\Image</argument>
+            <argument name="instanceName" xsi:type="string">Sirv\Magento2\Model\View\Asset\Image</argument>
         </arguments>
     </virtualType>
     <!-- NOTE: for product image url builder replace image asset factory with virtual one -->
     <type name="Magento\Catalog\Model\Product\Image\UrlBuilder">
         <arguments>
-            <argument name="viewAssetImageFactory" xsi:type="object">MagicToolbox\Sirv\Model\View\Asset\ImageFactory</argument>
+            <argument name="viewAssetImageFactory" xsi:type="object">Sirv\Magento2\Model\View\Asset\ImageFactory</argument>
         </arguments>
     </type>
 
     <!-- NOTE: for product image factory replace image asset factory with virtual one -->
     <type name="Magento\Catalog\Block\Product\ImageFactory">
         <arguments>
-            <argument name="viewAssetImageFactory" xsi:type="object">MagicToolbox\Sirv\Model\View\Asset\ImageFactory</argument>
+            <argument name="viewAssetImageFactory" xsi:type="object">Sirv\Magento2\Model\View\Asset\ImageFactory</argument>
         </arguments>
     </type>
 
     <!-- NOTE: override category model -->
-    <preference for="Magento\Catalog\Model\Category" type="MagicToolbox\Sirv\Model\Category" />
+    <preference for="Magento\Catalog\Model\Category" type="Sirv\Magento2\Model\Category" />
 
     <!-- NOTE: to use Sirv & Magic360 molules together -->
     <preference for="MagicToolbox\Magic360\Helper\Image" type="MagicToolbox\Magic360\Helper\SirvImage" />
     <preference for="MagicToolbox\Magic360\Model\Product\Image" type="MagicToolbox\Magic360\Model\Product\SirvImage" />
     <type name="MagicToolbox\Magic360\Model\Product\SirvImage">
         <arguments>
-            <argument name="imageFactory" xsi:type="object">MagicToolbox\Sirv\Model\Image\Factory</argument>
+            <argument name="imageFactory" xsi:type="object">Sirv\Magento2\Model\Image\Factory</argument>
         </arguments>
     </type>
     <preference for="MagicToolbox\Magic360\Model\Image" type="MagicToolbox\Magic360\Model\SirvImage" />
@@ -74,16 +74,11 @@
     <!--
     <type name="Magento\Catalog\Helper\ImageFactory">
         <arguments>
-            <argument name="instanceName" xsi:type="string">MagicToolbox\Sirv\Helper\Image</argument>
+            <argument name="instanceName" xsi:type="string">Sirv\Magento2\Helper\Image</argument>
         </arguments>
     </type>
     -->
 
     <!-- NOTE: override template filter for cms block -->
-    <preference for="Magento\Widget\Model\Template\Filter" type="MagicToolbox\Sirv\Model\Template\Filter" />
-
-    <!-- NOTE: override base URL for Auto-Fetch static files-->
-    <type name="Magento\Store\Model\Store">
-        <plugin name="sirvBaseUrlPlugin" type="MagicToolbox\Sirv\Plugin\Store" sortOrder="1000" />
-    </type>
+    <preference for="Magento\Widget\Model\Template\Filter" type="Sirv\Magento2\Model\Template\Filter" />
 </config>

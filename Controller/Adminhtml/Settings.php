@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Controller\Adminhtml;
+namespace Sirv\Magento2\Controller\Adminhtml;
 
 /**
  * Settings backend controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -20,17 +20,27 @@ abstract class Settings extends \Magento\Backend\App\Action
     protected $resultPageFactory = null;
 
     /**
+     * Data helper factory
+     *
+     * @var \Sirv\Magento2\Helper\Data\BackendFactory
+     */
+    protected $dataHelperFactory = null;
+
+    /**
      * Constructor
      *
      * @param \Magento\Backend\App\Action\Context $context
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
+     * @param \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory
      * @return void
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
-        \Magento\Framework\View\Result\PageFactory $resultPageFactory
+        \Magento\Framework\View\Result\PageFactory $resultPageFactory,
+        \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory
     ) {
         $this->resultPageFactory = $resultPageFactory;
+        $this->dataHelperFactory = $dataHelperFactory;
         parent::__construct($context);
     }
 
@@ -41,22 +51,25 @@ abstract class Settings extends \Magento\Backend\App\Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed('MagicToolbox_Sirv::sirv_settings_edit');
+        return $this->_authorization->isAllowed('Sirv_Magento2::sirv_settings_edit');
     }
 
     /**
      * Get data helper
      *
-     * @return \MagicToolbox\Sirv\Helper\Data\Backend
+     * @return \Sirv\Magento2\Helper\Data\Backend
      */
     protected function getDataHelper()
     {
         static $helper = null;
 
         if ($helper == null) {
+            /*
             $helper = \Magento\Framework\App\ObjectManager::getInstance()->get(
-                \MagicToolbox\Sirv\Helper\Data\Backend::class
+                \Sirv\Magento2\Helper\Data\Backend::class
             );
+            */
+            $helper = $this->dataHelperFactory->create();
         }
 
         return $helper;

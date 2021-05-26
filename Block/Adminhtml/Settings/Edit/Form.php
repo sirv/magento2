@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit;
+namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit;
 
 /**
  * Adminhtml settings form
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -22,7 +22,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data\Backend
+     * @var \Sirv\Magento2\Helper\Data\Backend
      */
     protected $dataHelper = null;
 
@@ -38,7 +38,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
      * @param \Magento\Framework\Registry $registry
      * @param \Magento\Framework\Data\FormFactory $formFactory
      * @param \Magento\Framework\Module\Dir\Reader $modulesReader
-     * @param \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper
+     * @param \Sirv\Magento2\Helper\Data\Backend $dataHelper
      * @param \Magento\Framework\ObjectManagerInterface $objectManager
      * @param array $data
      * @return void
@@ -48,7 +48,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         \Magento\Framework\Registry $registry,
         \Magento\Framework\Data\FormFactory $formFactory,
         \Magento\Framework\Module\Dir\Reader $modulesReader,
-        \MagicToolbox\Sirv\Helper\Data\Backend $dataHelper,
+        \Sirv\Magento2\Helper\Data\Backend $dataHelper,
         \Magento\Framework\ObjectManagerInterface $objectManager,
         array $data = []
     ) {
@@ -82,11 +82,11 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
         /** @var \Magento\Backend\Block\Widget\Form\Renderer\Fieldset\Element $fieldsetElementRenderer */
         $fieldsetElementRenderer = \Magento\Framework\Data\Form::getFieldsetElementRenderer();
-        $fieldsetElementRenderer->setTemplate('MagicToolbox_Sirv::widget/form/renderer/fieldset/element.phtml');
+        $fieldsetElementRenderer->setTemplate('Sirv_Magento2::widget/form/renderer/fieldset/element.phtml');
 
         $form->setUseContainer(true);//NOTE: to display form tag
 
-        $moduleEtcPath = $this->moduleDirReader->getModuleDir(\Magento\Framework\Module\Dir::MODULE_ETC_DIR, 'MagicToolbox_Sirv');
+        $moduleEtcPath = $this->moduleDirReader->getModuleDir(\Magento\Framework\Module\Dir::MODULE_ETC_DIR, 'Sirv_Magento2');
         $useErrors = libxml_use_internal_errors(true);
         $xml = simplexml_load_file($moduleEtcPath . '/settings.xml');
         libxml_use_internal_errors($useErrors);
@@ -222,6 +222,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     $fieldConfig['placeholder'] = (string)$field->placeholder;
                 }
 
+                if (isset($field->before_element_html)) {
+                    $fieldConfig['before_element_html'] = (string)$field->before_element_html;
+                }
+
                 if (isset($field->can_hide_select)) {
                     $fieldConfig['can_hide_select'] = true;
                 }
@@ -247,6 +251,9 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
                 switch ($name) {
                     case 'first_and_last_name':
+                        $fieldConfig['first_name'] = isset($config['first_name']) ? $config['first_name'] : '';
+                        $fieldConfig['last_name'] = isset($config['last_name']) ? $config['last_name'] : '';
+                        $fieldConfig['value'] = '';
                         // no break
                     case 'alias':
                         $fieldConfig['disabled'] = !$isNewAccount;
@@ -335,15 +342,13 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $config['cdn_url'] = $this->dataHelper->syncConfig('cdn_url');
                     case 'product_assets_folder':
                         $valuePrefix = isset($config['bucket']) ? $config['bucket'] : $config['account'];
-                        $valuePrefix = '//' . $valuePrefix . '.sirv.com/';
+                        $valuePrefix = $valuePrefix . '.sirv.com/';
                         if (isset($config['cdn_url']) && is_string($config['cdn_url'])) {
                             $cdn = trim($config['cdn_url']);
-                        } else {
-                            $cdn = '';
-                        }
-                        if (!empty($cdn)) {
-                            $valuePrefix = '//' . preg_replace('#^[^/]*//#', '', $cdn);
-                            $valuePrefix = rtrim($valuePrefix, '/') . '/';
+                            if (!empty($cdn)) {
+                                $valuePrefix = preg_replace('#^[^/]*//#', '', $cdn);
+                                $valuePrefix = rtrim($valuePrefix, '/') . '/';
+                            }
                         }
                         /* $fieldConfig['before_element_html'] = $valuePrefix; */
                         $fieldConfig['value_prefix'] = $valuePrefix;
@@ -356,6 +361,8 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             $fieldConfig['note'] .= '<span style="color: red;">Sirv assets cannot be used with Free plan!</span>';
                         }
                         break;
+                    case 'excluded_pages':
+                    case 'excluded_files':
                     case 'smv_js_options':
                     case 'smv_custom_css':
                         $fieldConfig['rows'] = 7;
@@ -408,7 +415,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             'form_after',
             $this->getLayout()->createBlock(
                 \Magento\Framework\View\Element\Template::class
-            )->setTemplate('MagicToolbox_Sirv::widget/form/form_after.phtml')
+            )->setTemplate('Sirv_Magento2::widget/form/form_after.phtml')
         );
 
         return parent::_prepareForm();

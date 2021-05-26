@@ -2,7 +2,7 @@
  * Settings page styles
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -29,6 +29,10 @@
 
 .page-title-wrapper .mt-module-version {
   padding-top: 8px;
+}
+
+.sirv-settings-edit .page-content .message-success {
+  background-color: #c8e8ba;
 }
 
 .sirv-upgrade-banner-wrapper {
@@ -171,6 +175,11 @@
   color: #ffffff;
   text-decoration: none;
 }
+.sirv-changelog-wraper .sirv-changelog-current-version {
+  float: right;
+  text-align: center;
+  font-weight: bold;
+}
 
 a.save-message {
   text-decoration: underline;
@@ -227,6 +236,9 @@ a.save-message {
 .mt-config .field .mt-option {
   width: 400px;
 }
+.admin__field.field-mt-first_and_last_name .mt-option {
+  width: 200px;
+}
 
 .mt-config .field .admin__control-select.mt-option.select-with-placeholder:invalid {
   color: #757575;
@@ -236,6 +248,14 @@ a.save-message {
 }
 .mt-config .fieldset .field.no-label .control {
   width: calc( (100%) - 30px );
+}
+
+.admin__field-control input[type='checkbox']:disabled + .admin__field-label,
+.admin__field-control input[type='checkbox']:disabled + .admin__field-label:before,
+.admin__field-control input[type='radio']:disabled + .admin__field-label,
+.admin__field-control input[type='radio']:disabled + .admin__field-label:before,
+.admin__field-control select:disabled {
+  cursor: not-allowed;
 }
 
 .admin__field-control > .admin__field-option.admin__field-option-inline {
@@ -267,6 +287,66 @@ a.save-message {
 .admin__field-control > .admin__field-option.admin__field-option-not-inline:nth-child(1):nth-last-child(2) + .admin__field-option:before,
 .admin__field-control > .admin__field-option.admin__field-option-not-inline:nth-child(2):nth-last-child(1) + .admin__field-option:before {
   display: none;
+}
+
+.admin__control-switcher {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
+  min-width: 130px;
+  background-color: #eff1f2;
+  border: 1px solid rgba(173, 173, 173, 0);
+  border-radius: 1px;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+}
+.admin__control-switcher input {
+  position: absolute;
+  opacity: 0
+}
+.admin__control-switcher label {
+  position: relative;
+  z-index: 2;
+  float: left;
+  width: 50%;
+  height: 100%;
+  padding: 0.6rem 1rem;
+  margin: 0;
+  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+  /*text-transform: uppercase;*/
+  color: #bbcdd2;
+  cursor: pointer;
+  transition: color .2s ease-out
+}
+.admin__control-switcher input:checked + label {
+  color: #fff
+}
+.admin__control-switcher input:disabled + label {
+  cursor: not-allowed
+}
+.admin__control-switcher input:disabled:checked + label {
+  background-color: #bbcdd2
+}
+.admin__control-switcher > .slide-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
+  width: 50%;
+  height: 100%;
+  color: #fff;
+  background-color: #79a22e;
+  transition: all .3s ease-out
+}
+.admin__control-switcher input:last-of-type:checked~.slide-button {
+  background-color: #666666;
+  left: 50%
 }
 
 .admin__field-control .admin__control-value-text {
@@ -312,6 +392,10 @@ a.save-message {
   margin-left: 10px;
 }
 */
+.admin__control-textarea {
+  resize: both;
+  max-width: 90%;
+}
 
 .admin__field-control {
   /* NOTE: for tooltip */
@@ -700,20 +784,21 @@ a.save-message {
   padding: 0.6rem 1.5rem;
 }
 
-#failed_list_items {
+.message.message-error.list-message {
   max-height: 400px;
   overflow: auto;
+  padding: 1rem 3rem 1rem 3rem;
 }
-#failed_list_items::-webkit-scrollbar {
+.message.message-error.list-message::-webkit-scrollbar {
   width: 10px;
 }
-#failed_list_items::-webkit-scrollbar-track {
+.message.message-error.list-message::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
-#failed_list_items::-webkit-scrollbar-thumb {
+.message.message-error.list-message::-webkit-scrollbar-thumb {
   background: #888;
 }
-#failed_list_items::-webkit-scrollbar-thumb:hover {
+.message.message-error.list-message::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 

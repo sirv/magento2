@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model;
+namespace Sirv\Magento2\Model;
 
 /**
  * Catalog category model
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -22,7 +22,7 @@ class Category extends \Magento\Catalog\Model\Category
     /**
      * Sync helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Sync
+     * @var \Sirv\Magento2\Helper\Sync
      */
     protected $syncHelper = null;
 
@@ -58,11 +58,11 @@ class Category extends \Magento\Catalog\Model\Category
 
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
-        $dataHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Data::class);
+        $dataHelper = $objectManager->get(\Sirv\Magento2\Helper\Data::class);
         $this->isSirvEnabled = $dataHelper->isSirvEnabled();
 
         if ($this->isSirvEnabled) {
-            $this->syncHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Sync::class);
+            $this->syncHelper = $objectManager->get(\Sirv\Magento2\Helper\Sync::class);
             $this->rootDirAbsPath = $this->syncHelper->getRootDirAbsPath();
             $this->mediaDirAbsPath = $this->syncHelper->getMediaDirAbsPath();
             $this->categoryMediaRelPath = $this->syncHelper->getCategoryMediaRelPath();
@@ -84,24 +84,26 @@ class Category extends \Magento\Catalog\Model\Category
 
             if ($image && is_string($image)) {
                 if (substr($image, 0, 1) === '/') {
-                    $pathType = \MagicToolbox\Sirv\Helper\Sync::DOCUMENT_ROOT_PATH;
+                    $pathType = \Sirv\Magento2\Helper\Sync::DOCUMENT_ROOT_PATH;
                     $relPath = $image;
                     $absPath = $this->rootDirAbsPath . $relPath;
                     if (strpos($absPath, $this->mediaDirAbsPath . '/') === 0) {
-                        $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH;
+                        $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
                         $relPath = $this->syncHelper->getRelativePath($absPath, $pathType);
                     }
                 } else {
-                    $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH;
+                    $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
                     $relPath = $this->categoryMediaRelPath . '/' . $image;
                     $absPath = $this->mediaDirAbsPath . $relPath;
                 }
 
-                if ($this->syncHelper->isSynced($relPath)) {
-                    $imageUrl = $this->syncHelper->getUrl($relPath);
-                } elseif (!$this->syncHelper->isCached($relPath)) {
-                    if ($this->syncHelper->save($absPath, $pathType)) {
+                if ($this->syncHelper->isNotExcluded($absPath)) {
+                    if ($this->syncHelper->isSynced($relPath)) {
                         $imageUrl = $this->syncHelper->getUrl($relPath);
+                    } elseif (!$this->syncHelper->isCached($relPath)) {
+                        if ($this->syncHelper->save($absPath, $pathType)) {
+                            $imageUrl = $this->syncHelper->getUrl($relPath);
+                        }
                     }
                 }
             }

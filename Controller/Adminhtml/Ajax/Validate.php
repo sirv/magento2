@@ -1,37 +1,23 @@
 <?php
 
-namespace MagicToolbox\Sirv\Controller\Adminhtml\Ajax;
+namespace Sirv\Magento2\Controller\Adminhtml\Ajax;
 
 /**
  * Validate ajax controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class Validate extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
+class Validate extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
-    /**
-     * Data helper
-     *
-     * @var \MagicToolbox\Sirv\Helper\Data
-     */
-    protected $dataHelper = null;
-
     /**
      * Cache model factory
      *
-     * @var \MagicToolbox\Sirv\Model\CacheFactory
+     * @var \Sirv\Magento2\Model\CacheFactory
      */
     protected $cacheModelFactory = null;
-
-    /**
-     * Bucket
-     *
-     * @var string
-     */
-    protected $bucket = '';
 
     /**
      * Base URL
@@ -90,8 +76,8 @@ class Validate extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      *
      * @param \Magento\Backend\App\Action\Context $context
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
-     * @param \MagicToolbox\Sirv\Model\CacheFactory $cacheModelFactory
+     * @param \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory
+     * @param \Sirv\Magento2\Model\CacheFactory $cacheModelFactory
      * @param \Magento\Framework\Stdlib\CookieManagerInterface $cookieManager
      * @param \Magento\Framework\Stdlib\Cookie\CookieMetadataFactory $cookieMetadataFactory
      * @param \Magento\Framework\Session\SessionManagerInterface $sessionManager
@@ -99,28 +85,14 @@ class Validate extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \MagicToolbox\Sirv\Helper\Data $dataHelper,
-        \MagicToolbox\Sirv\Model\CacheFactory $cacheModelFactory,
+        \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory,
+        \Sirv\Magento2\Model\CacheFactory $cacheModelFactory,
         \Magento\Framework\Stdlib\CookieManagerInterface $cookieManager,
         \Magento\Framework\Stdlib\Cookie\CookieMetadataFactory $cookieMetadataFactory,
         \Magento\Framework\Session\SessionManagerInterface $sessionManager
     ) {
-        parent::__construct($context, $resultPageFactory);
-        $this->dataHelper = $dataHelper;
+        parent::__construct($context, $resultPageFactory, $dataHelperFactory);
         $this->cacheModelFactory = $cacheModelFactory;
-
-        $this->bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
-        $this->baseUrl = 'https://' . $this->bucket . '.sirv.com';
-
-        $imageFolder = $dataHelper->getConfig('image_folder');
-        if (is_string($imageFolder)) {
-            $imageFolder = trim($imageFolder);
-            $imageFolder = trim($imageFolder, '\\/');
-            if (!empty($imageFolder)) {
-                $this->imageFolder = '/' . $imageFolder;
-            }
-        }
-
         $this->cookieManager = $cookieManager;
         $this->cookieMetadataFactory = $cookieMetadataFactory;
         $this->sessionManager = $sessionManager;
@@ -133,6 +105,21 @@ class Validate extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      */
     public function execute()
     {
+        /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
+        $dataHelper = $this->getDataHelper();
+
+        $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
+        $this->baseUrl = 'https://' . $bucket . '.sirv.com';
+
+        $imageFolder = $dataHelper->getConfig('image_folder');
+        if (is_string($imageFolder)) {
+            $imageFolder = trim($imageFolder);
+            $imageFolder = trim($imageFolder, '\\/');
+            if (!empty($imageFolder)) {
+                $this->imageFolder = '/' . $imageFolder;
+            }
+        }
+
         $postData = $this->getRequest()->getPostValue();
         $action = isset($postData['dataAction']) ? $postData['dataAction'] : '';
 
@@ -184,7 +171,7 @@ class Validate extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
             $cacheModel = $this->cacheModelFactory->create();
             $collection = $cacheModel->getCollection();
 
-            /** @var \MagicToolbox\Sirv\Model\ResourceModel\Cache $resource */
+            /** @var \Sirv\Magento2\Model\ResourceModel\Cache $resource */
             $resource = $collection->getResource();
             /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
             $connection = $resource->getConnection();
@@ -390,7 +377,7 @@ class Validate extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      * @param string $name
      * @return string
      */
-    public function getSirvCookie($name)
+    protected function getSirvCookie($name)
     {
         return $this->cookieManager->getCookie($name);
     }
@@ -403,7 +390,7 @@ class Validate extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      * @param int $duration
      * @return void
      */
-    public function setSirvCookie($name, $value, $duration = 86400)
+    protected function setSirvCookie($name, $value, $duration = 86400)
     {
         $metadata = $this->cookieMetadataFactory
             ->createPublicCookieMetadata()
@@ -424,7 +411,7 @@ class Validate extends \MagicToolbox\Sirv\Controller\Adminhtml\Settings
      * @param string $name
      * @return void
      */
-    public function deleteSirvCookie($name)
+    protected function deleteSirvCookie($name)
     {
         $metadata = $this->cookieMetadataFactory
             ->createPublicCookieMetadata()

@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml\Settings;
+namespace Sirv\Magento2\Block\Adminhtml\Settings;
 
 /**
  * Adminhtml settings form container
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -22,7 +22,7 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
         //NOTE: used for delete button
         $this->_objectId = 'sirv_settings_id';
         $this->_controller = 'adminhtml_settings';
-        $this->_blockGroup = 'MagicToolbox_Sirv';
+        $this->_blockGroup = 'Sirv_Magento2';
 
         parent::_construct();
 
@@ -79,7 +79,7 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
     /**
      * Get data helper
      *
-     * @return \MagicToolbox\Sirv\Helper\Data\Backend
+     * @return \Sirv\Magento2\Helper\Data\Backend
      */
     protected function getDataHelper()
     {
@@ -87,7 +87,7 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
 
         if ($helper == null) {
             $helper = \Magento\Framework\App\ObjectManager::getInstance()
-                ->get(\MagicToolbox\Sirv\Helper\Data\Backend::class);
+                ->get(\Sirv\Magento2\Helper\Data\Backend::class);
         }
 
         return $helper;

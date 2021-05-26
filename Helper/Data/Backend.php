@@ -1,16 +1,16 @@
 <?php
 
-namespace MagicToolbox\Sirv\Helper\Data;
+namespace Sirv\Magento2\Helper\Data;
 
 /**
  * Backend helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class Backend extends \MagicToolbox\Sirv\Helper\Data
+class Backend extends \Sirv\Magento2\Helper\Data
 {
     /**
      * Get config scope
@@ -227,7 +227,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
 
         $disableSpinScanning = false;
 
-        /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
+        /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
         $apiClient = $this->getSirvClient();
 
         //NOTE: make sure that folder exists and spin scanning is enabled
@@ -247,6 +247,24 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
     }
 
     /**
+     * Get account identifier (hash)
+     *
+     * @return string
+     */
+    protected function getAccountId()
+    {
+        static $hash = null;
+
+        if ($hash === null) {
+            $email = $this->getConfig('email') ?: '';
+            $account = $this->getConfig('account') ?: '';
+            $hash = hash('md5', $email . $account);
+        }
+
+        return $hash;
+    }
+
+    /**
      * Get account config
      *
      * @return array
@@ -256,8 +274,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
         static $config = null;
 
         if ($config === null) {
-            $account = $this->getConfig('account');
-            $cacheId = 'sirv_account_info_' . hash('md5', $account);
+            $cacheId = 'sirv_account_info_' . $this->getAccountId();
             $cache = $this->getAppCache();
 
             $data = $cache->load($cacheId);
@@ -266,7 +283,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
             }
 
             if (!is_array($data)) {
-                /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
+                /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
                 $apiClient = $this->getSirvClient();
 
                 $data = [];
@@ -344,7 +361,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
             ];
         }
 
-        /** @var \MagicToolbox\Sirv\Model\Api\Sirv $apiClient */
+        /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
         $apiClient = null;
 
         if ($fetching && ($fetching != $config['fetching_enabled'])) {
@@ -359,8 +376,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
 
             $updated = $apiClient->updateAccountInfo($data);
             if ($updated) {
-                $account = $this->getConfig('account');
-                $cacheId = 'sirv_account_info_' . hash('md5', $account);
+                $cacheId = 'sirv_account_info_' . $this->getAccountId();
                 $cache = $this->getAppCache();
                 $config['fetching_enabled'] = $fetching;
                 if (!empty($url)) {
@@ -460,8 +476,7 @@ class Backend extends \MagicToolbox\Sirv\Helper\Data
         static $data = null;
 
         if ($data === null || $force) {
-            $account = $this->getConfig('account');
-            $cacheId = 'sirv_account_usage_' . hash('md5', $account);
+            $cacheId = 'sirv_account_usage_' . $this->getAccountId();
             $cache = $this->getAppCache();
 
             $data = $force ? false : $cache->load($cacheId);

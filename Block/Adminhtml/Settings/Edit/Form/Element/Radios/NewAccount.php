@@ -1,16 +1,16 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios;
+namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios;
 
 /**
  * Form new account switcher
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class NewAccount extends \MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\Radios
+class NewAccount extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios
 {
     /**
      * Get the element HTML
@@ -35,7 +35,7 @@ class NewAccount extends \MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\E
             <script type="text/x-magento-init">
                 {
                     "[data-role=new-account-switcher]": {
-                        "MagicToolbox_Sirv/js/new-account-switcher": {}
+                        "Sirv_Magento2/js/new-account-switcher": {}
                     }
                 }
             </script>';

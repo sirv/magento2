@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model\Template;
+namespace Sirv\Magento2\Model\Template;
 
 /**
  * Template Filter Model
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -29,7 +29,7 @@ class Filter extends \Magento\Widget\Model\Template\Filter
     /**
      * Sync helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Sync
+     * @var \Sirv\Magento2\Helper\Sync
      */
     protected static $syncHelper = null;
 
@@ -51,11 +51,11 @@ class Filter extends \Magento\Widget\Model\Template\Filter
 
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
-        $dataHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Data::class);
+        $dataHelper = $objectManager->get(\Sirv\Magento2\Helper\Data::class);
         static::$isSirvEnabled = $dataHelper->isSirvEnabled();
 
         if (static::$isSirvEnabled) {
-            static::$syncHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Sync::class);
+            static::$syncHelper = $objectManager->get(\Sirv\Magento2\Helper\Sync::class);
             static::$mediaDirAbsPath = static::$syncHelper->getMediaDirAbsPath();
         }
     }
@@ -78,13 +78,15 @@ class Filter extends \Magento\Widget\Model\Template\Filter
             if (isset($params['url'])) {
                 $relPath = '/' . ltrim($params['url'], '\\/');
                 $absPath = static::$mediaDirAbsPath . $relPath;
-                $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH;
+                $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
 
-                if (static::$syncHelper->isSynced($relPath)) {
-                    $url = static::$syncHelper->getUrl($relPath);
-                } elseif (!static::$syncHelper->isCached($relPath)) {
-                    if (static::$syncHelper->save($absPath, $pathType)) {
+                if (static::$syncHelper->isNotExcluded($absPath)) {
+                    if (static::$syncHelper->isSynced($relPath)) {
                         $url = static::$syncHelper->getUrl($relPath);
+                    } elseif (!static::$syncHelper->isCached($relPath)) {
+                        if (static::$syncHelper->save($absPath, $pathType)) {
+                            $url = static::$syncHelper->getUrl($relPath);
+                        }
                     }
                 }
             }

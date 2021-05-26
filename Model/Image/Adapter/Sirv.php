@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model\Image\Adapter;
+namespace Sirv\Magento2\Model\Image\Adapter;
 
 /**
  * Sirv adapter
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -15,7 +15,7 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
     /**
      * Sync helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Sync
+     * @var \Sirv\Magento2\Helper\Sync
      */
     protected $syncHelper = null;
 
@@ -73,16 +73,16 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
      *
      * @param \Magento\Framework\Filesystem $filesystem
      * @param \Psr\Log\LoggerInterface $logger
-     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
-     * @param \MagicToolbox\Sirv\Helper\Sync $syncHelper
+     * @param \Sirv\Magento2\Helper\Data $dataHelper
+     * @param \Sirv\Magento2\Helper\Sync $syncHelper
      * @param array $data
      * @return void
      */
     public function __construct(
         \Magento\Framework\Filesystem $filesystem,
         \Psr\Log\LoggerInterface $logger,
-        \MagicToolbox\Sirv\Helper\Data $dataHelper,
-        \MagicToolbox\Sirv\Helper\Sync $syncHelper,
+        \Sirv\Magento2\Helper\Data $dataHelper,
+        \Sirv\Magento2\Helper\Sync $syncHelper,
         array $data = []
     ) {
         parent::__construct($filesystem, $logger, $data);
@@ -154,19 +154,21 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
 
         $absPath = $this->_fileName;
 
-        $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_PRODUCT_MEDIA_PATH;
+        $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_PRODUCT_MEDIA_PATH;
         $relPath = $this->syncHelper->getRelativePath($absPath, $pathType);
         if ($this->syncHelper->isCached($relPath)) {
             return;
         }
 
-        $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH;
+        $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
         $relPath = $this->syncHelper->getRelativePath($absPath, $pathType);
         if ($this->syncHelper->isCached($relPath)) {
             return;
         }
 
-        $this->syncHelper->save($absPath, $pathType);
+        if ($this->syncHelper->isNotExcluded($absPath)) {
+            $this->syncHelper->save($absPath, $pathType);
+        }
 
         //NOTE: set image quality value
         /*
@@ -323,11 +325,13 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
         $relPath = substr($absPath, strlen($this->mediaDirAbsPath));
 
         $url = false;
-        if ($this->syncHelper->isSynced($relPath)) {
-            $url = $this->syncHelper->getRelUrl($relPath);
-        } elseif (!$this->syncHelper->isCached($relPath)) {
-            if ($this->syncHelper->save($absPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH)) {
+        if ($this->syncHelper->isNotExcluded($absPath)) {
+            if ($this->syncHelper->isSynced($relPath)) {
                 $url = $this->syncHelper->getRelUrl($relPath);
+            } elseif (!$this->syncHelper->isCached($relPath)) {
+                if ($this->syncHelper->save($absPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH)) {
+                    $url = $this->syncHelper->getRelUrl($relPath);
+                }
             }
         }
 

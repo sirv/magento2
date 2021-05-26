@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Helper;
+namespace Sirv\Magento2\Helper;
 
 /**
  * Data helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -23,21 +23,21 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Config model factory
      *
-     * @var \MagicToolbox\Sirv\Model\ConfigFactory
+     * @var \Sirv\Magento2\Model\ConfigFactory
      */
     protected $configModelFactory = null;
 
     /**
      * Sirv client factory
      *
-     * @var \MagicToolbox\Sirv\Model\Api\SirvFactory
+     * @var \Sirv\Magento2\Model\Api\SirvFactory
      */
     protected $sirvClientFactory = null;
 
     /**
      * S3 client factory
      *
-     * @var \MagicToolbox\Sirv\Model\Api\S3Factory
+     * @var \Sirv\Magento2\Model\Api\S3Factory
      */
     protected $s3ClientFactory = null;
 
@@ -61,13 +61,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var bool
      */
     protected static $isInitialized = false;
-
-    /**
-     * Base static URL
-     *
-     * @var string
-     */
-    protected $baseStaticUrl = '';
 
     /**
      * Backend flag
@@ -128,6 +121,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         'email' => true,
         'password' => true,
         'first_and_last_name' => true,
+        'first_name' => true,
+        'last_name' => true,
         'alias' => true,
         'connect' => true,
         'register' => true,
@@ -167,9 +162,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @param \Magento\Framework\App\Helper\Context $context
      * @param \Magento\Framework\App\State $appState
-     * @param \MagicToolbox\Sirv\Model\ConfigFactory $configModelFactory
-     * @param \MagicToolbox\Sirv\Model\Api\SirvFactory $sirvClientFactory
-     * @param \MagicToolbox\Sirv\Model\Api\S3Factory $s3ClientFactory
+     * @param \Sirv\Magento2\Model\ConfigFactory $configModelFactory
+     * @param \Sirv\Magento2\Model\Api\SirvFactory $sirvClientFactory
+     * @param \Sirv\Magento2\Model\Api\S3Factory $s3ClientFactory
      * @param \Magento\Framework\ObjectManagerInterface $objectManager
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @return void
@@ -177,9 +172,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function __construct(
         \Magento\Framework\App\Helper\Context $context,
         \Magento\Framework\App\State $appState,
-        \MagicToolbox\Sirv\Model\ConfigFactory $configModelFactory,
-        \MagicToolbox\Sirv\Model\Api\SirvFactory $sirvClientFactory,
-        \MagicToolbox\Sirv\Model\Api\S3Factory $s3ClientFactory,
+        \Sirv\Magento2\Model\ConfigFactory $configModelFactory,
+        \Sirv\Magento2\Model\Api\SirvFactory $sirvClientFactory,
+        \Sirv\Magento2\Model\Api\S3Factory $s3ClientFactory,
         \Magento\Framework\ObjectManagerInterface $objectManager,
         \Magento\Store\Model\StoreManagerInterface $storeManager
     ) {
@@ -277,7 +272,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Get config model
      *
-     * @return \MagicToolbox\Sirv\Model\Config
+     * @return \Sirv\Magento2\Model\Config
      */
     public function getConfigModel()
     {
@@ -343,13 +338,38 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Is Sirv module enabled in config
+     * Is Sirv module enabled
      *
      * @return bool
      */
     public function isSirvEnabled()
     {
-        return static::$isSirvEnabled;
+        static $isEnabled = null;
+
+        if ($isEnabled === null) {
+            if (($isEnabled = static::$isSirvEnabled) && !static::$isBackend) {
+                $excludedPages = $this->getConfig('excluded_pages') ?: '';
+                if (!empty($excludedPages)) {
+                    $excludedPages = explode("\n", $excludedPages);
+                    foreach ($excludedPages as &$pattern) {
+                        $pattern = str_replace(
+                            '__ASTERISK__',
+                            '.*',
+                            preg_quote(
+                                str_replace('*', '__ASTERISK__', $pattern),
+                                '#'
+                            )
+                        );
+                    }
+                    $requestUri = $this->_request->getRequestUri();
+                    if (preg_match('#' . implode('|', $excludedPages) . '#', $requestUri)) {
+                        $isEnabled = false;
+                    }
+                }
+            }
+        }
+
+        return $isEnabled;
     }
 
     /**
@@ -363,28 +383,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Get/set base static URL
-     *
-     * @param string $url
-     * @return string
-     */
-    public function baseStaticUrl($url = null)
-    {
-        if (null !== $url) {
-            $this->baseStaticUrl = $url;
-        }
-
-        return $this->baseStaticUrl;
-    }
-
-    /**
      * Get Sirv client
      *
-     * @return \MagicToolbox\Sirv\Model\Api\Sirv
+     * @return \Sirv\Magento2\Model\Api\Sirv
      */
     public function getSirvClient()
     {
-        /** @var \MagicToolbox\Sirv\Model\Api\Sirv $sirvClient */
+        /** @var \Sirv\Magento2\Model\Api\Sirv $sirvClient */
         static $sirvClient = null;
 
         if ($sirvClient === null) {
@@ -424,7 +429,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
             $data['rateLimitExceededCallback'] = [$this, 'onSirvRateLimitExceeded'];
 
-            $data['moduleVersion'] = $this->getModuleVersion('MagicToolbox_Sirv') ?: 'unknown';
+            $data['moduleVersion'] = $this->getModuleVersion('Sirv_Magento2') ?: 'unknown';
 
             $sirvClient->init($data);
         }
@@ -435,11 +440,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Get S3 client
      *
-     * @return \MagicToolbox\Sirv\Model\Api\S3
+     * @return \Sirv\Magento2\Model\Api\S3
      */
     public function getS3Client()
     {
-        /** @var \MagicToolbox\Sirv\Model\Api\S3 $s3Client */
+        /** @var \Sirv\Magento2\Model\Api\S3 $s3Client */
         static $s3Client = null;
 
         if ($s3Client === null) {
@@ -461,7 +466,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $data['rateLimitData'] = $this->getUnserializer()->unserialize($rateLimitData);
                 }
 
-                $data['moduleVersion'] = $this->getModuleVersion('MagicToolbox_Sirv') ?: 'unknown';
+                $data['moduleVersion'] = $this->getModuleVersion('Sirv_Magento2') ?: 'unknown';
 
                 $s3Client = $this->s3ClientFactory->create(['params' => $data]);
             }
@@ -503,6 +508,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function onS3RateLimitExceeded($rateLimitData)
     {
         $this->saveConfig('s3_rate_limit_data', $this->getSerializer()->serialize($rateLimitData));
+    }
+
+    /**
+     * Get store manager
+     *
+     * @return \Magento\Store\Model\StoreManagerInterface
+     */
+    public function getStoreManager()
+    {
+        return $this->storeManager;
     }
 
     /**

@@ -2,7 +2,7 @@
  * New account switcher widget
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -61,7 +61,8 @@ define([
                 $('.field-mt-' + name).css('display', display);
             }
 
-            $('[name=mt-config\\[first_and_last_name\\]]').prop('disabled', disabled);
+            $('[name=mt-config\\[first_name\\]]').prop('disabled', disabled);
+            $('[name=mt-config\\[last_name\\]]').prop('disabled', disabled);
             $('[name=mt-config\\[alias\\]]').prop('disabled', disabled);
         }
     });

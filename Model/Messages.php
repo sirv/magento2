@@ -1,16 +1,16 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model;
+namespace Sirv\Magento2\Model;
 
 /**
- * Gallery model
+ * Messages model
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class Gallery extends \Magento\Framework\Model\AbstractModel
+class Messages extends \Magento\Framework\Model\AbstractModel
 {
     /**
      * Internal constructor
@@ -20,7 +20,7 @@ class Gallery extends \Magento\Framework\Model\AbstractModel
     protected function _construct()
     {
         //NOTE: define resource model
-        $this->_init('MagicToolbox\Sirv\Model\ResourceModel\Gallery');
+        $this->_init('Sirv\Magento2\Model\ResourceModel\Messages');
     }
 
     /**
@@ -30,11 +30,6 @@ class Gallery extends \Magento\Framework\Model\AbstractModel
      */
     protected function _clearData()
     {
-        $this->_hasDataChanges = false;
-        $this->_isDeleted = false;
-        $this->_isObjectNew = null;
-        $this->_origData = null;
-        $this->storedData = [];
         $this->_data = [];
         return $this;
     }

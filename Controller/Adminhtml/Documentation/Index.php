@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Controller\Adminhtml\Documentation;
+namespace Sirv\Magento2\Controller\Adminhtml\Documentation;
 
 /**
  * Documentation link controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -36,6 +36,6 @@ class Index extends \Magento\Backend\App\Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed('MagicToolbox_Sirv::sirv_documentation');
+        return $this->_authorization->isAllowed('Sirv_Magento2::sirv_documentation');
     }
 }

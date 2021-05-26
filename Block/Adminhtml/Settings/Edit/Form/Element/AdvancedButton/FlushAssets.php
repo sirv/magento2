@@ -1,21 +1,21 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton;
+namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton;
 
 /**
  * Flush assets button
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class FlushAssets extends \MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton
+class FlushAssets extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton
 {
     /**
      * Assets model factory
      *
-     * @var \MagicToolbox\Sirv\Model\AssetsFactory
+     * @var \Sirv\Magento2\Model\AssetsFactory
      */
     protected $assetsModelFactory = null;
 
@@ -23,14 +23,14 @@ class FlushAssets extends \MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\
      * @param \Magento\Framework\Data\Form\Element\Factory $factoryElement
      * @param \Magento\Framework\Data\Form\Element\CollectionFactory $factoryCollection
      * @param \Magento\Framework\Escaper $escaper
-     * @param \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory
+     * @param \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory
      * @param array $data
      */
     public function __construct(
         \Magento\Framework\Data\Form\Element\Factory $factoryElement,
         \Magento\Framework\Data\Form\Element\CollectionFactory $factoryCollection,
         \Magento\Framework\Escaper $escaper,
-        \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory,
+        \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory,
         $data = []
     ) {
         parent::__construct($factoryElement, $factoryCollection, $escaper, $data);

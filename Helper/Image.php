@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Helper;
+namespace Sirv\Magento2\Helper;
 
 /**
  * Image helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -35,7 +35,7 @@ class Image extends \Magento\Catalog\Helper\Image
     {
         $this->isInitialized = true;
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $dataHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Data::class);
+        $dataHelper = $objectManager->get(\Sirv\Magento2\Helper\Data::class);
         $this->isSirvEnabled = $dataHelper->isSirvEnabled();
     }
 }

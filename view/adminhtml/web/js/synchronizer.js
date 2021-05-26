@@ -2,7 +2,7 @@
  * Synchronizer widget
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -98,14 +98,14 @@ define([
                     '</div>',
             list:   '<div id="<%- data.id %>" class="message message-error list-message">' +
                     '<span class="message-text">' +
-                        '<strong><%- data.message %></strong><br />' +
+                        '<strong><%= data.message %></strong><br />' +
                     '</span>' +
                     '<ul>' +
                     '<% _.each(data.items, function(item, i) { %>' +
                     '<li><a target="_blank" href="<%- item.url %>" title="' +
-                    '<% if (item.exists) { %>file exists' +
-                    '<% } else { %>file does not exist<% } %>"' +
-                    '><%- item.path %></a></li>' +
+                    'File <% if (item.isFile) { %>exists<% } else { %>does not exist<% } %>.' +
+                    '<% if (item.fileSize) { %> Size <%- item.fileSize %> bytes.<% } %>' +
+                    '"><%- item.path %></a></li>' +
                     '<% }); %>' +
                     '</ul>' +
                     '</div>'
@@ -854,9 +854,17 @@ define([
             this._calculatePercents();
             this._updateProgressView();
 
-            $('#failed_list_items').remove();
-            $('#failed_list_message').remove();
-            $(this.selectors.viewFailedLink).addClass('hidden-element');
+            var i = 1,
+                el = $('#failed_images_list_' + i);
+            while (el.length) {
+                el.remove();
+                i++;
+                el = $('#failed_images_list_' + i);
+            }
+            $('#failed_images_message').remove();
+
+            !counters.failed && $(this.selectors.viewFailedLink).addClass('hidden-element');
+
             this._removeStripes();
             this._enableButtons();
             $('body').trigger('processStop');
@@ -921,23 +929,26 @@ define([
          * @param {Object} data
          */
         _getFailedSuccessed: function (data) {
-            if (data && data.failed) {
-                var message = data.failed.length + ' image' +
-                    (data.failed.length > 1 ? 's' : '') +
-                    ' could not be synced to Sirv because ' +
-                    (data.failed.length > 1 ? 'they are' : 'it is') +
-                    ' missing from your server.';
+            if (data && data.failed && data.failed.count) {
+                var message = data.failed.count + ' image' +
+                    (data.failed.count == 1 ? '' : 's') +
+                    ' could not be synced to Sirv.';
 
                 this._displayNotification({
-                    id: 'failed_list_message',
+                    id: 'failed_images_message',
                     type: 'error',
                     message: message
                 });
-                this._displayNotification({
-                    id: 'failed_list_items',
-                    type: 'list',
-                    message: 'List of images:',
-                    items: data.failed
+
+                var self = this, i = 0;
+                $.each(data.failed.groups, function (message, list) {
+                    i++;
+                    self._displayNotification({
+                        id: 'failed_images_list_' + i,
+                        type: 'list',
+                        message: message,
+                        items: list
+                    });
                 });
             }
 

@@ -4,33 +4,33 @@
  * Module menu config
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
-        <add id="MagicToolbox_Sirv::sirv_settings"
+        <add id="Sirv_Magento2::sirv_settings"
             title="Sirv CDN"
-            module="MagicToolbox_Sirv"
+            module="Sirv_Magento2"
             sortOrder="90"
             parent="Magento_Backend::system"
-            resource="MagicToolbox_Sirv::sirv_settings"/>
-        <add id="MagicToolbox_Sirv::sirv_settings_edit"
+            resource="Sirv_Magento2::sirv_settings"/>
+        <add id="Sirv_Magento2::sirv_settings_edit"
             title="Configuration"
-            module="MagicToolbox_Sirv"
+            module="Sirv_Magento2"
             sortOrder="10"
-            parent="MagicToolbox_Sirv::sirv_settings"
+            parent="Sirv_Magento2::sirv_settings"
             action="sirv/settings/edit"
-            resource="MagicToolbox_Sirv::sirv_settings_edit"/>
-        <add id="MagicToolbox_Sirv::sirv_documentation"
+            resource="Sirv_Magento2::sirv_settings_edit"/>
+        <add id="Sirv_Magento2::sirv_documentation"
             title="Documentation"
-            module="MagicToolbox_Sirv"
+            module="Sirv_Magento2"
             sortOrder="20"
-            parent="MagicToolbox_Sirv::sirv_settings"
+            parent="Sirv_Magento2::sirv_settings"
             action="sirv/documentation/index"
             target="_blank"
-            resource="MagicToolbox_Sirv::sirv_documentation"/>
+            resource="Sirv_Magento2::sirv_documentation"/>
     </menu>
 </config>

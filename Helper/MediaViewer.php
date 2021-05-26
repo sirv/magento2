@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Helper;
+namespace Sirv\Magento2\Helper;
 
 /**
  * Sirv Media Viewer helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -28,21 +28,21 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data
+     * @var \Sirv\Magento2\Helper\Data
      */
     protected $dataHelper = null;
 
     /**
      * Sync helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Sync
+     * @var \Sirv\Magento2\Helper\Sync
      */
     protected $syncHelper = null;
 
     /**
      * Assets model factory
      *
-     * @var \MagicToolbox\Sirv\Model\AssetsFactory
+     * @var \Sirv\Magento2\Model\AssetsFactory
      */
     protected $assetsModelFactory = null;
 
@@ -120,18 +120,18 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      * Constructor
      *
      * @param \Magento\Framework\App\Helper\Context $context
-     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
-     * @param \MagicToolbox\Sirv\Helper\Sync $syncHelper
-     * @param \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory
+     * @param \Sirv\Magento2\Helper\Data $dataHelper
+     * @param \Sirv\Magento2\Helper\Sync $syncHelper
+     * @param \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory
      * @param \Magento\Catalog\Helper\Image $imageHelper
      * @param \Magento\Framework\Json\EncoderInterface $jsonEncoder
      * @return void
      */
     public function __construct(
         \Magento\Framework\App\Helper\Context $context,
-        \MagicToolbox\Sirv\Helper\Data $dataHelper,
-        \MagicToolbox\Sirv\Helper\Sync $syncHelper,
-        \MagicToolbox\Sirv\Model\AssetsFactory $assetsModelFactory,
+        \Sirv\Magento2\Helper\Data $dataHelper,
+        \Sirv\Magento2\Helper\Sync $syncHelper,
+        \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory,
         \Magento\Catalog\Helper\Image $imageHelper,
         \Magento\Framework\Json\EncoderInterface $jsonEncoder
     ) {
@@ -422,6 +422,8 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             $idPrefix = 'item-' . $productId . '-';
             $index = 0;
             $disabled = ($this->productId == $productId ? 'false' : 'true');
+            $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
+            $dataType = $zoom == 'enabled' ? ' data-type="zoom"' : '';
 
             //NOTE: to sort by position for associated products
             $iterator = $images->getIterator();
@@ -455,7 +457,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                         break;
                     case 'image':
                         $absPath = $image->getData('path');
-                        $relPath = $this->syncHelper->getRelativePath($absPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
+                        $relPath = $this->syncHelper->getRelativePath($absPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH);
                         $url = $image->getData('large_image_url');
                         if (empty($url)) {
                             if ($imageUrlBuilder) {
@@ -470,13 +472,13 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                         $alt = $image->getData('label') ?: $productName;
                         $alt = $this->galleryBlock->escapeHtmlAttr($alt, false);
 
-                        if ($this->syncHelper->isSynced($relPath)) {
+                        if ($this->syncHelper->isNotExcluded($absPath) && $this->syncHelper->isSynced($relPath)) {
                             $parts = explode('?', $url, 2);
                             if (isset($parts[1])) {
                                 $parts[1] = str_replace('+', '%20', $parts[1]);
                             }
                             $url = implode('?', $parts);
-                            $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-type="zoom" data-disabled="' . $disabled . '" data-alt="' . $alt . '"></div>';
+                            $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '"' . $dataType . ' data-disabled="' . $disabled . '" data-alt="' . $alt . '"></div>';
                         } else {
                             $slides[$slideId] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" data-disabled="' . $disabled . '" data-alt="' . $alt . '" />';
                         }
@@ -538,6 +540,9 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $contents = json_decode($contents);
         $assets = is_object($contents) && isset($contents->assets) && is_array($contents->assets) ? $contents->assets : [];
 
+        $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
+        $dataType = $zoom == 'enabled' ? ' data-type="zoom"' : '';
+
         $slides = [];
         $idPrefix = 'sirv-item-' . $productId . '-';
         $index = 0;
@@ -547,7 +552,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             switch ($asset->type) {
                 case 'image':
                     $url = $folderUrl . '/' . $asset->name;
-                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-type="zoom" data-disabled="' . $disabled . '"></div>';
+                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '"' . $dataType . ' data-disabled="' . $disabled . '"></div>';
                     $index++;
                     break;
                 case 'spin':

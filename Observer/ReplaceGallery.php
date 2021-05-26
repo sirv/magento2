@@ -1,21 +1,21 @@
 <?php
 
-namespace MagicToolbox\Sirv\Observer;
+namespace Sirv\Magento2\Observer;
 
 /**
  * Observer to replace product media gallery view
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
-class ReplaceGalleryObserver implements \Magento\Framework\Event\ObserverInterface
+class ReplaceGallery implements \Magento\Framework\Event\ObserverInterface
 {
     /**
      * Data helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Data
+     * @var \Sirv\Magento2\Helper\Data
      */
     protected $dataHelper = null;
 
@@ -36,11 +36,11 @@ class ReplaceGalleryObserver implements \Magento\Framework\Event\ObserverInterfa
     /**
      * Constructor
      *
-     * @param \MagicToolbox\Sirv\Helper\Data $dataHelper
+     * @param \Sirv\Magento2\Helper\Data $dataHelper
      * @return void
      */
     public function __construct(
-        \MagicToolbox\Sirv\Helper\Data $dataHelper
+        \Sirv\Magento2\Helper\Data $dataHelper
     ) {
         $this->dataHelper = $dataHelper;
         $this->isSirvEnabled = $dataHelper->isSirvEnabled();
@@ -62,7 +62,7 @@ class ReplaceGalleryObserver implements \Magento\Framework\Event\ObserverInterfa
             if ($block) {
                 $template = $block->getTemplate();
                 $block->setOriginalTemplate($template);
-                $block->setTemplate('MagicToolbox_Sirv::product/view/gallery.phtml');
+                $block->setTemplate('Sirv_Magento2::product/view/gallery.phtml');
             }
         }
     }

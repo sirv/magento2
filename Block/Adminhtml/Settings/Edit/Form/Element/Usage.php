@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Block\Adminhtml\Settings\Edit\Form\Element;
+namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element;
 
 /**
  * Form usage element
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -40,7 +40,7 @@ class Usage extends \Magento\Framework\Data\Form\Element\AbstractElement
     {
         $formWidget = $this->getForm()->getParent();
         $layout = $formWidget->getLayout();
-        $usageBlock = $layout->createBlock(\MagicToolbox\Sirv\Block\Adminhtml\Usage::class);
+        $usageBlock = $layout->createBlock(\Sirv\Magento2\Block\Adminhtml\Usage::class);
 
         return $usageBlock->toHtml();
     }

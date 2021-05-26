@@ -4,39 +4,39 @@
  * Global module configuration
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <type name="MagicToolbox\Sirv\Model\Logger\Handler\Info">
+    <type name="Sirv\Magento2\Model\Logger\Handler\Info">
         <arguments>
             <argument name="fileName" xsi:type="string">var/log/sirv.log</argument>
         </arguments>
     </type>
-    <type name="MagicToolbox\Sirv\Model\Logger\Logger">
+    <type name="Sirv\Magento2\Model\Logger\Logger">
         <arguments>
             <argument name="name" xsi:type="string">sirv</argument>
             <argument name="handlers" xsi:type="array">
-                <item name="sirv" xsi:type="object">MagicToolbox\Sirv\Model\Logger\Handler\Info</item>
+                <item name="sirv" xsi:type="object">Sirv\Magento2\Model\Logger\Handler\Info</item>
             </argument>
         </arguments>
     </type>
-    <virtualType name="MagicToolbox\Sirv\Helper\Sync\Context" type="Magento\Framework\App\Helper\Context" shared="false">
+    <virtualType name="Sirv\Magento2\Helper\Sync\Context" type="Magento\Framework\App\Helper\Context" shared="false">
         <arguments>
-            <argument name="logger" xsi:type="object">MagicToolbox\Sirv\Model\Logger\Logger</argument>
+            <argument name="logger" xsi:type="object">Sirv\Magento2\Model\Logger\Logger</argument>
         </arguments>
     </virtualType>
-    <type name="MagicToolbox\Sirv\Helper\Sync">
+    <type name="Sirv\Magento2\Helper\Sync">
         <arguments>
-            <argument name="context" xsi:type="object">MagicToolbox\Sirv\Helper\Sync\Context</argument>
+            <argument name="context" xsi:type="object">Sirv\Magento2\Helper\Sync\Context</argument>
         </arguments>
     </type>
     <type name="Magento\Framework\Console\CommandList">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="sirv_clean_product_images_cache" xsi:type="object">MagicToolbox\Sirv\Console\Command\CleanProductImagesCacheCommand</item>
+                <item name="sirv_clean_product_images_cache" xsi:type="object">Sirv\Magento2\Console\Command\CleanProductImagesCacheCommand</item>
             </argument>
         </arguments>
     </type>

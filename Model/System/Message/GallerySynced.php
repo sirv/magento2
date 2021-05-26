@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model\System\Message;
+namespace Sirv\Magento2\Model\System\Message;
 
 /**
  * Notifications
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -29,7 +29,7 @@ class GallerySynced implements \Magento\Framework\Notification\MessageInterface
     /**
      * Sync helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Sync
+     * @var \Sirv\Magento2\Helper\Sync\Backend
      */
     protected $syncHelper = null;
 
@@ -38,13 +38,13 @@ class GallerySynced implements \Magento\Framework\Notification\MessageInterface
      *
      * @param \Magento\Framework\AuthorizationInterface $authorization
      * @param \Magento\Framework\UrlInterface $urlBuilder
-     * @param \MagicToolbox\Sirv\Helper\Sync $syncHelper
+     * @param \Sirv\Magento2\Helper\Sync\Backend $syncHelper
      * @return void
      */
     public function __construct(
         \Magento\Framework\AuthorizationInterface $authorization,
         \Magento\Framework\UrlInterface $urlBuilder,
-        \MagicToolbox\Sirv\Helper\Sync $syncHelper
+        \Sirv\Magento2\Helper\Sync\Backend $syncHelper
     ) {
         $this->authorization = $authorization;
         $this->urlBuilder = $urlBuilder;
@@ -83,7 +83,7 @@ class GallerySynced implements \Magento\Framework\Notification\MessageInterface
         $unsyncedPercent = $unsynced * 100 / $total;
         $isDisplayed = $unsynced > 1000 || $unsyncedPercent > 75;
 
-        return $this->authorization->isAllowed('MagicToolbox_Sirv::sirv_settings_edit') && $isDisplayed;
+        return $this->authorization->isAllowed('Sirv_Magento2::sirv_settings_edit') && $isDisplayed;
     }
 
     /**

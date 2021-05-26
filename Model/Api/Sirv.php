@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model\Api;
+namespace Sirv\Magento2\Model\Api;
 
 /**
  * Sirv api
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -959,6 +959,8 @@ class Sirv
         $this->errorMsg = '';
         if ($result === false) {
             $this->errorMsg = curl_error(self::$curlHandle);
+        } else if ($this->responseCode == 504) {
+            $this->errorMsg = '504 Gateway Time-out';
         } else {
             $result = empty($result) ? '' : json_decode($result);
             if ($result === null) {

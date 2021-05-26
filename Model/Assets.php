@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model;
+namespace Sirv\Magento2\Model;
 
 /**
  * Assets model
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -20,7 +20,7 @@ class Assets extends \Magento\Framework\Model\AbstractModel
     protected function _construct()
     {
         //NOTE: define resource model
-        $this->_init('MagicToolbox\Sirv\Model\ResourceModel\Assets');
+        $this->_init('Sirv\Magento2\Model\ResourceModel\Assets');
     }
 
     /**

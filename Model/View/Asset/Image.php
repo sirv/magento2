@@ -1,12 +1,12 @@
 <?php
 
-namespace MagicToolbox\Sirv\Model\View\Asset;
+namespace Sirv\Magento2\Model\View\Asset;
 
 /**
  * Image file asset
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2020 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -36,7 +36,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
     /**
      * Context
      *
-     * @var \MagicToolbox\Sirv\Model\View\Asset\Image\Context
+     * @var \Sirv\Magento2\Model\View\Asset\Image\Context
      */
     protected $context;
 
@@ -92,7 +92,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
     /**
      * Sync helper
      *
-     * @var \MagicToolbox\Sirv\Helper\Sync
+     * @var \Sirv\Magento2\Helper\Sync
      */
     protected static $syncHelper = null;
 
@@ -128,7 +128,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
      * Constructor
      *
      * @param \Magento\Catalog\Model\Product\Media\ConfigInterface $mediaConfig
-     * @param \MagicToolbox\Sirv\Model\View\Asset\Image\Context $context
+     * @param \Sirv\Magento2\Model\View\Asset\Image\Context $context
      * @param \Magento\Framework\Encryption\EncryptorInterface $encryptor
      * @param string $filePath
      * @param array $miscParams
@@ -136,7 +136,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
      */
     public function __construct(
         \Magento\Catalog\Model\Product\Media\ConfigInterface $mediaConfig,
-        \MagicToolbox\Sirv\Model\View\Asset\Image\Context $context,
+        \Sirv\Magento2\Model\View\Asset\Image\Context $context,
         \Magento\Framework\Encryption\EncryptorInterface $encryptor,
         $filePath,
         array $miscParams = []
@@ -171,11 +171,11 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
 
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
-        $dataHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Data::class);
+        $dataHelper = $objectManager->get(\Sirv\Magento2\Helper\Data::class);
         static::$isSirvEnabled = $dataHelper->isSirvEnabled();
 
-        static::$syncHelper = $objectManager->get(\MagicToolbox\Sirv\Helper\Sync::class);
-        static::$imageFactory = $objectManager->get(\MagicToolbox\Sirv\Model\Image\Factory::class);
+        static::$syncHelper = $objectManager->get(\Sirv\Magento2\Helper\Sync::class);
+        static::$imageFactory = $objectManager->get(\Sirv\Magento2\Model\Image\Factory::class);
 
         $filesystem = $objectManager->get(\Magento\Framework\Filesystem::class);
         static::$mediaDirectory = $filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
@@ -208,10 +208,10 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
         $isFileCached = true;
         $isFileSynced = false;
 
-        $pathType = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH;
+        $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
         $relPath = static::$syncHelper->getRelativePath($absPath, $pathType);
         if (!static::$syncHelper->isCached($relPath)) {
-            $pathTypeOld = \MagicToolbox\Sirv\Helper\Sync::MAGENTO_PRODUCT_MEDIA_PATH;
+            $pathTypeOld = \Sirv\Magento2\Helper\Sync::MAGENTO_PRODUCT_MEDIA_PATH;
             $relPathOld = static::$syncHelper->getRelativePath($absPath, $pathTypeOld);
             if (static::$syncHelper->isCached($relPathOld)) {
                 $pathType = $pathTypeOld;
@@ -221,19 +221,23 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
             }
         }
 
-        if ($isFileCached) {
-            $isFileSynced = static::$syncHelper->isSynced($relPath);
-        } else {
-            $isFileSynced = static::$syncHelper->save($absPath, $pathType);
+        if (static::$syncHelper->isNotExcluded($absPath)) {
+            if ($isFileCached) {
+                $isFileSynced = static::$syncHelper->isSynced($relPath);
+            } else {
+                $isFileSynced = static::$syncHelper->save($absPath, $pathType);
+            }
         }
 
         //NOTE: to sync watermark file with product image
         if (isset($this->miscParams['watermark_file'])) {
             $watermarkAbsPath = $this->getWatermarkFilePath($this->miscParams['watermark_file']);
             if ($watermarkAbsPath) {
-                $watermarkRelPath = static::$syncHelper->getRelativePath($watermarkAbsPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
-                if (!static::$syncHelper->isCached($watermarkRelPath)) {
-                    static::$syncHelper->save($watermarkAbsPath, \MagicToolbox\Sirv\Helper\Sync::MAGENTO_MEDIA_PATH);
+                $watermarkRelPath = static::$syncHelper->getRelativePath($watermarkAbsPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH);
+                if (static::$syncHelper->isNotExcluded($watermarkAbsPath)) {
+                    if (!static::$syncHelper->isCached($watermarkRelPath)) {
+                        static::$syncHelper->save($watermarkAbsPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH);
+                    }
                 }
             }
         }
@@ -411,7 +415,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
     protected function getUrlQuery($absPath)
     {
         try {
-            /** @var \MagicToolbox\Sirv\Model\Image $processor */
+            /** @var \Sirv\Magento2\Model\Image $processor */
             $processor = static::$imageFactory->create($absPath, 'SIRV');
         } catch (\Exception $e) {
             $this->context->getLogger()->critical($e);
