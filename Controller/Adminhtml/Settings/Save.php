@@ -67,6 +67,13 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
         if ($isNewAccount) {
             $valid = true;
 
+            if (strpos($email, 'mail.ru') !== false) {
+                $this->messageManager->addWarningMessage(
+                    __('Please use a company email address (not mail.ru).')
+                );
+                $valid = false;
+            }
+
             if (strlen($password) < 8) {
                 $this->messageManager->addWarningMessage(
                     __('Password is invalid. It must be at least 8 characters.')
@@ -245,19 +252,21 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
         }
 
         foreach (['excluded_pages', 'excluded_files'] as $optionId) {
-            $excludedList = isset($config[$optionId]) ? $config[$optionId] : '';
-            $excludedList = trim($excludedList);
-            if (!empty($excludedList)) {
-                $excludedList = explode("\r\n", $excludedList);
-                foreach ($excludedList as &$excludedUrl) {
-                    $excludedUrl = preg_replace('#^(?:https?\:)?//[^/]+/#', '/', $excludedUrl);
-                    $excludedUrl = preg_replace('#\*++#', '*', $excludedUrl);
-                    $excludedUrl = '/' . preg_replace('#^/#', '', $excludedUrl);
+            $excludedList = isset($config[$optionId]) ? $config[$optionId] : null;
+            if ($excludedList !== null) {
+                $excludedList = trim($excludedList);
+                if (!empty($excludedList)) {
+                    $excludedList = explode("\r\n", $excludedList);
+                    foreach ($excludedList as &$excludedUrl) {
+                        $excludedUrl = preg_replace('#^(?:https?\:)?//[^/]+/#', '/', $excludedUrl);
+                        $excludedUrl = preg_replace('#\*++#', '*', $excludedUrl);
+                        $excludedUrl = '/' . preg_replace('#^/#', '', $excludedUrl);
+                    }
+                    $excludedList = array_unique($excludedList);
+                    $excludedList = implode("\n", $excludedList);
                 }
-                $excludedList = array_unique($excludedList);
-                $excludedList = implode("\n", $excludedList);
+                $dataHelper->saveConfig($optionId, $excludedList);
             }
-            $dataHelper->saveConfig($optionId, $excludedList);
         }
 
         $smvJsOptions = isset($config['smv_js_options']) ? $config['smv_js_options'] : '';

@@ -80,10 +80,9 @@ class InstallData implements InstallDataInterface
                     \Magento\Framework\Module\Dir::MODULE_ETC_DIR,
                     'Sirv_Magento2'
                 );
-                $fileName = $moduleEtcPath . '/settings.xml';
 
                 $useErrors = libxml_use_internal_errors(true);
-                $xml = simplexml_load_file($fileName);
+                $xml = simplexml_load_file($moduleEtcPath . '/settings.xml');
                 libxml_use_internal_errors($useErrors);
 
                 $data = [];

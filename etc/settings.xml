@@ -204,6 +204,7 @@
                 </options>
                 <value>true</value>
             </field>
+            <!--
             <field>
                 <name>js_components</name>
                 <label>sirv.js components</label>
@@ -236,6 +237,7 @@
                 <value>image,spin,zoom,video</value>
                 <install/>
             </field>
+            -->
             <field>
                 <name>profile</name>
                 <label>Image profile</label>
@@ -392,6 +394,49 @@
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushAssets</type_class>
                 <notice><![CDATA[<a href="#" data-mage-init='{"sirvAssets": {"assetsUrl":"{{URL}}"}}'>View assets</a>]]></notice>
             </field>
+            <field>
+                <name>assets_cache_ttl</name>
+                <label>Sirv content cache TTL</label>
+                <notice><![CDATA[Time when cached content expires. Choose a shorter duration if your images change frequently.]]></notice>
+                <type>select</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
+                <options>
+                    <option>
+                        <label>No caching</label>
+                        <value>0</value>
+                    </option>
+                    <option>
+                        <label>15 minutes</label>
+                        <value>15</value>
+                    </option>
+                    <option>
+                        <label>1 hour</label>
+                        <value>60</value>
+                    </option>
+                    <option>
+                        <label>3 hours</label>
+                        <value>180</value>
+                    </option>
+                    <option>
+                        <label>12 hours</label>
+                        <value>720</value>
+                    </option>
+                    <option>
+                        <label>1 day (default)</label>
+                        <value>1440</value>
+                    </option>
+                    <option>
+                        <label>7 days</label>
+                        <value>10080</value>
+                    </option>
+                    <option>
+                        <label>1 month</label>
+                        <value>43200</value>
+                    </option>
+                </options>
+                <value>1440</value>
+                <install/>
+            </field>
         </fields>
     </group>
     <group id="support">
@@ -453,6 +498,12 @@
                         data-mage-init='{
                             "sirvButton": {
                                 "showLoader": true,
+                                "needConfirmation": true,
+                                "confirmationMessage": "
+                                    <b>Delete {{COUNT}} images.</b><br/>
+                                    This might take a long time.<br/>
+                                    Keep this page open until deletion complete.",
+                                "confirmationButtonText": "Empty image cache",
                                 "event": "sirv-sync",
                                 "target": "[data-role=sirv-synchronizer]",
                                 "eventData": {

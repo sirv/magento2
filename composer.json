@@ -2,7 +2,7 @@
     "name": "sirv/magento2",
     "description": "Sirv module for Magento 2",
     "type": "magento2-module",
-    "version": "4.0.0",
+    "version": "4.1.0",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
@@ -13,7 +13,7 @@
     },
     "conflict": {
         "magictoolbox/sirv": "*",
-        "magictoolbox/magic360": "<=1.7.0"
+        "magictoolbox/magic360": "<1.7.0"
     },
     "autoload": {
         "files": [

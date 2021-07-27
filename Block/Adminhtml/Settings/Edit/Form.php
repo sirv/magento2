@@ -120,13 +120,17 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         $password = isset($config['password']) ? $config['password'] : '';
         $account = isset($config['account']) ? $config['account'] : '';
         $isNewAccount = isset($config['account_exists']) ? ($config['account_exists'] == 'no') : false;
+        $clientId = isset($config['client_id']) ? $config['client_id'] : '';
+        $clientSecret = isset($config['client_secret']) ? $config['client_secret'] : '';
 
         $xpaths = [];//NOTE: do not display these fields
 
-        if (empty($email) || empty($password) || empty($account)) {
+        $passwordRequired = empty($email) || ((empty($clientId) || empty($clientSecret)) && empty($password));
+
+        if ($passwordRequired || empty($account)) {
             $xpaths[] = '/settings/group[not(@id="user")]';
 
-            if (empty($email) || empty($password)) {
+            if ($passwordRequired) {
                 $xpaths[] = '/settings/group[@id="user"]/fields/field[name="account"]';
             } else {
                 $fieldNames = [
@@ -141,6 +145,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 $xpaths[] = '/settings/group[@id="user"]/fields/field[' . $fieldNames . ']';
             }
         } else {
+            $this->dataHelper->saveConfig('password', '');
             $xpaths[] = '/settings/group[@id="user"]';
         }
 
@@ -387,6 +392,11 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $fieldConfig['note'] = str_replace(
                             '{{URL}}',
                             $this->getUrl('*/*/flushmagentoimagescache', []),
+                            $fieldConfig['note']
+                        );
+                        $fieldConfig['note'] = preg_replace(
+                            "#\n++ *+#",
+                            ' ',
                             $fieldConfig['note']
                         );
                         break;

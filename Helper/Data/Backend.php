@@ -267,17 +267,18 @@ class Backend extends \Sirv\Magento2\Helper\Data
     /**
      * Get account config
      *
+     * @param bool $force
      * @return array
      */
-    protected function getAccountConfig()
+    public function getAccountConfig($force = false)
     {
         static $config = null;
 
-        if ($config === null) {
+        if ($config === null || $force) {
             $cacheId = 'sirv_account_info_' . $this->getAccountId();
             $cache = $this->getAppCache();
 
-            $data = $cache->load($cacheId);
+            $data = $force ? false : $cache->load($cacheId);
             if (false !== $data) {
                 $data = $this->getUnserializer()->unserialize($data);
             }
@@ -291,11 +292,9 @@ class Backend extends \Sirv\Magento2\Helper\Data
                 if ($info) {
                     $data['alias'] = $alias = isset($info->alias) ? $info->alias : '';
                     $data['cdn_url'] = isset($info->cdnURL) ? $info->cdnURL : '';
-                    $data['cdn_enabled'] = false;
                     if (isset($info->aliases->{$alias})) {
-                        $data['cdn_enabled'] = isset($info->aliases->{$alias}->cdn) ? $info->aliases->{$alias}->cdn : false;
-                        if ($data['cdn_enabled']) {
-                            $data['cdn_url'] = isset($info->aliases->{$alias}->customDomain) ? $info->aliases->{$alias}->customDomain : $data['cdn_url'];
+                        if (isset($info->aliases->{$alias}->customDomain)) {
+                            $data['cdn_url'] = $info->aliases->{$alias}->customDomain;
                         }
                     }
                     $data['fetching_enabled'] = false;

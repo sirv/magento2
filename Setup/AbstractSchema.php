@@ -213,6 +213,12 @@ abstract class AbstractSchema
             null,
             ['nullable' => false],
             'Contents'
+        )->addColumn(
+            'timestamp',
+            Table::TYPE_INTEGER,
+            null,
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
+            'Last checked time'
         )->addIndex(
             $setup->getIdxName(
                 $tableName,
@@ -449,6 +455,42 @@ abstract class AbstractSchema
                 $indexName,
                 ['path'],
                 AdapterInterface::INDEX_TYPE_UNIQUE
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * Upgrade assets table
+     *
+     * @param SchemaSetupInterface $setup
+     * @return bool
+     */
+    protected function upgradeAssetsTable(SchemaSetupInterface $setup)
+    {
+        if (!$setup->tableExists(self::SIRV_ASSETS_TABLE)) {
+            return false;
+        }
+
+        /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+        $connection = $setup->getConnection();
+
+        $tableName = $setup->getTable(self::SIRV_ASSETS_TABLE);
+
+        if (!$connection->tableColumnExists($tableName, 'timestamp')) {
+            $connection->addColumn(
+                $tableName,
+                'timestamp',
+                [
+                    'type' => Table::TYPE_INTEGER,
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default' => 0,
+                    'comment' => 'Last checked time',
+                    'after' => 'contents'
+
+                ]
             );
         }
 

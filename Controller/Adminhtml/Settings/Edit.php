@@ -21,38 +21,56 @@ class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
     {
         /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
         $dataHelper = $this->getDataHelper();
-
         $config = $dataHelper->getConfig();
 
         $account = isset($config['account']) ? $config['account'] : '';
         if ($account) {
             $unauthorized = false;
-            /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
-            $apiClient = $dataHelper->getSirvClient();
-            $accountInfo = $apiClient->getAccountInfo();
-            $alias = $accountInfo && $accountInfo->alias ? $accountInfo->alias : false;
+            $accountInfo = $dataHelper->getAccountConfig(true);
+            $newAccount = empty($accountInfo) ? '' : $accountInfo['alias'];
+            if (!empty($newAccount)) {
+                if ($account != $newAccount) {
+                    $dataHelper->saveConfig('account', $newAccount);
+                    $dataHelper->saveConfig('bucket', $newAccount);
+                    $dataHelper->getSirvClient()->init([
+                        'account' => $newAccount,
+                        'bucket' => $newAccount
+                    ]);
+                    $this->messageManager->addNoticeMessage(__(
+                        'The account name "%1" has been changed to "%2".',
+                        $account,
+                        $newAccount
+                    ));
+                }
 
-            if ($alias) {
-                if ($alias != $account) {
-                    $unauthorized = true;
-                    $message = __(
-                        'The account name "%1" has been changed or removed. Please, select your new account name.',
-                        $account
-                    );
+                $cdnUrl = isset($config['cdn_url']) ? $config['cdn_url'] : '';
+                $newCdnUrl = $accountInfo['cdn_url'];
+                if ($cdnUrl != $newCdnUrl) {
+                    $dataHelper->saveConfig('cdn_url', $newCdnUrl);
+                    if (!empty($cdnUrl)) {
+                        $this->messageManager->addNoticeMessage(__(
+                            'Sirv domain "%1" has been changed to "%2".',
+                            $cdnUrl,
+                            $newCdnUrl
+                        ));
+                    }
                 }
             } else {
-                $code = $apiClient->getResponseCode();
+                $code = $dataHelper->getSirvClient()->getResponseCode();
                 if ($code == 401 || $code == 403) {
                     //NOTE: 401 Unauthorized
                     //      403 Forbidden
                     $unauthorized = true;
                     $dataHelper->saveConfig('password', '');
-                    $message = __(
+                    $this->messageManager->addWarningMessage(__(
                         'Unable to connect the account: "%1". The password may have been changed!',
                         $account
-                    );
+                    ));
                 } else {
-                    $this->messageManager->addWarningMessage(__('Unexpected error occurred. Code: "%1".', $code));
+                    $this->messageManager->addWarningMessage(__(
+                        'Unexpected error occurred. Code: "%1".',
+                        $code
+                    ));
                 }
             }
 
@@ -62,7 +80,6 @@ class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $dataHelper->saveConfig('token', '');
                 $dataHelper->saveConfig('client_id', '');
                 $dataHelper->saveConfig('client_secret', '');
-                $this->messageManager->addWarningMessage($message);
 
                 /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
                 $resultRedirect = $this->resultRedirectFactory->create();

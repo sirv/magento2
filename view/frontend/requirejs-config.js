@@ -29,5 +29,10 @@ var config = {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         }
+    },
+    map: {
+        '*': {
+            sirvAssetsCache: 'Sirv_Magento2/js/assets-cache'
+        }
     }
 };

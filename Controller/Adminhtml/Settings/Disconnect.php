@@ -61,6 +61,7 @@ class Disconnect extends \Sirv\Magento2\Controller\Adminhtml\Settings
             'smv_js_options' => null,
             'image_zoom' => null,
             'smv_custom_css' => null,
+            'assets_cache_ttl' => '1440',
             'excluded_pages' => null,
             'excluded_files' => null,
             'sirv_rate_limit_data' => null,

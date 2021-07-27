@@ -24,6 +24,7 @@ $jsOptions = $viewerHelper->getViewerJsOptions();
 $maxHeight = $viewerHelper->getMaxHeight();
 $customCss = $viewerHelper->getViewerCss();
 $dataOptions = $viewerHelper->getViewerDataOptions();
+$assetsCacheData = $viewerHelper->getAssetsCacheData();
 ?>
 <?= $jsOptions ?>
 <style>
@@ -40,7 +41,7 @@ $dataOptions = $viewerHelper->getViewerDataOptions();
 <?php endif; ?>
 <?= $customCss ?>
 </style>
-<div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>">
+<div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>" data-mage-init='{"sirvAssetsCache":<?= $assetsCacheData ?>}'>
     <div class="Sirv" data-options="<?= $dataOptions ?>">
         <?= implode("\n", $viewerSlides) ?>
     </div>

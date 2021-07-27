@@ -46,7 +46,8 @@ define([
                 'image_zoom',
                 'smv_max_height',
                 'smv_custom_css',
-                'assets_cache'
+                'assets_cache',
+                'assets_cache_ttl'
             ];
             var i, l, selector, display;
             l = options.length;

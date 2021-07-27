@@ -10,14 +10,18 @@
 define([
     'jquery',
     'mage/backend/button',
-    'loader'
-], function ($, button, loader) {
+    'loader',
+    'Magento_Ui/js/modal/confirm'
+], function ($, button, loader, uiConfirm) {
     'use strict';
 
     $.widget('sirv.button', $.ui.button, {
 
         options: {
-            showLoader: false
+            showLoader: false,
+            needConfirmation: false,
+            confirmationMessage: 'Are you sure?',
+            confirmationButtonText: 'OK'
         },
 
         /**
@@ -25,11 +29,41 @@ define([
          * @protected
          */
         _click: function () {
-            if (this.options.showLoader) {
-                $('body').trigger('processStart');
+            var _super = $.proxy(this._super, this),
+                actionFnc = $.proxy(function() {
+                    if (this.options.showLoader) {
+                        $('body').trigger('processStart');
+                    }
+                    _super();
+                }, this);
+
+            if (this.options.needConfirmation) {
+                uiConfirm({
+                    content: $.mage.__(this.options.confirmationMessage),
+                    actions: {
+                        confirm: function (event) {
+                            actionFnc();
+                        }
+                    },
+                    buttons: [{
+                        text: $.mage.__('Cancel'),
+                        class: 'action-secondary action-dismiss',
+                        click: function (event) {
+                            this.closeModal(event);
+                        }
+                    }, {
+                        text: $.mage.__(this.options.confirmationButtonText),
+                        class: 'action-primary action-accept',
+                        click: function (event) {
+                            this.closeModal(event, true);
+                        }
+                    }]
+                });
+
+                return;
             }
 
-            this._super();
+            actionFnc();
         }
     });
 

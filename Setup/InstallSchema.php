@@ -31,7 +31,7 @@ class InstallSchema extends AbstractSchema implements InstallSchemaInterface
 
         $this->upgradeConfigTable($setup) || $this->createConfigTable($setup);
         $this->upgradeCacheTable($setup) || $this->createCacheTable($setup);
-        $this->createAssetsTable($setup);
+        $this->upgradeAssetsTable($setup) || $this->createAssetsTable($setup);
         $this->createMessagesTable($setup);
 
         $setup->endSetup();

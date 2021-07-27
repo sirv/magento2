@@ -117,6 +117,18 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $configurableData = [];
 
     /**
+     * Sirv content cache data
+     *
+     * @var array
+     */
+    protected $assetsCacheData = [
+        'ttl' => 0,
+        'currentTime' => 0,
+        'url' => '',
+        'timestamps' => []
+    ];
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\App\Helper\Context $context
@@ -142,6 +154,9 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $this->imageHelper = $imageHelper;
         $this->jsonEncoder = $jsonEncoder;
         $this->slideSources = (int)($this->dataHelper->getConfig('viewer_contents') ?: self::MAGENTO_ASSETS);
+        $this->assetsCacheData['ttl'] = ($this->dataHelper->getConfig('assets_cache_ttl') ?: 0);
+        $this->assetsCacheData['currentTime'] = time();
+        $this->assetsCacheData['url'] = $this->_getUrl('sirv/ajax/assetsCache');
     }
 
     /**
@@ -243,6 +258,20 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return $this->jsonEncoder->encode($this->configurableData);
+    }
+
+    /**
+     * Get assets cache data
+     *
+     * @return string
+     */
+    public function getAssetsCacheData()
+    {
+        if (!isset($this->viewerSlides)) {
+            $this->initAssetsData();
+        }
+
+        return $this->jsonEncoder->encode($this->assetsCacheData);
     }
 
     /**
@@ -534,7 +563,13 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             $contents = $this->downloadViewContents($url);
             $assetsModel->setData('product_id', $productId);
             $assetsModel->setData('contents', $contents);
+            $assetsModel->setData(
+                'timestamp',
+                $this->assetsCacheData['timestamps'][$productId] = time()
+            );
             $assetsModel->save();
+        } else {
+            $this->assetsCacheData['timestamps'][$productId] = $assetsModel->getData('timestamp');
         }
 
         $contents = json_decode($contents);
@@ -643,7 +678,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             curl_close(self::$curlHandle);
             self::$curlHandle = null;
         }
-        if (method_exists(get_parent_class($this), '__destruct')) {
+        if (method_exists(get_parent_class(__CLASS__), '__destruct')) {
             parent::__destruct();
         }
     }

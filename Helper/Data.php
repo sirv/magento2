@@ -140,7 +140,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         'image_folder' => true,
         'sirv_rate_limit_data' => true,
         's3_rate_limit_data' => true,
-        'assets_cache' => true
+        'assets_cache' => true,
+        'assets_cache_ttl' => true,
     ];
 
     /**
