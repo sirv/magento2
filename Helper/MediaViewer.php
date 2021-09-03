@@ -129,6 +129,18 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     ];
 
     /**
+     * Sirv pinned items
+     *
+     * @var array
+     */
+    protected $pinnedItems = [
+        'videos' => '',
+        'spins' => '',
+        'images' => '',
+        'mask' => ''
+    ];
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\App\Helper\Context $context
@@ -157,6 +169,28 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $this->assetsCacheData['ttl'] = ($this->dataHelper->getConfig('assets_cache_ttl') ?: 0);
         $this->assetsCacheData['currentTime'] = time();
         $this->assetsCacheData['url'] = $this->_getUrl('sirv/ajax/assetsCache');
+        $pinnedItems = $this->dataHelper->getConfig('pinned_items') ?: '{}';
+        $pinnedItems = json_decode($pinnedItems, true);
+        foreach (['videos', 'spins', 'images'] as $key) {
+            if (isset($pinnedItems[$key])) {
+                if ($pinnedItems[$key] == 'left') {
+                    $this->pinnedItems[$key] = ' data-pinned="start"';
+                } else if ($pinnedItems[$key] == 'right') {
+                    $this->pinnedItems[$key] = ' data-pinned="end"';
+                }
+            }
+        }
+        if (isset($pinnedItems['mask']) && !empty($pinnedItems['mask'])) {
+            $this->pinnedItems['mask'] = '#' .
+                str_replace(
+                    '__ASTERISK__',
+                    '.*',
+                    preg_quote(
+                        str_replace('*', '__ASTERISK__', $pinnedItems['mask']),
+                        '#'
+                    )
+                ) . '#';
+        }
     }
 
     /**
@@ -228,6 +262,10 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         $options = 'slide.first: ' . $this->activeSlideIndex . ';';
+        $itemsOrder = $this->dataHelper->getConfig('slides_order') ?: '';
+        if (!empty($itemsOrder)) {
+            $options .= 'itemsOrder:[\'' . implode('\',\'', explode(',', $itemsOrder)) . '\'];';
+        }
 
         return $options;
     }
@@ -450,7 +488,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             $productName = $product->getName();
             $idPrefix = 'item-' . $productId . '-';
             $index = 0;
-            $disabled = ($this->productId == $productId ? 'false' : 'true');
+            $disabled = ($this->productId == $productId ? '' : ' data-disabled');
             $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
             $dataType = $zoom == 'enabled' ? ' data-type="zoom"' : '';
 
@@ -481,7 +519,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                 switch ($image->getData('media_type')) {
                     case 'external-video':
                         $url = $image->getData('video_url');
-                        $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-disabled="' . $disabled . '"></div>';
+                        $slides[$slideId] = '<div data-id="' . $slideId . '"' . $disabled . ' data-src="' . $url . '"' . $this->pinnedItems['videos'] . '></div>';
                         $index++;
                         break;
                     case 'image':
@@ -501,15 +539,20 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                         $alt = $image->getData('label') ?: $productName;
                         $alt = $this->galleryBlock->escapeHtmlAttr($alt, false);
 
+                        $pinnedAttr = $this->pinnedItems['images'];
+                        if (!(empty($pinnedAttr) || empty($this->pinnedItems['mask']) || preg_match($this->pinnedItems['mask'], $url))) {
+                            $pinnedAttr = '';
+                        }
+
                         if ($this->syncHelper->isNotExcluded($absPath) && $this->syncHelper->isSynced($relPath)) {
                             $parts = explode('?', $url, 2);
                             if (isset($parts[1])) {
                                 $parts[1] = str_replace('+', '%20', $parts[1]);
                             }
                             $url = implode('?', $parts);
-                            $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '"' . $dataType . ' data-disabled="' . $disabled . '" data-alt="' . $alt . '"></div>';
+                            $slides[$slideId] = '<div data-id="' . $slideId . '"' . $dataType . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '"></div>';
                         } else {
-                            $slides[$slideId] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" data-disabled="' . $disabled . '" data-alt="' . $alt . '" />';
+                            $slides[$slideId] = '<img data-id="' . $slideId . '" data-type="static"' . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '" />';
                         }
                         $index++;
                         break;
@@ -581,19 +624,24 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $slides = [];
         $idPrefix = 'sirv-item-' . $productId . '-';
         $index = 0;
-        $disabled = ($this->productId == $productId ? 'false' : 'true');
+        $disabled = ($this->productId == $productId ? '' : ' data-disabled');
+
         foreach ($assets as $asset) {
             $slideId = $idPrefix . $index;
             switch ($asset->type) {
                 case 'image':
                     $url = $folderUrl . '/' . $asset->name;
-                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '"' . $dataType . ' data-disabled="' . $disabled . '"></div>';
+                    $pinnedAttr = $this->pinnedItems['images'];
+                    if (!(empty($pinnedAttr) || empty($this->pinnedItems['mask']) || preg_match($this->pinnedItems['mask'], $url))) {
+                        $pinnedAttr = '';
+                    }
+                    $slides[$slideId] = '<div data-id="' . $slideId . '"' . $dataType . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
                     $index++;
                     break;
                 case 'spin':
                 case 'video':
                     $url = $folderUrl . '/' . $asset->name;
-                    $slides[$slideId] = '<div data-id="' . $slideId . '" data-src="' . $url . '" data-disabled="' . $disabled . '"></div>';
+                    $slides[$slideId] = '<div data-id="' . $slideId . '"' . $disabled . ' data-src="' . $url . '"' . $this->pinnedItems[$asset->type . 's'] . '></div>';
                     $index++;
                     break;
             }

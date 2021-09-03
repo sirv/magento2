@@ -21,8 +21,11 @@ class Edit extends \Magento\Backend\Block\Widget\Form\Container
     {
         //NOTE: used for delete button
         $this->_objectId = 'sirv_settings_id';
-        $this->_controller = 'adminhtml_settings';
+
+        //NOTE: used for build form class name
         $this->_blockGroup = 'Sirv_Magento2';
+        $this->_controller = 'adminhtml_settings';
+        $this->_mode = 'edit';
 
         parent::_construct();
 

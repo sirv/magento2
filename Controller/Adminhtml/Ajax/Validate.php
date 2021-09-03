@@ -108,8 +108,7 @@ class Validate extends \Sirv\Magento2\Controller\Adminhtml\Settings
         /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
         $dataHelper = $this->getDataHelper();
 
-        $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
-        $this->baseUrl = 'https://' . $bucket . '.sirv.com';
+        $this->baseUrl = 'https://' . $dataHelper->getSirvDomain();
 
         $imageFolder = $dataHelper->getConfig('image_folder');
         if (is_string($imageFolder)) {

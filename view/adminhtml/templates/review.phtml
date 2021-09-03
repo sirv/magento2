@@ -1,0 +1,27 @@
+<?php
+/**
+ * Review block template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+/**
+ * @var $block \Sirv\Magento2\Block\Adminhtml\Review
+ */
+
+?>
+<?php if ($block->doDisplayBanner()): ?>
+<div class="sirv-banner-wrapper">
+    <div class="sirv-banner sirv-review-banner">
+        We noticed you've been using Sirv for some time. We hope you love it!<br/>
+        We'd be thrilled if you could <a href="https://marketplace.magento.com/magictoolbox-sirv.html#bazaarvoice.reviews.tab" target="_blank">leave a review on the Magento Marketplace</a>.<br/>
+        If you have any requests for our team, please <a href="https://sirv.com/contact/" target="_blank">message us</a>.<br/>
+        <?= $block->getDismissButtonHtml() ?>
+    </div>
+</div>
+<?php endif; ?>

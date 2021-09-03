@@ -788,6 +788,30 @@ class Sirv
     }
 
     /**
+     * Set file description
+     *
+     * @param string $filename
+     * @param string $description
+     * @return bool
+     */
+    public function setFileDescription($filename, $description)
+    {
+        if ($this->getToken()) {
+            $this->sendRequest(
+                'v2/files/meta/description?filename=' . urlencode($filename),
+                'POST',
+                ['description' => $description]
+            );
+
+            if ($this->responseCode == 200) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get API limits
      * Method to check the allowed number of API requests and the number of requests used in the past 60 minutes
      *

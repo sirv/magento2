@@ -384,6 +384,35 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Get Sirv domain
+     *
+     * @param bool $direct
+     * @return string
+     */
+    public function getSirvDomain($direct = true)
+    {
+        static $domains = [];
+
+        if (empty($domains)) {
+            $alias = $this->getConfig('bucket') ?: $this->getConfig('account');
+            $domains[0] = $alias . '.sirv.com';
+            $domains[1] = $this->getConfig('cdn_url');
+            $domains[1] = is_string($domains[1]) ? trim($domains[1]) : '';
+            if (empty($domains[1])) {
+                $domains[1] = $domains[0];
+            }
+
+            $subAlias = $this->getConfig('sub_alias') ?: '';
+            if (!empty($subAlias) && ($subAlias != $alias)) {
+                $subAliasDomain = $this->getConfig('sub_alias_domain') ?: '';
+                $domains[1] = empty($subAliasDomain) ? $subAlias . '.sirv.com' : $subAliasDomain;
+            }
+        }
+
+        return $direct ? $domains[0] : $domains[1];
+    }
+
+    /**
      * Get Sirv client
      *
      * @return \Sirv\Magento2\Model\Api\Sirv

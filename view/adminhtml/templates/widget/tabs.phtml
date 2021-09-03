@@ -1,0 +1,63 @@
+<?php
+/**
+ * Tabs block template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+/**
+ * @var $block \Sirv\Magento2\Block\Adminhtml\Settings\Tabs
+ */
+
+$_tabContents = '';
+?>
+<?php if (!empty($tabs)) : ?>
+<div id="<?=  $block->escapeHtmlAttr($block->getId()) ?>">
+<ul class="tabs-horiz">
+    <?php foreach ($tabs as $_tab) : ?>
+    <?php
+        $_tabId = $block->getTabId($_tab);
+        $_tabClass = 'tab-item-link ' . $block->getTabClass($_tab) . ' ' . (preg_match('/\s?ajax\s?/', $_tab->getClass()) ? 'notloaded' : '');
+        $_tabType = (!preg_match('/\s?ajax\s?/', $_tabClass) && $block->getTabUrl($_tab) != '#') ? 'link' : '';
+        $_tabHref = $block->getTabUrl($_tab) == '#' ? '#' . $_tabId . '_content' : $block->getTabUrl($_tab);
+        $_tabContents .= '<div id="' . $block->escapeHtmlAttr($_tabId) . '_content" style="display:none">' . $block->getTabContent($_tab) . '</div>';
+    ?>
+    <li>
+        <a href="<?= $block->escapeUrl($_tabHref) ?>" id="<?= $block->escapeHtmlAttr($_tabId) ?>" title="<?= $block->escapeHtmlAttr($block->getTabTitle($_tab)) ?>" class="<?= $block->escapeHtmlAttr($_tabClass) ?>" data-tab-type="<?= $block->escapeHtmlAttr($_tabType) ?>">
+            <span>
+                <span class="changed" title="<?= $block->escapeHtmlAttr(__('The information in this tab has been changed.')) ?>"></span>
+                <span class="error" title="<?= $block->escapeHtmlAttr(__('This tab contains invalid data. Please resolve this before saving.')) ?>"></span>
+                <span class="loader" title="<?= $block->escapeHtmlAttr(__('Loading...')) ?>"></span>
+                <?= $block->escapeHtml($block->getTabLabel($_tab)) ?>
+            </span>
+        </a>
+    </li>
+    <?php endforeach; ?>
+</ul>
+<?= $_tabContents ?>
+</div>
+<script>
+require(["jquery","mage/backend/tabs"], function($){
+    $(function() {
+        $('#<?= /* @noEscape */ $block->getId() ?>').tabs({
+            active: '<?= /* @noEscape */ $block->getActiveTabId() ?>',
+            destination: '#<?= /* @noEscape */ $block->getDestElementId() ?>',
+            shadowTabs: <?= /* @noEscape */ $block->getAllShadowTabs() ?>,
+            activate: function(event, data) {
+                var id = '';
+                if (data && data.newTab) {
+                    id = data.newTab.find('a').attr('id');
+                    id = id.replace('sirv_config_tab_', '');
+                }
+                $('#current-tab-id').val(id);
+            }
+        });
+    });
+});
+</script>
+<?php endif; ?>

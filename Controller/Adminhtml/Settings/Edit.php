@@ -26,8 +26,8 @@ class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $account = isset($config['account']) ? $config['account'] : '';
         if ($account) {
             $unauthorized = false;
-            $accountInfo = $dataHelper->getAccountConfig(true);
-            $newAccount = empty($accountInfo) ? '' : $accountInfo['alias'];
+            $accConfig = $dataHelper->getAccountConfig(true);
+            $newAccount = empty($accConfig) ? '' : $accConfig['alias'];
             if (!empty($newAccount)) {
                 if ($account != $newAccount) {
                     $dataHelper->saveConfig('account', $newAccount);
@@ -44,7 +44,7 @@ class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 }
 
                 $cdnUrl = isset($config['cdn_url']) ? $config['cdn_url'] : '';
-                $newCdnUrl = $accountInfo['cdn_url'];
+                $newCdnUrl = $accConfig['cdn_url'];
                 if ($cdnUrl != $newCdnUrl) {
                     $dataHelper->saveConfig('cdn_url', $newCdnUrl);
                     if (!empty($cdnUrl)) {
@@ -53,6 +53,29 @@ class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
                             $cdnUrl,
                             $newCdnUrl
                         ));
+                    }
+                }
+
+                $subAlias = isset($config['sub_alias']) ? $config['sub_alias'] : '';
+                if (empty($subAlias) ||
+                    $subAlias == $newAccount ||
+                    !isset($accConfig['aliases']) ||
+                    !isset($accConfig['aliases'][$subAlias]) ||
+                    count($accConfig['aliases']) < 2
+                ) {
+                    $dataHelper->deleteConfig('sub_alias');
+                    $dataHelper->deleteConfig('sub_alias_domain');
+                } else {
+                    $subAliasDomain = isset($config['sub_alias_domain']) ? $config['sub_alias_domain'] : '';
+                    if (empty($subAliasDomain) ||
+                        $subAliasDomain != $accConfig['aliases'][$subAlias]
+                    ) {
+                        if (empty($accConfig['aliases'][$subAlias])) {
+                            $dataHelper->deleteConfig('sub_alias');
+                            $dataHelper->deleteConfig('sub_alias_domain');
+                        } else {
+                            $dataHelper->saveConfig('sub_alias_domain', $accConfig['aliases'][$subAlias]);
+                        }
                     }
                 }
             } else {

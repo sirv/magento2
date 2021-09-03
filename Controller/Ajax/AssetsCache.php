@@ -37,13 +37,7 @@ class AssetsCache extends \Magento\Framework\App\Action\Action implements \Magen
             if (empty($productAssetsFolder)) {
                 $result = ['message' => 'Product assets folder is empty!'];
             } else {
-                $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
-                $baseUrl = 'https://' . $bucket . '.sirv.com';
-                $cdnUrl = $dataHelper->getConfig('cdn_url');
-                $cdnUrl = is_string($cdnUrl) ? trim($cdnUrl) : '';
-                if (!empty($cdnUrl)) {
-                    $baseUrl = 'https://' . $cdnUrl;
-                }
+                $baseUrl = 'https://' . $dataHelper->getSirvDomain(/*false*/);
 
                 /** @var \Sirv\Magento2\Model\Assets $assetsModel */
                 $assetsModel = $this->_objectManager::getInstance()->get(

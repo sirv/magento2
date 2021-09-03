@@ -92,8 +92,7 @@ class Assets extends \Sirv\Magento2\Controller\Adminhtml\Settings
             /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
             $dataHelper = $this->getDataHelper();
 
-            $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
-            $baseUrl = 'https://' . $bucket . '.sirv.com';
+            $baseUrl = 'https://' . $dataHelper->getSirvDomain();
 
             foreach ($assetsData as $id => $contents) {
                 $data[$id] = [];
@@ -113,13 +112,14 @@ class Assets extends \Sirv\Magento2\Controller\Adminhtml\Settings
                             $units = 'MB';
                         }
                     }
-                    $url = $baseUrl . $dirname . '/' . $asset->name;
-                    if ($asset->type == 'spin') {
-                        $url .= '?image';
+                    $thumbUrl = $url = $baseUrl . $dirname . '/' . $asset->name;
+                    if ($asset->type == 'spin' || $asset->type == 'video') {
+                        $thumbUrl .= '?thumb';
                     }
                     $data[$id]['items'][] = [
                         'name' => $asset->name,
                         'url' => $url,
+                        'thumbUrl' => $thumbUrl,
                         'mtime' => $asset->mtime,
                         'size' => round($size, 2) . ' ' . $units,
                         'type' => $asset->type,

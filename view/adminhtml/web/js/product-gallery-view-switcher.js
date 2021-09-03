@@ -44,7 +44,9 @@ define([
                 'product_assets_folder',
                 'smv_js_options',
                 'image_zoom',
+                'slides_order',
                 'smv_max_height',
+                'pinned_items',
                 'smv_custom_css',
                 'assets_cache',
                 'assets_cache_ttl'

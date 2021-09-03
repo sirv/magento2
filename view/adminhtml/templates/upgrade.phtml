@@ -11,14 +11,14 @@
  */
 
 /**
- * @var $block \Sirv\Magento2\Block\Adminhtml\Version
+ * @var $block \Sirv\Magento2\Block\Adminhtml\Upgrade
  */
 
 $changelogUrl = $block->escapeUrl($block->getChangelogUrl());
 ?>
 <?php if ($block->hasNewVersion()): ?>
-<div class="sirv-upgrade-banner-wrapper">
-    <div class="sirv-upgrade-banner">
+<div class="sirv-banner-wrapper">
+    <div class="sirv-banner sirv-upgrade-banner">
         New version available!
         <span class="sirv-latest-version">
             <a href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#installation" target="_blank">Download <?= $block->getLatestVersion() ?></a>

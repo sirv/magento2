@@ -86,18 +86,19 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
         $form->setUseContainer(true);//NOTE: to display form tag
 
+        $this->setForm($form);
+
         $moduleEtcPath = $this->moduleDirReader->getModuleDir(\Magento\Framework\Module\Dir::MODULE_ETC_DIR, 'Sirv_Magento2');
         $useErrors = libxml_use_internal_errors(true);
         $xml = simplexml_load_file($moduleEtcPath . '/settings.xml');
         libxml_use_internal_errors($useErrors);
 
         if (!$xml) {
-            $fieldset = $form->addFieldset('sirv_group_fieldset_notice', ['legend' => '']);
-            $fieldset->addField('mt-config-notice', 'label', [
+            $fieldset = $form->addFieldset('sirv_group_fieldset_error_notice', ['legend' => '']);
+            $fieldset->addField('mt-config-error-notice', 'label', [
                 'label' => null,
                 'after_element_html' => '<span class="mt-config-error-notice">Error: can\'t get configuration settings! Make sure the module is installed correctly.</span>'
             ]);
-            $this->setForm($form);
 
             return parent::_prepareForm();
         }
@@ -172,18 +173,17 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             }
         }
 
-        foreach ($xml->group as $group) {
-            $fieldset = $form->addFieldset(
-                'sirv_group_fieldset_' . (string)$group['id'],
-                ['legend' => __((string)$group->label)]
-            );
+        $container = $form->addFieldset('sirv_fieldset_container', ['legend' => '']);
 
-            if (isset($group->notice)) {
-                $field = $fieldset->addField('mt-' . (string)$group['id'] . '-notice', 'label', [
-                    'label' => null,
-                    'after_element_html' => (string)$group->notice,
-                ]);
-            }
+        $tabsData = [];
+        $groupId = '';
+        foreach ($xml->group as $group) {
+            $groupId = (string)$group['id'];
+            $legend = $groupId == 'user' ? __((string)$group->label) : '';
+            $fieldset = $container->addFieldset(
+                'sirv_group_fieldset_' . $groupId,
+                ['legend' => $legend]
+            );
 
             foreach ($group->fields->field as $field) {
                 $type = (string)$field->type;
@@ -240,7 +240,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     $fieldset->addType($type, $typeClass);
                 }
 
-                if ($type == 'select' || $type == 'radios' || $type == 'checkboxes') {
+                if (in_array($type, ['select', 'radios', 'checkboxes', 'slides_order'])) {
                     $fieldConfig['values'] = [];
                     foreach ($field->options->option as $option) {
                         $fieldConfig['values'][] = [
@@ -325,6 +325,23 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     case 'auto_fetch':
                         $fieldConfig['value'] = $this->dataHelper->syncConfig('auto_fetch');
                         break;
+                    case 'sub_alias':
+                        $accountConfig = $this->dataHelper->getAccountConfig();
+                        if (isset($accountConfig['aliases'])) {
+                            foreach ($accountConfig['aliases'] as $_alias => $domain) {
+                                $fieldConfig['values'][] = [
+                                    'value' => $_alias,
+                                    'label' => $_alias . ': ' . $domain
+                                ];
+                            }
+                        }
+                        if (count($fieldConfig['values']) < 2) {
+                            continue 2;
+                        }
+                        if (!isset($fieldConfig['value']) || empty($fieldConfig['value'])) {
+                            $fieldConfig['value'] = $config['account'];
+                        }
+                    break;
                     case 'url_prefix':
                         $urlPrefix = $this->dataHelper->syncConfig('url_prefix');
                         $domains = $this->dataHelper->getDomains();
@@ -344,19 +361,9 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         break;
                     case 'image_folder':
                         //NOTE: for sync 'cdn_url' option
-                        $config['cdn_url'] = $this->dataHelper->syncConfig('cdn_url');
+                        $config['cdn_url'] = $this->dataHelper->syncConfig('cdn_url');//NOTE: is it still needed here?
                     case 'product_assets_folder':
-                        $valuePrefix = isset($config['bucket']) ? $config['bucket'] : $config['account'];
-                        $valuePrefix = $valuePrefix . '.sirv.com/';
-                        if (isset($config['cdn_url']) && is_string($config['cdn_url'])) {
-                            $cdn = trim($config['cdn_url']);
-                            if (!empty($cdn)) {
-                                $valuePrefix = preg_replace('#^[^/]*//#', '', $cdn);
-                                $valuePrefix = rtrim($valuePrefix, '/') . '/';
-                            }
-                        }
-                        /* $fieldConfig['before_element_html'] = $valuePrefix; */
-                        $fieldConfig['value_prefix'] = $valuePrefix;
+                        $fieldConfig['value_prefix'] = $this->dataHelper->getSirvDomain(false) . '/';
                         break;
                     case 'viewer_contents':
                         $data = $this->dataHelper->getAccountUsageData();
@@ -371,6 +378,9 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     case 'smv_js_options':
                     case 'smv_custom_css':
                         $fieldConfig['rows'] = 7;
+                        break;
+                    case 'pinned_items':
+                        $fieldConfig['value'] = json_decode($fieldConfig['value'], true);
                         break;
                     case 'smv_max_height':
                         $fieldConfig['after_element_html'] = ' px';
@@ -415,11 +425,43 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
                 $field = $fieldset->addField('mt-' . $name, $type, $fieldConfig);
             }
+
+            if ($groupId == 'user') {
+                continue;
+            }
+
+            $tabsData[$groupId] = [
+                'label' => __((string)$group->label),
+                'active' => false,
+                'content' => $fieldset->toHtml()
+            ];
+
+            $container->removeField('sirv_group_fieldset_' . $groupId);
+        }
+
+        if ($groupId != 'user') {
+            $form->removeField('sirv_fieldset_container');
+
+            $currentTabId = $this->getRequest()->getParam('tabId') ?: 'general';
+            if (isset($tabsData[$currentTabId])) {
+                $tabsData[$currentTabId]['active'] = true;
+            } else {
+                reset($tabsData);
+                $currentTabId = key($tabsData);
+                $tabsData[$currentTabId]['active'] = true;
+            }
+
+            $form->addType('tabs', '\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Tabs');
+            $tabs = $form->addField('sirv_config_tabs_element', 'tabs', []);
+            $tabs->setTabsData($tabsData);
+
+            $form->addField('current-tab-id', 'hidden', [
+                'name' => 'current_tab_id',
+                'value' => $currentTabId
+            ]);
         }
 
         unset($xml);
-
-        $this->setForm($form);
 
         $this->setChild(
             'form_after',

@@ -15,6 +15,7 @@ define([
     'Magento_Ui/js/modal/confirm',
     'Magento_Ui/js/modal/modal',
     'mage/translate',
+    'jquery/jquery.cookie'
 ], function ($, mageTemplate, validatorTpl, uiAlert, uiConfirm) {
     'use strict';
 

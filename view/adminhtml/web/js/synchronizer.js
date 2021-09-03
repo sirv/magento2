@@ -93,7 +93,7 @@ define([
                     '</div>',
             error:  '<div id="<%- data.id %>" class="message message-error">' +
                     '<span class="message-text">' +
-                        '<strong><%- data.message %></strong><br />' +
+                        '<strong><%= data.message %></strong><br />' +
                     '</span>' +
                     '</div>',
             list:   '<div id="<%- data.id %>" class="message message-error list-message">' +
@@ -791,6 +791,12 @@ define([
             $(this.selectors.texts.progressLabel).addClass('hidden-element');
             $(this.selectors.texts.completedLabel).addClass('hidden-element');
             $(this.selectors.texts.failedLabel).removeClass('hidden-element');
+
+            if (this.counters.failed) {
+                $(this.selectors.viewFailedLink).removeClass('hidden-element');
+            } else {
+                $(this.selectors.viewFailedLink).addClass('hidden-element');
+            }
 
             if (message) {
                 this._displayNotification({

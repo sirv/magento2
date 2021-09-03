@@ -24,6 +24,7 @@
         </referenceBlock>
         <referenceContainer name="page.wrapper">
             <block class="Sirv\Magento2\Block\Adminhtml\Upgrade" name="sirv.upgrade.banner" template="Sirv_Magento2::upgrade.phtml" after="header" />
+            <block class="Sirv\Magento2\Block\Adminhtml\Review" name="sirv.review.banner" template="Sirv_Magento2::review.phtml" after="sirv.upgrade.banner" />
         </referenceContainer>
         <referenceContainer name="page.main.actions">
             <block class="Magento\Backend\Block\Store\Switcher" name="sirv.system.config.switcher" template="Magento_Backend::store/switcher.phtml">

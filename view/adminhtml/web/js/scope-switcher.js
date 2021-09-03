@@ -51,6 +51,8 @@ define([
                 disabled ? 'off' : 'on'
             );
             $('[name^="mt-config\[' + this.options.name + '\]"]').prop('disabled', disabled);
+            var label = this.element.find('.scope-switcher-label');
+            label.attr('title', label.attr('data-text-' + (disabled ? 'off' : 'on')));
         }
     });
 

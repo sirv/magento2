@@ -1067,69 +1067,94 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     break;
                 }
             } catch (\Exception $e) {
-                $this->logger->critical('Exception on fetching images with Sirv API:', ['exception' => $e]);
-                $result = false;
+                $error = 'Exception on fetching images with Sirv API!';
+                $this->logger->critical($error, ['exception' => $e]);
+                $aborted = true;
+                break;
             }
 
-            if (is_array($result)) {
-                foreach ($result as $fileData) {
-                    $relPath = preg_replace('#^' . preg_quote($this->imageFolder, '#') . '#', '', $fileData->filename);
-                    $absPath = $this->mediaDirAbsPath . $relPath;
+            if (!is_array($result)) {
+                $error = 'Unexpected result on fetching images with Sirv API!';
+                $this->logger->critical($error);
+                $aborted = true;
+                break;
+            }
 
-                    $attempt = is_array($fileData->attempts) ? end($fileData->attempts) : false;
-                    $errorMessage = 'Unknown error.';
+            $totalCounter = 0;
+            $timeoutCounter = 0;
+            $exampleLink = '';
+            foreach ($result as $fileData) {
+                $totalCounter++;
+                $relPath = preg_replace('#^' . preg_quote($this->imageFolder, '#') . '#', '', $fileData->filename);
+                $absPath = $this->mediaDirAbsPath . $relPath;
+
+                $attempt = is_array($fileData->attempts) ? end($fileData->attempts) : false;
+                $errorMessage = 'Unknown error.';
+                if ($attempt) {
+                    if (isset($attempt->error)) {
+                        if (isset($attempt->error->httpCode)) {
+                            if ((int)$attempt->error->httpCode == 429) {
+                                $rateLimit = [
+                                    'expireTime' => isset($attempt->error->counter, $attempt->error->counter->reset) ? (int)$attempt->error->counter->reset : 0,
+                                    'currentTime' => time(),
+                                    'message' => isset($attempt->error->message) ? $attempt->error->message : 'Api rate limit error!',
+                                ];
+                                continue;
+                            }
+                        }
+                        $errorMessage = isset($attempt->error->message) ? $attempt->error->message : '';
+                        $errorMessage = preg_replace('#(?:\s*+\.)?\s*+$#', '.', $errorMessage);
+                        if (strpos($errorMessage, 'Timeout') !== false) {
+                            $timeoutCounter++;
+                            if (empty($exampleLink)) {
+                                $exampleLink = $attempt->url;
+                            }
+                        }
+                    }
+                    /*
+                    if (isset($attempt->statusCode)) {
+                        if ((int)$attempt->statusCode == 404) {
+                            $errorMessage = 'The file is not found on the server.';
+                        }
+                    }
+                    */
+                }
+
+                if ($fileData->success) {
+                    $modificationTime = filemtime($absPath);
+                    $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_SYNCED, $modificationTime);
+                    $synced++;
+
+                    if ($doClean) {
+                        $this->cleanMagentoImagesCache(
+                            preg_replace('#^' . preg_quote($this->productMediaRelPath, '#') . '#', '', $relPath)
+                        );
+                    }
+                } else {
+                    $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_FAILED, 0);
+                    $this->updateMessageData($relPath, $errorMessage);
+                    $failed++;
                     if ($attempt) {
-                        if (isset($attempt->error)) {
-                            if (isset($attempt->error->httpCode)) {
-                                if ((int)$attempt->error->httpCode == 429) {
-                                    $rateLimit = [
-                                        'expireTime' => isset($attempt->error->counter, $attempt->error->counter->reset) ? (int)$attempt->error->counter->reset : 0,
-                                        'currentTime' => time(),
-                                        'message' => isset($attempt->error->message) ? $attempt->error->message : 'Api rate limit error!',
-                                    ];
-                                    continue;
-                                }
-                            }
-                            $errorMessage = isset($attempt->error->message) ? $attempt->error->message : '';
-                            $errorMessage = preg_replace('#(?:\s*+\.)?\s*+$#', '.', $errorMessage);
-                        }
-                        /*
-                        if (isset($attempt->statusCode)) {
-                            if ((int)$attempt->statusCode == 404) {
-                                $errorMessage = 'The file is not found on the server.';
-                            }
-                        }
-                        */
-                    }
-
-                    if ($fileData->success) {
-                        $modificationTime = filemtime($absPath);
-                        $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_SYNCED, $modificationTime);
-                        $synced++;
-
-                        if ($doClean) {
-                            $this->cleanMagentoImagesCache(
-                                preg_replace('#^' . preg_quote($this->productMediaRelPath, '#') . '#', '', $relPath)
-                            );
-                        }
-                    } else {
-                        $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_FAILED, 0);
-                        $this->updateMessageData($relPath, $errorMessage);
-                        $failed++;
-                        if ($attempt) {
-                            $this->logger->info(sprintf(
-                                '"%s" was not fetched. %s',
-                                $attempt->url,
-                                $errorMessage
-                            ));
-                        }
+                        $this->logger->info(sprintf(
+                            '"%s" was not fetched. %s',
+                            $attempt->url,
+                            $errorMessage
+                        ));
                     }
                 }
+            }
 
-                if ($rateLimit) {
-                    $aborted = true;
-                    break;
-                }
+            if ($totalCounter && ($totalCounter == $timeoutCounter)) {
+                $error = 'Some files could not be fetched because the remote server did not release them.' .
+                    ' Example:<br/> <a target="_blank" href="' . $exampleLink . '">' . $exampleLink . '</a><br/>' .
+                    'Please check if your server is rate-limiting Sirv and if so, add a firewall rule to permit the Sirv user agent named "Sirv Image Service". <a target="_blank" href="https://sirv.com/help/articles/fetch-images/#possible-causes-of-errors">Learn more</a>.';
+                $aborted = true;
+                break;
+            }
+
+            if ($rateLimit) {
+                $aborted = true;
+                break;
             }
 
             if ($breakTime - time() <= 0) {

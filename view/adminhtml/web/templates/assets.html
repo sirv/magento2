@@ -44,7 +44,9 @@
                     <% _.each(product.items, function(item, i) { %>
                     <tr class="sirv-assets-product-item">
                         <td class="sirv-assets-product-item-preview">
-                            <a href="<%- item.url %>" target="_blank"><img src="<%- item.url %>" alt="<%- item.name %>" /></a>
+                            <a href="<%- item.url %>" target="_blank">
+                                <img src="<%- item.thumbUrl %>" alt="<%- item.name %>" />
+                            </a>
                         </td>
                         <td class="sirv-assets-product-item-info">
                             <div class="sirv-assets-product-item-name"><%- item.name %></div>

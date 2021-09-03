@@ -93,13 +93,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
             $this->syncHelper = $syncHelper;
             $this->storeManager = $storeManager;
 
-            $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
-            $this->sirvHost = $bucket . '.sirv.com';
-            $cdn = $dataHelper->getConfig('cdn_url');
-            $cdn = is_string($cdn) ? trim($cdn) : '';
-            if (!empty($cdn)) {
-                $this->sirvHost = $cdn;
-            }
+            $this->sirvHost = $dataHelper->getSirvDomain(false);
             $this->urlPrefix = $dataHelper->getConfig('url_prefix');
             $this->urlPrefix = is_string($this->urlPrefix) ? trim($this->urlPrefix) : '';
 
@@ -131,7 +125,10 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 $html = $response->getBody();
                 if ($html) {
 
-                    $this->addHeadContent($html);
+                    //NOTE: if we do not have a HEAD tag, this may be contents received via AJAX
+                    if (preg_match('#<head[^>]++>#', $html)) {
+                        $this->addHeadContent($html);
+                    }
 
                     $this->processImageUrls($html);
 
@@ -423,6 +420,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 ')*+' .
             ')' .
             '<\\\\?/\1\s*+>';
+        $regExp .= '|<!-- Facebook Pixel Code -->.*?<!-- End Facebook Pixel Code -->';
 
         $matches = [];
         if (preg_match_all('#' . $regExp . '#is', $html, $matches, PREG_SET_ORDER)) {

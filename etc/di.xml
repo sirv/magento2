@@ -40,4 +40,19 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="sirv_clean_js_css_files_cache" xsi:type="object">Sirv\Magento2\Console\Command\CleanJsCssFilesCacheCommand</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="sirv_clean_static_files_cache" xsi:type="object">Sirv\Magento2\Console\Command\CleanStaticFilesCacheCommand</item>
+            </argument>
+        </arguments>
+    </type>
+
 </config>

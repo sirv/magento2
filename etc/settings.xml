@@ -120,6 +120,13 @@
                 <install/>
             </field>
             <field>
+                <name>sub_alias</name>
+                <label>Domain</label>
+                <type>select</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
+                <options></options>
+            </field>
+            <field>
                 <name>image_folder</name>
                 <label>Folder name on Sirv</label>
                 <tooltip><![CDATA[Images will be copied here in <a target="_blank" href="https://my.sirv.com/#/browse/">your Sirv account</a>. The folder will be automatically created by Sirv.]]></tooltip>
@@ -137,16 +144,16 @@
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
                 <options>
                     <option>
-                        <label>No other files</label>
-                        <value>none</value>
-                    </option>
-                    <option>
                         <label>JS, CSS &amp; associated files (recommended)</label>
                         <value>custom</value>
                     </option>
                     <option>
                         <label>JS, CSS &amp; all static files</label>
                         <value>all</value>
+                    </option>
+                    <option>
+                        <label>No other files</label>
+                        <value>none</value>
                     </option>
                 </options>
                 <value>custom</value>
@@ -372,6 +379,39 @@
                 <value>enabled</value>
             </field>
             <field>
+                <name>slides_order</name>
+                <label>Gallery items order</label>
+                <type>slides_order</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\SlidesOrder</type_class>
+                <options>
+                    <option>
+                        <label>Spin</label>
+                        <value>spin</value>
+                    </option>
+                    <option>
+                        <label>Video</label>
+                        <value>video</value>
+                    </option>
+                    <option>
+                        <label>Zoom</label>
+                        <value>zoom</value>
+                    </option>
+                    <option>
+                        <label>Image</label>
+                        <value>image</value>
+                    </option>
+                </options>
+                <value></value>
+            </field>
+            <field>
+                <name>pinned_items</name>
+                <label>Pin gallery items</label>
+                <type>pinned_items</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\PinnedItems</type_class>
+                <value>{"videos":"no","spins":"no","images":"no","mask":""}</value>
+                <install/>
+            </field>
+            <field>
                 <name>smv_max_height</name>
                 <label>Max height</label>
                 <type>text</type>
@@ -466,6 +506,12 @@
                 <type>validator</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Validator</type_class>
             </field>
+            <field>
+                <name>custom_sync</name>
+                <label>Sync product media</label>
+                <type>custom_sync</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\CustomSync</type_class>
+            </field>
         </fields>
     </group>
     <group id="synchronization">
@@ -532,7 +578,7 @@
         </fields>
     </group>
     <group id="usage">
-        <label></label>
+        <label>Usage</label>
         <fields>
             <field>
                 <name>usage</name>

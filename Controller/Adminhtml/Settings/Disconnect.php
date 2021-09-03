@@ -33,6 +33,8 @@ class Disconnect extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
         $names = [
             'enabled' => 'false',
+            'sub_alias' => null,
+            'sub_alias_domain' => null,
             'image_folder' => 'magento',
             'profile' => 'Default',
             'magento_watermark' => 'false',
@@ -60,6 +62,8 @@ class Disconnect extends \Sirv\Magento2\Controller\Adminhtml\Settings
             'cdn_url' => null,
             'smv_js_options' => null,
             'image_zoom' => null,
+            'slides_order' => null,
+            'pinned_items' => '{"videos":"no","spins":"no","images":"no","mask":""}',
             'smv_custom_css' => null,
             'assets_cache_ttl' => '1440',
             'excluded_pages' => null,

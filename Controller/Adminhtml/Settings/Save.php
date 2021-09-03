@@ -33,9 +33,17 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $configScope = $dataHelper->getConfigScope();
         $configScopeId = $dataHelper->getConfigScopeId();
 
+        $params = [];
+        if (isset($data['current_tab_id']) && !empty($data['current_tab_id'])) {
+            $params['tabId'] = $data['current_tab_id'];
+        }
+        if ($configScope != 'default') {
+            $params[$configScope] = $configScopeId;
+        }
+
         if (empty($config) && empty($scopeData)) {
             $this->messageManager->addWarningMessage(__('There is nothing to save!'));
-            $resultRedirect->setPath('sirv/*/edit', ($configScope == 'default' ? [] : [$configScope => $configScopeId]));
+            $resultRedirect->setPath('sirv/*/edit', $params);
             return $resultRedirect;
         }
 
@@ -43,18 +51,24 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
             $config['js_components'] = implode(',', $config['js_components']);
         }
 
+        if (isset($config['pinned_items'])) {
+            $config['pinned_items'] = json_encode($config['pinned_items']);
+        }
+
+        $configTmp = $config;
         foreach ($scopeData as $name => $v) {
             if ($v == 'on') {
                 $dataHelper->saveConfig($name, $config[$name]);
             } elseif ($v == 'off') {
                 $dataHelper->deleteConfig($name);
             }
-            unset($config[$name]);
+            unset($configTmp[$name]);
         }
 
-        foreach ($config as $name => $value) {
+        foreach ($configTmp as $name => $value) {
             $dataHelper->saveConfig($name, $value);
         }
+        unset($configTmp);
 
         $addSuccessMessage = true;
         $doGetCredentials = false;
@@ -74,9 +88,10 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $valid = false;
             }
 
-            if (strlen($password) < 8) {
+            $passLen = strlen($password);
+            if ($passLen < 8 || $passLen > 64) {
                 $this->messageManager->addWarningMessage(
-                    __('Password is invalid. It must be at least 8 characters.')
+                    __('Password is invalid. It must be at least 8 characters and at most 64 characters.')
                 );
                 $valid = false;
             }
@@ -293,7 +308,7 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
             $this->messageManager->addSuccess($message);
         }
 
-        $resultRedirect->setPath('sirv/*/edit', ($configScope == 'default' ? [] : [$configScope => $configScopeId]));
+        $resultRedirect->setPath('sirv/*/edit', $params);
 
         return $resultRedirect;
     }

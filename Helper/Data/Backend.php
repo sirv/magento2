@@ -292,6 +292,11 @@ class Backend extends \Sirv\Magento2\Helper\Data
                 if ($info) {
                     $data['alias'] = $alias = isset($info->alias) ? $info->alias : '';
                     $data['cdn_url'] = isset($info->cdnURL) ? $info->cdnURL : '';
+                    $data['aliases'] = [];
+                    foreach ($info->aliases as $_alias => $_data) {
+                        $data['aliases'][$_alias] = isset($_data->customDomain) ? $_data->customDomain : $_alias . '.sirv.com';
+                    }
+
                     if (isset($info->aliases->{$alias})) {
                         if (isset($info->aliases->{$alias}->customDomain)) {
                             $data['cdn_url'] = $info->aliases->{$alias}->customDomain;
@@ -310,6 +315,7 @@ class Backend extends \Sirv\Magento2\Helper\Data
                     if (isset($info->minify)) {
                         $data['minify'] = isset($info->minify->enabled) ? $info->minify->enabled : false;
                     }
+                    $data['date_created'] = isset($info->dateCreated) ? $info->dateCreated : '';
                 } else {
                     $message = 'Can\'t get Sirv account info. ' .
                         'Code: ' . $apiClient->getResponseCode() . ' ' .

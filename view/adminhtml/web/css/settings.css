@@ -35,27 +35,30 @@
   background-color: #c8e8ba;
 }
 
-.sirv-upgrade-banner-wrapper {
+.sirv-banner-wrapper {
   margin: 0;
+  margin-top: -1.2rem;
   padding: 0 3rem;
 }
-.sirv-upgrade-banner {
+.sirv-banner-wrapper + .sirv-banner-wrapper {
+  margin-top: 0.3rem;
+}
+.sirv-banner {
   background: #007dbd;
   border: solid #007dbd;
   color: #ffffff;
   border-width: 0.1rem;
   text-align: center;
   padding: 0.5rem;
-  margin-top: -1.2rem;
 }
-.sirv-upgrade-banner > span {
+.sirv-banner > span {
   display: inline-block;
   box-sizing: border-box;
   padding: 0;
   margin: 0;
   margin-left: 15px;
 }
-.sirv-upgrade-banner > span:before {
+.sirv-banner > span:before {
   display: inline-block;
   box-sizing: border-box;
   padding: 0;
@@ -69,8 +72,20 @@
 .sirv-upgrade-banner .sirv-whats-new:before {
   content: '\e901';
 }
-.sirv-upgrade-banner a {
+.sirv-banner a {
   color: inherit;
+}
+.sirv-review-banner a {
+  text-decoration: underline;
+}
+#sirv-dismiss-button {
+  margin-top: 5px;
+}
+#sirv-dismiss-button span:before {
+  font-family: 'Admin Icons';
+  content: '\e62f';
+  vertical-align: middle;
+  padding-right: 5px;
 }
 
 .modal-popup.sirv-changelog-modal .modal-inner-wrap {
@@ -216,6 +231,9 @@ a.save-message {
   box-shadow: inherit;
 }
 
+.mt-config .ui-tabs-panel {
+  border-top: 1px solid #adadad;
+}
 .mt-config .fieldset .admin__legend {
   margin-bottom: 1.9rem;
   padding: 1.9rem 0 1.9rem 0;
@@ -224,13 +242,13 @@ a.save-message {
 .mt-config .fieldset .field.no-label .control {
   width: 100%;
 }
-.mt-config .fieldset .field-mt-config-notice .mt-config-error-notice {
-  color: red;
-}
+.mt-config .fieldset .field-mt-config-notice .mt-config-error-notice,
+.mt-config .fieldset .field-mt-config-error-notice .mt-config-error-notice,
 .mt-config .fieldset .field-mt-outdated-notice .mt-outdated-error-notice {
   color: red;
 }
-.mt-config .fieldset .field-mt-config-notice.no-label .control {
+.mt-config .fieldset .field-mt-config-notice.no-label .control,
+.mt-config .fieldset .field-mt-config-error-notice .mt-config-error-notice {
   font-size: 1.8rem;
 }
 .mt-config .field .mt-option {
@@ -265,7 +283,7 @@ a.save-message {
   margin-left: 41px;
   margin-top: 0;
 }
-.admin__field-control > .admin__field-option.admin__field-option-inline:not(:first-child):before {
+.admin__field-control > .admin__field-option.admin__field-option-inline:not(:first-of-type):before {
   background: #cacaca;
   content: '';
   display: inline-block;
@@ -445,6 +463,25 @@ a.save-message {
 
 .mt-config .field-mt-image_quality .mt-option option[value='80'] {
   font-weight: 600;
+}
+
+.admin__field.field-mt-pinned_items > .admin__field-control > .note.admin__field-note-top {
+  margin-top: 0.7rem;
+  margin-bottom: 0.8rem;
+}
+.admin__field.field-mt-pinned_items > .admin__field-control > .admin__field-control {
+  margin-top: 0;
+}
+.admin__field.field-mt-pinned_items > .admin__field-control label.addbefore {
+  display: inline-block;
+  width: 155px;
+}
+.admin__field.field-mt-pinned_items #mt-pinned_items-mask {
+  margin-left: 196px;
+  width: 440px;
+}
+.admin__field.field-mt-pinned_items #mt-pinned_items-mask + .admin__field-note {
+  margin-left: 196px;
 }
 
 .admin__fieldset > .admin__field.field-mt-synchronizer > .admin__field-control {
@@ -1045,5 +1082,182 @@ a.save-message {
 }
 .clear-failed-items-button:hover, .clear-failed-items-button:active, .clear-failed-items-button:focus {
   background-color: #eb694a;
+}
+
+/* slides order widget CSS -------------------------------------------------- */
+.slides_order_items .slides_order_item {
+  background: #ffffff;
+  box-sizing: border-box;
+  display: inline-block;
+  margin: 0 1rem 1rem 0;
+  position: relative;
+  vertical-align: top;
+  width: 100px;
+}
+.slides_order_items .slides_order_item.ui-sortable-placeholder {
+  background: #e0f6fe;
+  border: 1px solid #008bdb;
+  visibility: visible !important;
+}
+.slides_order_items .slides_order_item_wrapper {
+  background: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  height: 100px;
+  line-height: 1;
+  overflow: hidden;
+  position: relative;
+  width: 100px;
+}
+.slides_order_items .slides_order_item_wrapper.item_add_wrapper {
+  overflow: visible;
+}
+.slides_order_items .slides_order_item_label {
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-height: 100%;
+  max-width: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  text-align: center;
+  vertical-align: middle;
+  padding: 40px 0 40px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.slides_order_items .slides_order_action {
+  cursor: none;
+  height: 20px;
+  width: 20px;
+  margin: 0;
+  position: absolute;
+  z-index: 3;
+  display: inline-block;
+  text-decoration: none;
+}
+.slides_order_items .slides_order_action_draggable_handle {
+  cursor: move;
+  left: 2px;
+  left: 4px;
+  top: 4px;
+}
+.slides_order_items .slides_order_action:before {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 2rem;
+  line-height: inherit;
+  color: #9e9e9e;
+  font-family: 'Admin Icons';
+  vertical-align: middle;
+  display: inline-block;
+  font-weight: normal;
+  overflow: hidden;
+  speak: none;
+  text-align: center;
+}
+.slides_order_items .slides_order_action_draggable_handle:before {
+  content: '\e617';
+}
+.slides_order_items .slides_order_action_remove {
+  cursor: pointer;
+  left: 4px;
+  bottom: 4px;
+  margin-left: -1px;
+}
+.slides_order_items .slides_order_action_remove:before {
+  content: '\e630';
+}
+.slides_order_items .slides_order_action_add {
+  cursor: pointer;
+  margin: 0;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: auto;
+  padding: 20px;
+}
+.slides_order_items .slides_order_action_add:before {
+  content: '\e61D';
+}
+.slides_order_items .slides_order_action.slides_order_action_add:hover:before {
+  color: #909090;
+  font-size: 2.2rem;
+}
+.slides_order_items .items-menu {
+  position: absolute;
+  z-index: 1000;
+  display: none;
+  list-style: none;
+  font-size: 14px;
+  text-align: left;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0,0,0,.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
+  -moz-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+  box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
+  background-clip: padding-box;
+  left: 0px;
+  top: 0px;
+  width: calc( (100%) + 8px );
+  margin: -4px 0 0 -4px;
+  padding: 0;
+}
+.slides_order_items .items-menu.open {
+  display: block;
+}
+.slides_order_items .items-menu-header {
+  display: block;
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+  min-height: auto;
+  line-height: 18px;
+  padding: 3px 6px;
+}
+.slides_order_items .items-menu-header:first-child {
+  padding-top: 6px;
+}
+.slides_order_items .items-menu > li > a {
+  display: block;
+  clear: both;
+  font-weight: 400;
+  line-height: 24px;
+  color: #141414;
+  white-space: nowrap;
+  padding: 3px 6px;
+  min-height: auto;
+  border: none;
+  border-radius: 0;
+}
+.slides_order_items .items-menu > li > a:hover,
+.slides_order_items .items-menu > li > a:focus {
+  text-decoration: none;
+  color: #141414;
+  background-color: #eff8fe;
+}
+.slides_order_items .items-menu > li > a > span:last-child {
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.slides_order_items.disabled .slides_order_item_wrapper {
+  background-color: #e9e9e9;
+  border-color: #adadad;
+  color: #303030;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.slides_order_items.disabled .slides_order_action {
+  cursor: not-allowed;
 }
 /* -------------------------------------------------------------------------- */

@@ -200,15 +200,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         $this->logger = $context->getLogger();
         $this->sirvClient = $dataHelper->getSirvClient();
 
-        $bucket = $dataHelper->getConfig('bucket') ?: $dataHelper->getConfig('account');
-
-        $this->baseUrl = $this->baseDirectUrl = 'https://' . $bucket . '.sirv.com';
-
-        $cdnUrl = $dataHelper->getConfig('cdn_url');
-        $cdnUrl = is_string($cdnUrl) ? trim($cdnUrl) : '';
-        if (!empty($cdnUrl)) {
-            $this->baseUrl = 'https://' . $cdnUrl;
-        }
+        $this->baseDirectUrl = 'https://' . $dataHelper->getSirvDomain();
+        $this->baseUrl = 'https://' . $dataHelper->getSirvDomain(false);
 
         $imageFolder = $dataHelper->getConfig('image_folder');
         if (is_string($imageFolder)) {
@@ -254,6 +247,9 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         $this->mediaBaseUrl = $catalogProductMediaConfig->getBaseMediaUrl();
         $this->mediaBaseUrl = rtrim($this->mediaBaseUrl, '\\/');
         $this->mediaBaseUrl = preg_replace('#' . preg_quote($this->productMediaRelPath, '#') . '$#', '', $this->mediaBaseUrl);
+
+        $cdnUrl = $dataHelper->getConfig('cdn_url');
+        $cdnUrl = is_string($cdnUrl) ? trim($cdnUrl) : '';
         if (!empty($cdnUrl) && strpos($this->mediaBaseUrl, $cdnUrl) !== false) {
             $storeManager = $dataHelper->getStoreManager();
             $this->mediaBaseUrl = $storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB);

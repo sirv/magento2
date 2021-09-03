@@ -131,8 +131,6 @@ class Synchronizer extends \Magento\Backend\Block\Template
     /**
      * Get buttons html
      *
-     * @param integer $failed
-     * @param integer $cached
      * @return string
      */
     public function getButtonsHtml()

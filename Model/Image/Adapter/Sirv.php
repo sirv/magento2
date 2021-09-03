@@ -442,6 +442,124 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
     }
 
     /**
+     * Set watermark position
+     *
+     * @param string $position
+     * @return $this
+     */
+    public function setWatermarkPosition($position)
+    {
+        if ($this->isWatermarkDisabled) {
+            return $this;
+        }
+
+        $this->_watermarkPosition = $position;
+
+        $width = $this->getWatermarkWidth();
+        if (empty($width)) {
+            $width = '100%';
+        }
+        $height = $this->getWatermarkHeight();
+        if (empty($height)) {
+            $height = '100%';
+        }
+
+        if ($width && $height && $position != self::POSITION_STRETCH) {
+            $this->setImagingOptions('watermark.scale.width', $width);
+            $this->setImagingOptions('watermark.scale.height', $height);
+            $this->setImagingOptions('watermark.scale.option', 'ignore');
+        }
+
+        switch ($position) {
+            case self::POSITION_CENTER:
+                $this->setImagingOptions('watermark.position', 'center');
+                break;
+            case self::POSITION_TOP_RIGHT:
+                $this->setImagingOptions('watermark.position', 'northeast');
+                break;
+            case self::POSITION_TOP_LEFT:
+                $this->setImagingOptions('watermark.position', 'northwest');
+                break;
+            case self::POSITION_BOTTOM_RIGHT:
+                $this->setImagingOptions('watermark.position', 'southeast');
+                break;
+            case self::POSITION_BOTTOM_LEFT:
+                $this->setImagingOptions('watermark.position', 'southwest');
+                break;
+            case self::POSITION_TILE:
+                $this->setImagingOptions('watermark.position', 'tile');
+                break;
+            case self::POSITION_STRETCH:
+            default:
+                $this->setImagingOptions('watermark.position', 'center');
+                $this->setImagingOptions('watermark.scale.width', '100%');
+                $this->setImagingOptions('watermark.scale.height', '100%');
+                $this->setImagingOptions('watermark.scale.option', 'ignore');
+                break;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set watermark opacity
+     *
+     * @param int $imageOpacity
+     * @return $this
+     */
+    public function setWatermarkImageOpacity($imageOpacity)
+    {
+        if ($this->isWatermarkDisabled || empty($imageOpacity)) {
+            return $this;
+        }
+        $this->_watermarkImageOpacity = $imageOpacity;
+        $this->setImagingOptions('watermark.opacity', $imageOpacity);
+        return $this;
+    }
+
+    /**
+     * Set watermark width
+     *
+     * @param int $width
+     * @return $this
+     */
+    public function setWatermarkWidth($width)
+    {
+        if ($this->isWatermarkDisabled || empty($width)) {
+            return $this;
+        }
+        $this->_watermarkWidth = $width;
+        if ($this->getWatermarkPosition() == self::POSITION_STRETCH) {
+            $this->setImagingOptions('watermark.scale.width', '100%');
+            $this->setImagingOptions('watermark.scale.option', 'ignore');
+        } else {
+            $this->setImagingOptions('watermark.scale.width', $width);
+        }
+        return $this;
+    }
+
+    /**
+     * Set watermark height
+     *
+     * @param int $height
+     * @return $this
+     */
+    public function setWatermarkHeight($height)
+    {
+        if ($this->isWatermarkDisabled || empty($height)) {
+            return $this;
+        }
+        $this->_watermarkHeight = $height;
+        if ($this->getWatermarkPosition() == self::POSITION_STRETCH) {
+            $this->setImagingOptions('watermark.scale.height', '100%');
+            $this->setImagingOptions('watermark.scale.option', 'ignore');
+        } else {
+            $this->setImagingOptions('watermark.scale.height', $height);
+        }
+        return $this;
+    }
+
+    /**
      * Get/set quality, values in percentage from 0 to 100
      *
      * @param int $value
