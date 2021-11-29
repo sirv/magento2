@@ -1,0 +1,35 @@
+<!--
+/**
+ * Failed items template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+-->
+
+<div data-role="sirv-messages" id="sirv-messages" class="messages">
+    <div id="failed_images_message" class="message message-error">
+        <span class="message-text">
+            <strong><%= data.message %></strong><br />
+        </span>
+    </div>
+    <% _.each(data.failed.groups, function(items, message) { %>
+    <div id="failed_images_list_" class="message message-error list-message">
+        <span class="message-text">
+            <strong><%= message %></strong><br />
+        </span>
+        <ul>
+        <% _.each(items, function(item, i) { %>
+        <li><a target="_blank" href="<%- item.url %>" title="
+        File <% if (item.isFile) { %>exists<% } else { %>does not exist<% } %>.
+        <% if (item.fileSize) { %> Size <%- item.fileSize %> bytes.<% } %>
+        "><%- item.path %></a></li>
+        <% }); %>
+        </ul>
+    </div>
+    <% }); %>
+</div>

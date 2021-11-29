@@ -1,0 +1,120 @@
+<!--
+/**
+ * Sync master images template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+-->
+<style>
+.sirv-cmi-content .progress-completed-label {
+  float: right;
+}
+.sirv-cmi-content .progress-bar-holder {
+  position: relative;
+  border-radius: 1rem;
+  background-color: #d2e2f0;
+  height: 1.4rem;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  color: #000000;
+  text-align: center;
+  font-size: 1.4rem;
+}
+.sirv-cmi-content .progress-bar {
+  position: absolute;
+  border-radius: 1rem;
+  background-color: #d2e2f0;
+  height: 100%;
+  transition: width .6s ease;
+  width: 0;
+  z-index: 0;
+}
+.sirv-cmi-content .progress-bar-copied {
+  background-color: #347cbb;
+  z-index: 2;
+}
+.sirv-cmi-content .progress-bar-failed {
+  background-color: #f37152;
+  z-index: 1;
+}
+.sirv-cmi-content .progress-bar-holder.stripes,
+.sirv-cmi-content .progress-bar-holder.stripes .progress-bar {
+  background-size: 30px 30px;
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, .15) 25%, transparent 25%,
+                    transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%,
+                    transparent 75%, transparent);
+  animation: sirv-cmi-animate-stripes 3s linear infinite;
+}
+@keyframes sirv-cmi-animate-stripes {
+  0% {background-position: 0 0;} 100% {background-position: 60px 0;}
+}
+
+.sirv-cmi-content .progress-counters-list {
+  list-style-type: none;
+}
+.sirv-cmi-content .progress-counters-list .list-item {
+  margin-top: 5px;
+}
+.sirv-cmi-content .progress-counters-list .list-item-style-type {
+  display: inline-block;
+  border-radius: 1rem;
+  background-color: #000000;
+  height: 1rem;
+  width: 1rem;
+}
+
+.sirv-cmi-content .progress-counters-list .list-item-failed .list-item-style-type {
+  background-color: #f37152;
+}
+
+.sirv-cmi-content .progress-counters-list .list-item-title {
+  display: inline-block;
+  padding-left: 10px;
+  width: 220px;
+}
+</style>
+<div class="sirv-cmi-container">
+  <div class="sirv-cmi-content">
+    <div class="row">
+      <p class="progress-label">
+        <span class="progress-completed-label">
+          <% if (counters.withoutMedia) { %>
+            <b><span class="progress-value">0</span> of <%- counters.withoutMedia %></b> products processed
+          <% } else { %>
+            There are no products without images.
+          <% } %>
+        </span>
+      </p>
+    </div>
+    <div class="row">
+      <div class="progress-bar-holder">
+        <div class="progress-bar progress-bar-copied" role="progressbar" style="width: 0%"></div>
+        <div class="progress-bar progress-bar-failed" role="progressbar" style="width: 0%"></div>
+      </div>
+    </div>
+    <div class="row">
+      <ul class="progress-counters-list">
+        <li class="list-item list-item-total">
+          <span class="list-item-style-type"></span>
+          <span class="list-item-title">Total products</span>
+          <span class="list-item-value"><%- counters.total %></span>
+        </li>
+        <li class="list-item list-item-products-with-images">
+          <span class="list-item-style-type"></span>
+          <span class="list-item-title">Products with images</span>
+          <span class="list-item-value"><%- counters.withMedia %></span>
+        </li>
+        <li class="list-item list-item-products-without-images">
+          <span class="list-item-style-type"></span>
+          <span class="list-item-title">Products without images</span>
+          <span class="list-item-value"><%- counters.withoutMedia %></span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
