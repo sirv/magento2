@@ -507,12 +507,13 @@ class Backend extends \Sirv\Magento2\Helper\Sync
     }
 
     /**
-     * Method to get media pathes that are queued
+     * Method to get media pathes that are cached
      *
+     * @param int|array $status
      * @param int $limit
      * @return array
      */
-    protected function getQueuedPathes($limit = 0)
+    public function getCachedPathes($status, $limit = 0)
     {
         /** @var \Sirv\Magento2\Model\ResourceModel\Cache $resource */
         $resource = $this->cacheModel->getResource();
@@ -539,7 +540,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     ['ct' => $cacheTable],
                     ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
                 )
-                ->where('`ct`.`status` IN (?)', [self::IS_NEW, self::IS_PROCESSING])
+                ->where('`ct`.`status` ' . (is_array($status) ? 'IN (?)' : ' = ?'), $status)
                 ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
 
             $mtSelect->reset()
@@ -596,125 +597,14 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     ['ct' => $cacheTable],
                     ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
                 )
-                ->where('`ct`.`status` IN (?)', [self::IS_NEW, self::IS_PROCESSING])
+                ->where('`ct`.`status` ' . (is_array($status) ? 'IN (?)' : ' = ?'), $status)
                 ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
 
-            $queuedPathes = $connection->fetchCol($ctSelect, $bind);
+            $pathes = $connection->fetchCol($ctSelect, $bind);
 
             $result = [];
             $i = 0;
-            foreach ($queuedPathes as $path) {
-                if (isset($mediaPathes[$path])) {
-                    $result[] = $path;
-                    $i++;
-                    if ($limit && $i == $limit) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Method to get media pathes that are failed
-     *
-     * @param int $limit
-     * @return array
-     */
-    public function getFailedPathes($limit = 0)
-    {
-        /** @var \Sirv\Magento2\Model\ResourceModel\Cache $resource */
-        $resource = $this->cacheModel->getResource();
-        /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
-        $connection = $resource->getConnection();
-        $mediaTable = $resource->getTable(\Magento\Catalog\Model\ResourceModel\Product\Gallery::GALLERY_TABLE);
-        $mediaToEntityTable = $resource->getTable(\Magento\Catalog\Model\ResourceModel\Product\Gallery::GALLERY_VALUE_TO_ENTITY_TABLE);
-        /** @var \Magento\Framework\DB\Select $mtSelect */
-        $mtSelect = clone $connection->select();
-        $cacheTable = $resource->getMainTable();
-        /** @var \Magento\Framework\DB\Select $ctSelect */
-        $ctSelect = clone $connection->select();
-
-        $bind = [
-            ':mmp_type' => self::MAGENTO_MEDIA_PATH,
-            ':mpmp_type' => self::MAGENTO_PRODUCT_MEDIA_PATH,
-            ':pm_rel_path' => $this->productMediaRelPath,
-            ':pm_rel_path_regexp' => '^' . $this->productMediaRelPath,
-        ];
-
-        if ($this->joinWithMySQL) {
-            $ctSelect->reset()
-                ->from(
-                    ['ct' => $cacheTable],
-                    ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
-                )
-                ->where('`ct`.`status` = ?', self::IS_FAILED)
-                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
-
-            $mtSelect->reset()
-                ->distinct()
-                ->from(
-                    ['mt' => $mediaTable],
-                    ['unique_value' => 'BINARY(`mt`.`value`)']
-                )
-                ->joinInner(
-                    ['mtet' => $mediaToEntityTable],
-                    '`mt`.`value_id` = `mtet`.`value_id`',
-                    []
-                )
-                ->joinLeft(
-                    ['tt' => new \Zend_Db_Expr("({$ctSelect})")],
-                    '`tt`.`short_path` = `mt`.`value` OR TRIM(LEADING "/" FROM `tt`.`short_path`) = `mt`.`value`',
-                    []
-                )
-                ->where('`tt`.`short_path` IS NOT NULL')
-                ->where('`mt`.`value` IS NOT NULL')
-                ->where('`mt`.`value` != ?', '');
-
-            if ($limit) {
-                $mtSelect->limit($limit);
-            }
-
-            /** @var array $result */
-            $result = $connection->fetchCol($mtSelect, $bind);
-        } else {
-            $mtSelect->reset()
-                ->distinct()
-                ->from(
-                    ['mt' => $mediaTable],
-                    ['unique_value' => 'BINARY(`mt`.`value`)']
-                )
-                ->joinInner(
-                    ['mtet' => $mediaToEntityTable],
-                    '`mt`.`value_id` = `mtet`.`value_id`',
-                    []
-                )
-                ->where('`mt`.`value` IS NOT NULL')
-                ->where('`mt`.`value` != ?', '');
-
-            $mediaPathes = $connection->fetchCol($mtSelect, []);
-            foreach ($mediaPathes as &$path) {
-                $path = '/' . ltrim($path, '\\/');
-            }
-            unset($path);
-            $mediaPathes = array_flip($mediaPathes);
-
-            $ctSelect->reset()
-                ->distinct()
-                ->from(
-                    ['ct' => $cacheTable],
-                    ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
-                )
-                ->where('`ct`.`status` = ?', self::IS_FAILED)
-                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
-
-            $failedPathes = $connection->fetchCol($ctSelect, $bind);
-
-            $result = [];
-            $i = 0;
-            foreach ($failedPathes as $path) {
+            foreach ($pathes as $path) {
                 if (isset($mediaPathes[$path])) {
                     $result[] = $path;
                     $i++;
@@ -890,7 +780,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
         if ($stage == 1) {
             $images = $this->getNotCachedPathes($limit);
         } else {
-            $images = $this->getQueuedPathes($limit);
+            $images = $this->getCachedPathes([self::IS_NEW, self::IS_PROCESSING], $limit);
         }
 
         $imagesCount = count($images);
@@ -1211,6 +1101,10 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                 $resource->deleteByStatus(self::IS_PROCESSING);
                 $result = true;
                 break;
+            case 'synced':
+                $resource->deleteByStatus(self::IS_SYNCED);
+                $result = true;
+                break;
             case 'all':
                 //NOTE: clear DB cache
                 $resource->deleteAll();
@@ -1225,5 +1119,15 @@ class Backend extends \Sirv\Magento2\Helper\Sync
         }
 
         return $result;
+    }
+
+    /**
+     * Get media base URL
+     *
+     * @return string
+     */
+    public function getMediaBaseUrl()
+    {
+        return $this->mediaBaseUrl;
     }
 }

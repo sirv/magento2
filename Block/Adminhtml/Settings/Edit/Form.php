@@ -331,7 +331,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             foreach ($accountConfig['aliases'] as $_alias => $domain) {
                                 $fieldConfig['values'][] = [
                                     'value' => $_alias,
-                                    'label' => $_alias . ': ' . $domain
+                                    'label' => $domain
                                 ];
                             }
                         }
@@ -365,12 +365,16 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     case 'product_assets_folder':
                         $fieldConfig['value_prefix'] = $this->dataHelper->getSirvDomain(false) . '/';
                         break;
+                    case 'copy_primary_images_to_magento':
+                        $url = $this->getUrl('sirv/ajax/copyprimaryimages', []);
+                        $fieldConfig['data-mage-init'] = '{"sirvCopyPrimaryImages": {"ajaxUrl":"' . $url . '"}}';
+                        break;
                     case 'viewer_contents':
                         $data = $this->dataHelper->getAccountUsageData();
                         if (!isset($data['plan']) ||
                             !isset($data['plan']['name']) ||
-                            preg_match('#beta|free|demo#i', $data['plan']['name'])) {
-                            $fieldConfig['note'] .= '<span style="color: red;">Sirv assets cannot be used with Free plan!</span>';
+                            preg_match('#beta|free|demo|trial#i', $data['plan']['name'])) {
+                            $fieldConfig['note'] .= '<span style="color: red;">To use Sirv assets, <a target="_blank" href="https://my.sirv.com/#/account/billing/plan">upgrade to a paid plan</a>.</span>';
                         }
                         break;
                     case 'excluded_pages':
@@ -396,7 +400,12 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $data = $this->dataHelper->getMagentoCatalogImagesCacheData();
                         $fieldConfig['note'] = str_replace(
                             '{{COUNT}}',
-                            $data['count'] . ' image' . ($data['count'] != 1 ? 's' : ''),
+                            $data['count'],
+                            $fieldConfig['note']
+                        );
+                        $fieldConfig['note'] = str_replace(
+                            '{{SUFFIX}}',
+                            $data['count'] != 1 ? 's' : '',
                             $fieldConfig['note']
                         );
                         $fieldConfig['note'] = str_replace(

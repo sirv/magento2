@@ -53,7 +53,13 @@ define([
                 total: '.sirv-sync-content .items-total-value',
                 synced: '.sirv-sync-content .progress-counters-list .list-item-synced .list-item-value',
                 queued: '.sirv-sync-content .progress-counters-list .list-item-queued .list-item-value',
-                failed: '.sirv-sync-content .progress-counters-list .list-item-failed .list-item-value'
+                failed: '.sirv-sync-content .progress-counters-list .list-item-failed .list-item-value',
+                estimatedDurationNotice: '.sirv-sync-content .estimated-duration-notice'
+            },
+            actionLinks: {
+                synced: '.sirv-sync-content .view-synced-items-link, .sirv-sync-content .clear-synced-items-link',
+                queued: '.sirv-sync-content .view-queued-items-link, .sirv-sync-content .clear-queued-items-link',
+                failed: '.sirv-sync-content .view-failed-items-link, .sirv-sync-content .clear-failed-items-link'
             },
             viewFailedLink: '.sirv-sync-content .sirv-view-failed-link'
         },
@@ -160,6 +166,9 @@ define([
                 case 'flush-queued':
                     this._flushCache('queued');
                     break;
+                case 'flush-synced':
+                    this._flushCache('synced');
+                    break;
                 case 'flush-all':
                     this._flushCache('all');
                     break;
@@ -225,6 +234,8 @@ define([
             $(this.selectors.texts.failedLabel).addClass('hidden-element');
             $(this.selectors.texts.progressLabel).removeClass('hidden-element');
             $(this.selectors.viewFailedLink).addClass('hidden-element');
+            this._hideActionLinks();
+            this._updateEstimatedDurationMessage();
 
             this._addStripes();
 
@@ -543,6 +554,45 @@ define([
         },
 
         /**
+         * Update estimated duration message
+         */
+        _updateEstimatedDurationMessage: function () {
+            var estimatedDurationNoticeSelector = this.selectors.texts.estimatedDurationNotice,
+                counters = this.counters,
+                speed = 2000,
+                imagesToSync,
+                estimatedDuration,
+                timeUnits,
+                mSpeed,
+                sSpeed;
+
+            imagesToSync = counters.total - counters.synced - counters.failed;
+            if (imagesToSync < 1) {
+                $(estimatedDurationNoticeSelector).html('');
+                return;
+            }
+
+            if (imagesToSync >= speed) {
+                estimatedDuration = Math.ceil(imagesToSync / speed);
+                timeUnits = estimatedDuration > 1 ? 'hours' : 'hour';
+            } else {
+                mSpeed = speed / 60;
+                if (imagesToSync >= mSpeed) {
+                    estimatedDuration = Math.ceil(imagesToSync / mSpeed);
+                    timeUnits = estimatedDuration > 1 ? 'minutes' : 'minute';
+                } else {
+                    sSpeed = mSpeed / 60;
+                    estimatedDuration = Math.ceil(imagesToSync / sSpeed);
+                    timeUnits = estimatedDuration > 1 ? 'seconds' : 'second';
+                }
+            }
+
+            $(estimatedDurationNoticeSelector).html($.mage.__(
+                'Estimated duration up to ' + estimatedDuration + ' ' + timeUnits + ' at ' + speed + ' images/hour.'
+            ));
+        },
+
+        /**
          * Get simulator
          */
         _getSimulator: function () {
@@ -768,6 +818,7 @@ define([
             } else {
                 $(this.selectors.viewFailedLink).addClass('hidden-element');
             }
+            this._displayActionLinks();
 
             if (!this.isSyncFailed) {
                 this._enableButtons();
@@ -797,6 +848,7 @@ define([
             } else {
                 $(this.selectors.viewFailedLink).addClass('hidden-element');
             }
+            this._displayActionLinks();
 
             if (message) {
                 this._displayNotification({
@@ -844,6 +896,9 @@ define([
                 case 'queued':
                     counters.queued = 0;
                     break;
+                case 'synced':
+                    counters.synced = 0;
+                    break;
                 case 'all':
                 case 'master':
                     counters.synced = 0;
@@ -870,6 +925,7 @@ define([
             $('#failed_images_message').remove();
 
             !counters.failed && $(this.selectors.viewFailedLink).addClass('hidden-element');
+            this._displayActionLinks();
 
             this._removeStripes();
             this._enableButtons();
@@ -904,6 +960,32 @@ define([
             for (key in this.selectors.buttons) {
                 selector = this.selectors.buttons[key];
                 $(selector).removeClass('disabled').attr('disabled', false);
+            }
+        },
+
+        /**
+         * Hide action links
+         */
+        _hideActionLinks: function () {
+            var key, selector;
+            for (key in this.selectors.actionLinks) {
+                selector = this.selectors.actionLinks[key];
+                $(selector).addClass('hidden-element');
+            }
+        },
+
+        /**
+         * Display action links
+         */
+        _displayActionLinks: function () {
+            var key, selector;
+            for (key in this.selectors.actionLinks) {
+                selector = this.selectors.actionLinks[key];
+                if (this.counters[key]) {
+                    $(selector).removeClass('hidden-element');
+                } else {
+                    $(selector).addClass('hidden-element');
+                }
             }
         },
 

@@ -185,7 +185,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 $replace = "<script type=\"text/javascript\" src=\"https://scripts.sirv.com/sirvjs/v3/sirv.js\" data-components=\"" . $this->sirvJsComponents . "\"></script>";
             }
             */
-            $replace = "<script type=\"text/javascript\" src=\"https://scripts.sirv.com/sirvjs/v3/sirv.full.js\"></script>\n";
+            $replace = "<script type=\"text/javascript\" src=\"https://scripts.sirv.com/sirvjs/v3/sirv.js\"></script>\n";
             $html = preg_replace(
                 '#<script[^>]++>#',
                 $replace . '$0',

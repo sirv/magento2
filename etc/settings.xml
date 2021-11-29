@@ -354,6 +354,13 @@
                 <install/>
             </field>
             <field>
+                <name>copy_primary_images_to_magento</name>
+                <label>Copy primary image</label>
+                <type>button</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Button\CopyPrimaryImages</type_class>
+                <value>Copy primary images to Magento</value>
+            </field>
+            <field>
                 <name>smv_js_options</name>
                 <label>Sirv Media Viewer options</label>
                 <notice><![CDATA[<a target="_blank" href="https://sirv.com/help/viewer/">Choose your options here</a>, then paste the code from the Script tab.]]></notice>
@@ -538,7 +545,7 @@
                     If required, you can regenerate the Magento image cache with the Magento CLI command: <b>php bin/magento catalog:images:resize</b>
                 ]]></tooltip>
                 <notice><![CDATA[
-                    Magento image cache: {{COUNT}}.
+                    Your Magento cache contains {{COUNT}} resized image{{SUFFIX}}.
                     <a href="#"
                         onclick="return false"
                         data-mage-init='{
@@ -546,7 +553,7 @@
                                 "showLoader": true,
                                 "needConfirmation": true,
                                 "confirmationMessage": "
-                                    <b>Delete {{COUNT}} images.</b><br/>
+                                    <b>Delete {{COUNT}} resized Magento image{{SUFFIX}}?</b><br/>
                                     This might take a long time.<br/>
                                     Keep this page open until deletion complete.",
                                 "confirmationButtonText": "Empty image cache",
@@ -559,7 +566,7 @@
                             }
                         }'
                         title="Delete pregenerated product images files"
-                        >Delete</a>
+                        >Delete cache...</a>
                 ]]></notice>
                 <value>false</value>
             </field>
@@ -569,12 +576,14 @@
                 <type>synchronizer</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Synchronizer</type_class>
             </field>
+            <!--
             <field>
                 <name>urls_cache</name>
                 <label>Synchronized image cache</label>
                 <type>button</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushUrls</type_class>
             </field>
+            -->
         </fields>
     </group>
     <group id="usage">

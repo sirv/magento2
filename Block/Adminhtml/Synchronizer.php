@@ -119,13 +119,54 @@ class Synchronizer extends \Magento\Backend\Block\Template
     }
 
     /**
-     * Get AJAX URL
+     * Get estimated duration message
      *
      * @return string
      */
-    public function getAjaxUrl()
+    public function getEstimatedDurationMessage()
+    {
+        $data = $this->getSyncData();
+        $speed = 2000;//images per hour
+        $imagesToSync = $data['total'] - $data['synced'] - $data['failed'];
+        if ($imagesToSync < 1) {
+            return '';
+        }
+        if ($imagesToSync >= $speed) {
+            $estimatedDuration = ceil($imagesToSync / $speed);
+            $timeUnits = $estimatedDuration > 1 ? 'hours' : 'hour';
+        } else {
+            $mSpeed = $speed / 60;//images per minute
+            if ($imagesToSync >= $mSpeed) {
+                $estimatedDuration = ceil($imagesToSync / $mSpeed);
+                $timeUnits = $estimatedDuration > 1 ? 'minutes' : 'minute';
+            } else {
+                $sSpeed = $mSpeed / 60;//images per second
+                $estimatedDuration = ceil($imagesToSync / $sSpeed);
+                $timeUnits = $estimatedDuration > 1 ? 'seconds' : 'second';
+            }
+        }
+
+        return "Estimated duration up to {$estimatedDuration} {$timeUnits} at {$speed} images/hour.";
+    }
+
+    /**
+     * Get sync controller URL
+     *
+     * @return string
+     */
+    public function getSyncAjaxUrl()
     {
         return $this->getUrl('sirv/ajax/synchronize');
+    }
+
+    /**
+     * Get cache controller URL
+     *
+     * @return string
+     */
+    public function getCacheAjaxUrl()
+    {
+        return $this->getUrl('sirv/ajax/cache');
     }
 
     /**

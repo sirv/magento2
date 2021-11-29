@@ -64,32 +64,4 @@ class Review extends \Magento\Framework\View\Element\Template
 
         return $doDisplayBanner == 'true';
     }
-
-    /**
-     * Get dismiss button html
-     *
-     * @return string
-     */
-    public function getDismissButtonHtml()
-    {
-        $buttonConfig = [
-            'id' => 'sirv-dismiss-button',
-            'label' => __('Dismiss'),
-            'title' => __('Dismiss'),
-            'class' => 'sirv-button action-secondary',
-            'onclick' => 'return false',
-            'data_attribute' => [
-                'mage-init' => [
-                    'sirvDismissReview' => [
-                        'ajaxUrl' => $this->getUrl('sirv/ajax/dismissreview')
-                    ]
-                ]
-            ]
-        ];
-
-        $block = $this->getLayout()->createBlock(\Magento\Backend\Block\Widget\Button::class, 'mt-sirv-dismiss');
-        $block->setData($buttonConfig);
-
-        return $block->toHtml();
-    }
 }

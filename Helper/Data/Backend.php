@@ -127,33 +127,41 @@ class Backend extends \Sirv\Magento2\Helper\Data
 
         if ($data === null) {
             $data = ['count' => 0];
+
             /** @var \Magento\Framework\Filesystem $filesystem */
             $filesystem = $this->objectManager->get(\Magento\Framework\Filesystem::class);
             /** @var \Magento\Framework\Filesystem\Directory\ReadInterface $mediaDirectory */
             $mediaDirectory = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-
             $mediaDirAbsPath = $mediaDirectory->getAbsolutePath();
             $cacheDirAbsPath = rtrim($mediaDirAbsPath, '\\/') . '/catalog/product/cache';
 
-            $count = 0;
             if (is_dir($cacheDirAbsPath)) {
-                $flags = \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::UNIX_PATHS;
+                /** @var \Magento\Framework\Shell $shell */
+                $shell = $this->objectManager->get(\Magento\Framework\Shell::class);
+                $command = 'find ' . $cacheDirAbsPath . ' -type f | wc -l';
                 try {
-                    $iterator = new \RecursiveIteratorIterator(
-                        new \RecursiveDirectoryIterator($cacheDirAbsPath, $flags),
-                        \RecursiveIteratorIterator::CHILD_FIRST
-                    );
-                    foreach ($iterator as $item) {
-                        if ($item->isFile()) {
-                            $count++;
-                        }
-                    }
-                    $data['count'] = $count;
+                    $output = $shell->execute($command);
+                    $data['count'] = $output;
                 } catch (\Exception $e) {
-                    throw new \Magento\Framework\Exception\FileSystemException(
-                        new \Magento\Framework\Phrase($e->getMessage()),
-                        $e
-                    );
+                    $flags = \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::UNIX_PATHS;
+                    try {
+                        $iterator = new \RecursiveIteratorIterator(
+                            new \RecursiveDirectoryIterator($cacheDirAbsPath, $flags),
+                            \RecursiveIteratorIterator::CHILD_FIRST
+                        );
+                        $count = 0;
+                        foreach ($iterator as $item) {
+                            if ($item->isFile()) {
+                                $count++;
+                            }
+                        }
+                        $data['count'] = $count;
+                    } catch (\Exception $e) {
+                        throw new \Magento\Framework\Exception\FileSystemException(
+                            new \Magento\Framework\Phrase($e->getMessage()),
+                            $e
+                        );
+                    }
                 }
             }
         }
@@ -589,7 +597,7 @@ class Backend extends \Sirv\Magento2\Helper\Data
 
         $limitsData = $this->getApiLimitsData();
         $data['limits'] = empty($limitsData) ? [] : $limitsData['limits'];
-        $data['current_time'] = empty($limitsData) ? [] : $limitsData['current_time'];
+        $data['current_time'] = empty($limitsData) ? date('H:i:s e', time()) : $limitsData['current_time'];
 
         return $data;
     }

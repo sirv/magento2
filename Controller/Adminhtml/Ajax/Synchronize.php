@@ -85,7 +85,7 @@ class Synchronize extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $mediaBaseUrl = $storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
                 $mediaBaseUrl = rtrim($mediaBaseUrl, '\\/');
 
-                $failedPathes = $this->syncHelper->getFailedPathes();
+                $failedPathes = $this->syncHelper->getCachedPathes(\Sirv\Magento2\Helper\Sync::IS_FAILED);
                 $failedCount = count($failedPathes);
                 foreach ($failedPathes as $i => $path) {
                     $failedPathes[$i] = $productMediaRelPath . '/' . ltrim($path, '\\/');

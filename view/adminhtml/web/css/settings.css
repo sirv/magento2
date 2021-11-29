@@ -43,7 +43,7 @@
 .sirv-banner-wrapper + .sirv-banner-wrapper {
   margin-top: 0.3rem;
 }
-.sirv-banner {
+.sirv-upgrade-banner {
   background: #007dbd;
   border: solid #007dbd;
   color: #ffffff;
@@ -51,14 +51,14 @@
   text-align: center;
   padding: 0.5rem;
 }
-.sirv-banner > span {
+.sirv-upgrade-banner > span {
   display: inline-block;
   box-sizing: border-box;
   padding: 0;
   margin: 0;
   margin-left: 15px;
 }
-.sirv-banner > span:before {
+.sirv-upgrade-banner > span:before {
   display: inline-block;
   box-sizing: border-box;
   padding: 0;
@@ -72,20 +72,93 @@
 .sirv-upgrade-banner .sirv-whats-new:before {
   content: '\e901';
 }
-.sirv-banner a {
+.sirv-upgrade-banner a {
   color: inherit;
 }
-.sirv-review-banner a {
+.sirv-review-banner {
+  display: table;
+  width: 100%;
+  background: rgb(235, 242, 248);
+  border-bottom: 1px solid #e3e3e3;
+  border-top: 1px solid #e3e3e3;
+  margin: 0 0 2rem;
+}
+.sirv-review-banner-row {
+  display:table-row;
+  width: 100%;
+  height: 80px;
+}
+.sirv-review-banner-icon {
+  display: table-cell;
+  width: 100px;
+  background: url(../images/tup.png) no-repeat;
+}
+.sirv-review-banner-desc {
+  display: table-cell;
+  vertical-align: middle;
+}
+.sirv-review-banner-desc a {
   text-decoration: underline;
 }
-#sirv-dismiss-button {
-  margin-top: 5px;
-}
-#sirv-dismiss-button span:before {
-  font-family: 'Admin Icons';
-  content: '\e62f';
+.sirv-review-banner-buttons {
+  display: table-cell;
   vertical-align: middle;
-  padding-right: 5px;
+  width: 265px;
+}
+.sirv-review-banner-buttons .action {
+  margin-right: 10px;
+}
+.action-sirv-review {
+  font-size: 1.4rem;
+  letter-spacing: .025em;
+  padding-bottom: 0.6875em;
+  padding-top: 0.6875em;
+
+  background-color: #007dbd;
+  border-color: #007dbd;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}
+.action-sirv-review:after {
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Admin Icons';
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  speak: none;
+
+  content: '\e644';
+  font-size: 1rem;
+  vertical-align: super;
+}
+.action-sirv-review:hover,
+.action-sirv-review:active,
+.action-sirv-review:focus {
+  background-color: #0073ae;
+  border-color: #007dbd;
+  box-shadow: 0 0 0 1px #007bdb;
+  color: #ffffff;
+  text-decoration: none;
+}
+.action-sirv-dismiss {
+  font-size: 1.4rem;
+  letter-spacing: .025em;
+  padding-bottom: 0.6875em;
+  padding-top: 0.6875em;
+
+  background-color: rgb(235, 242, 248);
+  border-color: #514943;
+  color: #514943;
+  text-shadow: none;
+}
+.action-sirv-dismiss:hover,
+.action-sirv-dismiss:active,
+.action-sirv-dismiss:focus {
+  background-color: rgb(235, 242, 248);
+  border-color: #514943;
+  box-shadow: 0 0 0 1px #514943;
+  color: #514943;
 }
 
 .modal-popup.sirv-changelog-modal .modal-inner-wrap {
@@ -465,7 +538,8 @@ a.save-message {
   font-weight: 600;
 }
 
-.admin__field.field-mt-pinned_items > .admin__field-control > .note.admin__field-note-top {
+.admin__field.field-mt-pinned_items > .admin__field-control > .note.admin__field-note-top,
+.admin__field.field-mt-copy_primary_images_to_magento  > .admin__field-control > .note.admin__field-note-top {
   margin-top: 0.7rem;
   margin-bottom: 0.8rem;
 }
@@ -482,6 +556,15 @@ a.save-message {
 }
 .admin__field.field-mt-pinned_items #mt-pinned_items-mask + .admin__field-note {
   margin-left: 196px;
+}
+.admin__field.field-mt-copy_primary_images_to_magento .products_with_images_label,
+.admin__field.field-mt-copy_primary_images_to_magento .products_without_images_label {
+  display: inline-block;
+  width: 170px;
+}
+.admin__field.field-mt-copy_primary_images_to_magento .spinner {
+  font-size: 1.8rem;
+  margin-right: 0;
 }
 
 .admin__fieldset > .admin__field.field-mt-synchronizer > .admin__field-control {
@@ -540,9 +623,11 @@ a.save-message {
 .modal-content .sirv-sync-content .visible-in-modal-view {
   display: inherit;
 }
+/*
 .sirv-sync-content .hidden-in-modal-view {
   display: inherit;
 }
+*/
 .modal-content .sirv-sync-content .hidden-in-modal-view {
   display: none;
 }
@@ -678,13 +763,22 @@ a.save-message {
   padding-left: 10px;
   width: 120px;
 }
+.progress-counters-list .list-item-value {
+  display: inline-block;
+  padding-left: 10px;
+  min-width: 70px;
+}
 .progress-counters-list .list-item-link {
   padding-left: 10px;
 }
+.progress-counters-list .list-item-link + .list-item-link {
+  padding-left: 20px;
+}
+/*
 .progress-counters-list .list-item-failed .list-item-link a {
   color: #f37152;
 }
-
+*/
 .sirv-usage-wraper {
   width: 100%;
 }
@@ -933,6 +1027,14 @@ a.save-message {
 .sirv-assets-modal .modal-content::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+.sirv-assets-modal .action-previous-button.hidden-element,
+.sirv-assets-modal .action-next-button.hidden-element,
+.sirv-assets-modal .page-support-text.hidden-element {
+  display: none;
+}
+.sirv-assets-modal .page-support-text {
+  padding: 0 5px;
+}
 
 .sirv-assets-wraper {
   box-sizing: border-box;
@@ -942,6 +1044,7 @@ a.save-message {
 .sirv-assets-wraper .admin__table-primary th {
   border-top: 0;
   padding: 0.6rem 1.5rem;
+  font-size: 2rem;
 }
 .sirv-assets-wraper > .admin__table-primary th:nth-child(1) {
   width: 10%;
@@ -984,6 +1087,28 @@ a.save-message {
 .sirv-assets-wraper .sirv-assets-product-item-name {
   font-weight: 600;
   font-size: 1.6rem;
+}
+.sirv-assets-wraper .sirv-assets-product-item-name a {
+  color: #303030;
+  text-decoration: none;
+}
+.sirv-assets-wraper .sirv-assets-product-item-name a:hover,
+.sirv-assets-wraper .sirv-assets-product-item-name a:active,
+.sirv-assets-wraper .sirv-assets-product-item-name a:focus {
+  color: #303030;
+  text-decoration: none;
+}
+.sirv-assets-wraper .sirv-assets-product-item-name a:after {
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Admin Icons';
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  speak: none;
+  content: '\e644';
+  font-size: 1rem;
+  vertical-align: super;
+  padding-left: 5px;
 }
 
 /* cache validator CSS ------------------------------------------------------ */

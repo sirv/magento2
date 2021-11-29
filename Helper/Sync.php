@@ -460,11 +460,13 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
             return false;
         }
 
+        $relPath = $this->getRelativePath($absPath, $pathType);
+
         if (!is_file($absPath)) {
+            $this->updateCacheData($relPath, $pathType, self::IS_FAILED, 0);
+            $this->updateMessageData($relPath, 'The file does not exist or is not readable.');
             return false;
         }
-
-        $relPath = $this->getRelativePath($absPath, $pathType);
 
         if ($this->isLocalHost || $forcedUpload) {
             try {

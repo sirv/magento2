@@ -55,18 +55,30 @@ class Button extends \Magento\Framework\Data\Form\Element\Button
             $this->setTitle($buttonLabel);
         }
 
-        $this->setData(
-            'data-mage-init',
-            str_replace(
-                '"',
-                '&quot;',
-                '{"button":{"event":"save","target":"#edit_form"}}'
-            )
-        );
+        $mageInitAttr = $this->getData('data-mage-init');
+        if ($mageInitAttr) {
+            $this->setData(
+                'data-mage-init',
+                str_replace(
+                    '"',
+                    '&quot;',
+                    $mageInitAttr
+                )
+            );
+        } else {
+            $this->setData(
+                'data-mage-init',
+                str_replace(
+                    '"',
+                    '&quot;',
+                    '{"button":{"event":"save","target":"#edit_form"}}'
+                )
+            );
+        }
 
         $this->addClass('action-default');
 
-        return '<button id="' . $this->getHtmlId() . '" ' . $this->serialize($this->getHtmlAttributes()) . '>' .
+        return '<button id="' . $this->getHtmlId() . '-button" ' . $this->serialize($this->getHtmlAttributes()) . '>' .
             '<span class="ui-button-text"><span>' . $buttonLabel . '</span></span></button>';
     }
 

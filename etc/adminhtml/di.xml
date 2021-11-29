@@ -13,7 +13,8 @@
     <type name="Magento\Framework\Notification\MessageList">
         <arguments>
             <argument name="messages" xsi:type="array">
-                <item name="sirv" xsi:type="string">Sirv\Magento2\Model\System\Message\GallerySynced</item>
+                <item name="sirv_unsynced_gallery_notification" xsi:type="string">Sirv\Magento2\Model\System\Message\UnsyncedGallery</item>
+                <item name="sirv_javascript_settings_notification" xsi:type="string">Sirv\Magento2\Model\System\Message\JavaScriptSettings</item>
             </argument>
         </arguments>
     </type>

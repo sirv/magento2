@@ -16,6 +16,7 @@ var config = {
             sirvButton: 'Sirv_Magento2/js/button',
             sirvAdvancedButton: 'Sirv_Magento2/js/advanced-button',
             sirvEditFolderOption: 'Sirv_Magento2/js/edit-folder-option',
+            sirvCopyPrimaryImages: 'Sirv_Magento2/js/copy-primary-images',
             sirvSlidesOrder: 'Sirv_Magento2/js/slides-order',
             sirvPinnedMask: 'Sirv_Magento2/js/pinned-mask',
             sirvAssets: 'Sirv_Magento2/js/assets',
@@ -23,6 +24,7 @@ var config = {
             sirvChangelog: 'Sirv_Magento2/js/changelog',
             sirvDismissReview: 'Sirv_Magento2/js/dismiss-review',
             sirvSynchronizer: 'Sirv_Magento2/js/synchronizer',
+            sirvCache: 'Sirv_Magento2/js/cache',
             sirvUsage: 'Sirv_Magento2/js/usage'
         }
     }

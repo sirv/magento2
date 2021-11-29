@@ -60,10 +60,12 @@ define([
                     }]
                 });
 
-                return;
+                return false;
             }
 
             actionFnc();
+
+            return false;
         }
     });
 

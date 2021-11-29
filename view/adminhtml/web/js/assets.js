@@ -214,7 +214,7 @@ define([
                 }
             };
 
-            this.modalWindow = $('<div/>').modal(dialogProperties);
+            this.modalWindow = $('<div></div>').modal(dialogProperties);
 
             return this.modalWindow;
         }

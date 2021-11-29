@@ -21,20 +21,6 @@ $queuedBarWidth = $syncedBarWidth + $data['queued-percent'];
 $failedBarWidth = $queuedBarWidth + $data['failed-percent'];
 
 $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidden-element');
-
-$ajaxUrl = $block->escapeUrl($block->getAjaxUrl());
-
-$speed = 2000;//images per hour
-$timeUnits = 'hour';
-$estimatedDuration = ($data['total'] - $data['synced'] - $data['failed']) / $speed;
-$estimatedDuration = ceil($estimatedDuration);
-if ($estimatedDuration == 0) {
-    $estimatedDuration = 1;
-}
-if ($estimatedDuration > 1) {
-    $timeUnits .= 's';
-}
-$estimatedDurationMessage = "Estimated duration up to {$estimatedDuration} {$timeUnits} at {$speed} images/hour.";
 ?>
 <div class="sirv-sync-container">
   <div class="sirv-sync-status" data-role="sirv-synchronizer">
@@ -54,8 +40,8 @@ $estimatedDurationMessage = "Estimated duration up to {$estimatedDuration} {$tim
       </div>
       <div class="row visible-in-modal-view">
         <p class="sync-status-notice">
-        <?= __('Keep this page open while images copy to Sirv.') ?><br/>
-        <?= __($estimatedDurationMessage) ?><br/>
+          <?= __('Keep this page open while images copy to Sirv.') ?><br/>
+          <span class="estimated-duration-notice"><?= __($block->getEstimatedDurationMessage()) ?></span><br/>
         </p>
       </div>
       <div class="row">
@@ -89,18 +75,29 @@ $estimatedDurationMessage = "Estimated duration up to {$estimatedDuration} {$tim
             <span class="list-item-style-type"></span>
             <span class="list-item-title"><?= __('Synced images') ?></span>
             <span class="list-item-value"><?= $data['synced'] ?></span>
+            <?php $hideClass = $data['synced'] ? '' : ' hidden-element'; ?>
+            <span class="list-item-link view-synced-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-synced-items"}}}' title="View synced images">View images</a></span>
+            <span class="list-item-link clear-synced-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-synced-items"}}}' title="Clear synced images">Clear cache</a></span>
           </li>
           <li class="list-item list-item-queued">
             <span class="list-item-style-type"></span>
             <span class="list-item-title"><?= __('Queued images') ?></span>
             <span class="list-item-value"><?= $data['queued'] ?></span>
+            <?php $hideClass = $data['queued'] ? '' : ' hidden-element'; ?>
+            <span class="list-item-link view-queued-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-queued-items"}}}' title="View queued images">View images</a></span>
+            <span class="list-item-link clear-queued-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-queued-items"}}}' title="Clear synced images">Clear cache</a></span>
           </li>
           <li class="list-item list-item-failed">
             <span class="list-item-style-type"></span>
             <span class="list-item-title"><?= __('Failed images') ?></span>
             <span class="list-item-value"><?= $data['failed'] ?></span>
-            <span class="list-item-link">
+            <?php $hideClass = $data['failed'] ? '' : ' hidden-element'; ?>
+            <span class="list-item-link view-failed-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-failed-items"}}}' title="View failed images">View images</a></span>
+            <span class="list-item-link clear-failed-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-failed-items"}}}' title="Clear synced images">Clear cache</a></span>
+            <span class="hidden-element">
+            <span class="list-item-link<?= $hideClass ?>">
               <a class="<?= $viewFailedLinkClass ?>" href="#" data-mage-init='{"button": {"event": "sirv-sync", "target": "[data-role=sirv-synchronizer]", "eventData": {"action": "view-failed"}}}'><?= __('View list') ?></a>
+            </span>
             </span>
           </li>
         </ul>
@@ -118,11 +115,14 @@ $estimatedDurationMessage = "Estimated duration up to {$estimatedDuration} {$tim
     {
         "[data-role=sirv-synchronizer]": {
             "sirvSynchronizer": {
-                "ajaxUrl": "<?= /* @escapeNotVerified */ $ajaxUrl ?>",
+                "ajaxUrl": "<?= $block->escapeUrl($block->getSyncAjaxUrl()) ?>",
                 "total": <?= /* @escapeNotVerified */ $data['total'] ?>,
                 "synced": <?= /* @escapeNotVerified */ $data['synced'] ?>,
                 "queued": <?= /* @escapeNotVerified */ $data['queued'] ?>,
                 "failed": <?= /* @escapeNotVerified */ $data['failed'] ?>
+            },
+            "sirvCache": {
+                "ajaxUrl": "<?= $block->escapeUrl($block->getCacheAjaxUrl()) ?>"
             }
         }
     }
