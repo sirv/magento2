@@ -60,6 +60,7 @@ class Cache extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $status = isset($postData['status']) ? $postData['status'] : 'synced';
         $pageNum = isset($postData['pageNum']) ? (int)$postData['pageNum'] : 0;
         $pageSize = isset($postData['pageSize']) ? (int)$postData['pageSize'] : 100;
+        $pId = isset($postData['pId']) ? (int)$postData['pId'] : 0;
 
         $result = [
             'success' => false,
@@ -69,7 +70,7 @@ class Cache extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
         switch ($action) {
             case 'view':
-                $data = $this->getCachedImagesData($status, $pageNum, $pageSize);
+                $data = $this->getCachedImagesData($status, $pageNum, $pageSize, $pId);
                 $result['success'] = true;
                 break;
             case 'view-failed':
@@ -96,9 +97,10 @@ class Cache extends \Sirv\Magento2\Controller\Adminhtml\Settings
      * @param int|array $status
      * @param int $page
      * @param int $size
+     * @param int $pId
      * @return array
      */
-    public function getCachedImagesData($status, $page, $size)
+    public function getCachedImagesData($status, $page, $size, $pId)
     {
         /** @var \Sirv\Magento2\Model\Cache $cacheModel */
         $cacheModel = $this->cacheModelFactory->create();
@@ -127,7 +129,7 @@ class Cache extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $dataHelper = $this->getDataHelper();
 
         $cache = $dataHelper->getAppCache();
-        $cacheId = 'sirv_cached_' . $status . '_pathes_data_' . $size;
+        $cacheId = 'sirv_cache_' . $status . '_data_' . $size . '_' . $pId;
         $cacheData = $cache->load($cacheId);
         if (false === $cacheData) {
             $cacheData = [];
@@ -142,7 +144,7 @@ class Cache extends \Sirv\Magento2\Controller\Adminhtml\Settings
             $result = $connection->fetchCol($select, []);
             $cacheData['total'] = count($result);
             $cacheData['map'] = array_chunk($result, $size);
-            $cache->save($dataHelper->getSerializer()->serialize($cacheData), $cacheId, [], 600);
+            $cache->save($dataHelper->getSerializer()->serialize($cacheData), $cacheId, [], null);
         } else {
             $cacheData = $dataHelper->getUnserializer()->unserialize($cacheData);
         }

@@ -626,6 +626,13 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $index = 0;
         $disabled = ($this->productId == $productId ? '' : ' data-disabled');
 
+        $profile = $this->dataHelper->getConfig('profile');
+        if (!empty($profile) && !in_array($profile, ['-', 'Default'])) {
+            $profile = '?profile=' . $profile;
+        } else {
+            $profile = '';
+        }
+
         foreach ($assets as $asset) {
             $slideId = $idPrefix . $index;
             switch ($asset->type) {
@@ -635,12 +642,13 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                     if (!(empty($pinnedAttr) || empty($this->pinnedItems['mask']) || preg_match($this->pinnedItems['mask'], $url))) {
                         $pinnedAttr = '';
                     }
+                    $url .= $profile;
                     $slides[$slideId] = '<div data-id="' . $slideId . '"' . $dataType . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
                     $index++;
                     break;
                 case 'spin':
                 case 'video':
-                    $url = $folderUrl . '/' . $asset->name;
+                    $url = $folderUrl . '/' . $asset->name . $profile;;
                     $slides[$slideId] = '<div data-id="' . $slideId . '"' . $disabled . ' data-src="' . $url . '"' . $this->pinnedItems[$asset->type . 's'] . '></div>';
                     $index++;
                     break;

@@ -23,6 +23,7 @@ define([
             ajaxUrl: null
         },
         isBusy: false,
+        processId: 0,
         syncStatus: 'synced',
         pageNum: 0,
         pageSize: 100,
@@ -46,6 +47,7 @@ define([
          * @param {Object} data - event data object
          */
         _eventHandler: function (e, data) {
+            this.processId = Date.now();
             switch (data.action) {
                 case 'view-synced-items':
                     this._viewItems('synced');
@@ -92,7 +94,12 @@ define([
         _getItemsInfo: function () {
             this._doRequest(
                 'view',
-                {'status': this.syncStatus, 'pageNum': this.pageNum, 'pageSize': this.pageSize},
+                {
+                    'status': this.syncStatus,
+                    'pageNum': this.pageNum,
+                    'pageSize': this.pageSize,
+                    'pId': this.processId
+                },
                 this._displayItems
             );
         },
