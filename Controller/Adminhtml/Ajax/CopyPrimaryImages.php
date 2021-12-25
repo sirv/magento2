@@ -224,8 +224,23 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                         }
                     }
                     if (empty($url)) {
-                        $product['message'] = 'Product has no image asset on Sirv';
-                        continue;
+                        foreach ($assets as $asset) {
+                            if ($asset->type == 'spin') {
+                                $spinInfoUrl = $baseUrl . '/' . $assetsFolder . '/' . $asset->name . '?info';
+                                $contents = $this->downloadContents($spinInfoUrl);
+                                $contents = json_decode($contents);
+                                $fileName = is_object($contents) && isset($contents->layers) && isset($contents->layers->{'1'}) && isset($contents->layers->{'1'}->{'1'}) ? $contents->layers->{'1'}->{'1'} : false;
+                                if ($fileName) {
+                                    $url = preg_replace('#/[^/]++$#', '/', $spinInfoUrl) . $fileName;
+                                    $tmpAbsPath = $mediaDirAbsPath . '/tmp/sirv/' . $fileName;
+                                    break;
+                                }
+                            }
+                        }
+                        if (empty($url)) {
+                            $product['message'] = 'Product has no image asset on Sirv';
+                            continue;
+                        }
                     }
 
                     if ($fileContents = file_get_contents($url)) {

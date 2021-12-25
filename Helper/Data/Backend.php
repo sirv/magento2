@@ -325,10 +325,13 @@ class Backend extends \Sirv\Magento2\Helper\Data
                     }
                     $data['date_created'] = isset($info->dateCreated) ? $info->dateCreated : '';
                 } else {
+                    $code = $apiClient->getResponseCode();
                     $message = 'Can\'t get Sirv account info. ' .
-                        'Code: ' . $apiClient->getResponseCode() . ' ' .
-                        $apiClient->getErrorMsg();
+                        'Code: ' . $code . ' ' . $apiClient->getErrorMsg();
                     $this->_logger->error($message);
+                    if ($code == 401 || $code == 403) {
+                        return [];
+                    }
                     throw new \Magento\Framework\Exception\LocalizedException(
                         new \Magento\Framework\Phrase($message)
                     );
