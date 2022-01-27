@@ -19,6 +19,8 @@ $viewerHelper = $objectManager->get(\Sirv\Magento2\Helper\MediaViewer::class);
 $viewerHelper->setGalleryBlock($block);
 
 $viewerSlides = $viewerHelper->getViewerSlides();
+$usePlaceholder = $viewerHelper->usePlaceholder();
+$placeholder = $viewerHelper->getPlaceholder();
 $jsonConfig = $block->escapeHtmlAttr($viewerHelper->getJsonConfig());
 $jsOptions = $viewerHelper->getViewerJsOptions();
 $maxHeight = $viewerHelper->getMaxHeight();
@@ -35,14 +37,30 @@ $assetsCacheData = $viewerHelper->getAssetsCacheData();
 .smv-pg-container .Sirv {
     min-height: 1px;
 }
+.smv-pg-container .pdp-gallery-main,
+.smv-pg-container .pdp-gallery-placeholder,
 .smv-pg-container .Sirv > .smv {
     max-height: <?= $maxHeight ?>px;
 }
 <?php endif; ?>
 <?= $customCss ?>
 </style>
+<?php if ($usePlaceholder) : ?>
+<div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>" data-mage-init='{"sirvAssetsCache":<?= $assetsCacheData ?>}'>
+    <div class="pdp-gallery-container">
+        <div class="pdp-gallery-thumbnails"></div>
+        <div class="pdp-gallery-main">
+            <img width="<?= $placeholder['width'] ?>" height="<?= $placeholder['height'] ?>" class="pdp-gallery-placeholder" src="<?= $placeholder['url'] ?>" alt="" loading="lazy">
+            <div class="Sirv mainimage" data-options="<?= $dataOptions ?>">
+                <?= implode("\n", $viewerSlides) ?>
+            </div>
+        </div>
+    </div>
+</div>
+<?php else : ?>
 <div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>" data-mage-init='{"sirvAssetsCache":<?= $assetsCacheData ?>}'>
     <div class="Sirv" data-options="<?= $dataOptions ?>">
         <?= implode("\n", $viewerSlides) ?>
     </div>
 </div>
+<?php endif; ?>

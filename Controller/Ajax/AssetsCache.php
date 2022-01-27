@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Controller\Ajax;
  * Assets cache controller
  *
  */
-class AssetsCache extends \Magento\Framework\App\Action\Action implements \Magento\Framework\App\Action\HttpGetActionInterface
+class AssetsCache extends \Magento\Framework\App\Action\Action
 {
     /**
      * cURL resource
@@ -34,6 +34,7 @@ class AssetsCache extends \Magento\Framework\App\Action\Action implements \Magen
             $productAssetsFolder = $dataHelper->getConfig('product_assets_folder') ?: '';
             $productAssetsFolder = trim($productAssetsFolder);
             $productAssetsFolder = trim($productAssetsFolder, '/');
+
             if (empty($productAssetsFolder)) {
                 $result = ['message' => 'Product assets folder is empty!'];
             } else {
@@ -50,17 +51,19 @@ class AssetsCache extends \Magento\Framework\App\Action\Action implements \Magen
                 );
 
                 foreach ($productIds as $productId) {
-                    if (strpos($productAssetsFolder, '{product-id}') !== false) {
-                        $assetsFolder = str_replace('{product-id}', $productId, $productAssetsFolder);
-                    } else {
-                        $product = $productRepository->getById($productId);
-                        $productSku = $product->getSku();
-                        if (strpos($productAssetsFolder, '{product-sku}') !== false) {
-                            $assetsFolder = str_replace('{product-sku}', $productSku, $productAssetsFolder);
-                        } else {
-                            $assetsFolder = $productAssetsFolder . '/' . $productSku;
-                        }
+                    $product = $productRepository->getById($productId);
+                    $productSku = $product->getSku();
+
+                    $assetsFolder = str_replace(
+                        ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
+                        [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
+                        $productAssetsFolder,
+                        $found
+                    );
+                    if (!$found) {
+                        $assetsFolder = $productAssetsFolder . '/' . $productSku;
                     }
+
                     $url = $baseUrl . '/' . $assetsFolder . '.view?info';
 
                     $assetsModel->load($productId, 'product_id');

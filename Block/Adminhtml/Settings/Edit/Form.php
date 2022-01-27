@@ -80,6 +80,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         /** @var \Magento\Backend\Block\Widget\Form\Renderer\Element $elementRenderer */
         //$elementRenderer = \Magento\Framework\Data\Form::getElementRenderer();
 
+        /** @var \Magento\Backend\Block\Widget\Form\Renderer\Fieldset $fieldsetRenderer */
+        $fieldsetRenderer = \Magento\Framework\Data\Form::getFieldsetRenderer();
+        $fieldsetRenderer->setTemplate('Sirv_Magento2::widget/form/renderer/fieldset.phtml');
+
         /** @var \Magento\Backend\Block\Widget\Form\Renderer\Fieldset\Element $fieldsetElementRenderer */
         $fieldsetElementRenderer = \Magento\Framework\Data\Form::getFieldsetElementRenderer();
         $fieldsetElementRenderer->setTemplate('Sirv_Magento2::widget/form/renderer/fieldset/element.phtml');
@@ -128,11 +132,19 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
 
         $passwordRequired = empty($email) || ((empty($clientId) || empty($clientSecret)) && empty($password));
 
+        $comment = '';
         if ($passwordRequired || empty($account)) {
             $xpaths[] = '/settings/group[not(@id="user")]';
 
             if ($passwordRequired) {
                 $xpaths[] = '/settings/group[@id="user"]/fields/field[name="account"]';
+                if ($this->dataHelper->getConfig('display_credentials_rejected_message')) {
+                    $comment = __(
+                        'Your Sirv email or password were incorrect. Please check and try again or <a target="_blank" href="%1">reset your password</a>.',
+                        'https://my.sirv.com/#/password/forgot'
+                    );
+                    $this->dataHelper->deleteConfig('display_credentials_rejected_message');
+                }
             } else {
                 $fieldNames = [
                     'email',
@@ -179,10 +191,14 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         $groupId = '';
         foreach ($xml->group as $group) {
             $groupId = (string)$group['id'];
-            $legend = $groupId == 'user' ? __((string)$group->label) : '';
+            $fieldsetConfig = [];
+            if ($groupId == 'user') {
+                $fieldsetConfig['legend'] = __((string)$group->label);
+                $fieldsetConfig['comment'] = $comment;
+            }
             $fieldset = $container->addFieldset(
                 'sirv_group_fieldset_' . $groupId,
-                ['legend' => $legend]
+                $fieldsetConfig
             );
 
             foreach ($group->fields->field as $field) {
@@ -324,6 +340,22 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         break;
                     case 'auto_fetch':
                         $fieldConfig['value'] = $this->dataHelper->syncConfig('auto_fetch');
+                        $fieldConfig['url_prefix'] = ['value' => '', 'values' => []];
+                        $urlPrefix = $this->dataHelper->syncConfig('url_prefix');
+                        $domains = $this->dataHelper->getDomains();
+                        if (!empty($urlPrefix) && !in_array($urlPrefix, $domains)) {
+                            $fieldConfig['url_prefix']['values'][] = [
+                                'value' => $urlPrefix,
+                                'label' => preg_replace('#https?://#i', '', rtrim($urlPrefix, '/'))
+                            ];
+                        }
+                        foreach ($domains as $domain) {
+                            $fieldConfig['url_prefix']['values'][] = [
+                                'value' => $domain,
+                                'label' => preg_replace('#https?://#i', '', rtrim($domain, '/'))
+                            ];
+                        }
+                        $fieldConfig['url_prefix']['value'] = empty($urlPrefix) ? reset($domains) : $urlPrefix;
                         break;
                     case 'sub_alias':
                         $accountConfig = $this->dataHelper->getAccountConfig();
@@ -342,6 +374,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             $fieldConfig['value'] = $config['account'];
                         }
                     break;
+                    /*
                     case 'url_prefix':
                         $urlPrefix = $this->dataHelper->syncConfig('url_prefix');
                         $domains = $this->dataHelper->getDomains();
@@ -359,6 +392,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         }
                         $fieldConfig['value'] = empty($urlPrefix) ? reset($domains) : $urlPrefix;
                         break;
+                    */
                     case 'image_folder':
                         //NOTE: for sync 'cdn_url' option
                         $config['cdn_url'] = $this->dataHelper->syncConfig('cdn_url');//NOTE: is it still needed here?

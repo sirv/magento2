@@ -76,6 +76,27 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
     protected $sirvJsComponents = '';
 
     /**
+     * Add width/height for img tags
+     *
+     * @var bool
+     */
+    protected $addImgWidthHeight = false;
+
+    /**
+     * Folder name on Sirv
+     *
+     * @var string
+     */
+    protected $imageFolder = '';
+
+    /**
+     * Use placeholders
+     *
+     * @var bool
+     */
+    protected $usePlaceholders = false;
+
+    /**
      * Constructor
      *
      * @param \Sirv\Magento2\Helper\Data $dataHelper
@@ -106,6 +127,18 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
 
             $this->isSirvMediaViewerUsed = $dataHelper->useSirvMediaViewer();
             $this->sirvJsComponents = $dataHelper->getConfig('js_components');
+
+            $this->addImgWidthHeight = $dataHelper->getConfig('add_img_width_height') == 'true';
+            $imageFolder = $dataHelper->getConfig('image_folder');
+            if (is_string($imageFolder)) {
+                $imageFolder = trim($imageFolder);
+                $imageFolder = trim($imageFolder, '\\/');
+                if (!empty($imageFolder)) {
+                    $this->imageFolder = '/' . $imageFolder;
+                }
+            }
+
+            $this->usePlaceholders = $dataHelper->getConfig('use_placeholders') == 'true';
         }
     }
 
@@ -138,6 +171,10 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
 
                     if ($this->isLazyLoadEnabled) {
                         $this->processImageTags($html);
+                    }
+
+                    if ($this->addImgWidthHeight) {
+                        $this->addImageWidthHeight($html);
                     }
 
                     $response->setBody($html);
@@ -421,6 +458,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
             ')' .
             '<\\\\?/\1\s*+>';
         $regExp .= '|<!-- Facebook Pixel Code -->.*?<!-- End Facebook Pixel Code -->';
+        $regExp .= '|<img\s[^>]*?\bclass\s*+=\s*+\\\\?"pdp-gallery-placeholder\\\\?"[^>]++>';
 
         $matches = [];
         if (preg_match_all('#' . $regExp . '#is', $html, $matches, PREG_SET_ORDER)) {
@@ -462,12 +500,17 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                     $imgTag = preg_replace('#^<img#', '<img class=' . $bs . '"Sirv' . $bs . '"', $imgTag);
                 }
 
+                $imgTag = preg_replace('#\ssrc\s*+=\s*+#', ' data-src=', $imgTag);
+
                 $srcHost = parse_url($srcMatches[2], PHP_URL_HOST) ?: '';
                 if (strpos($srcHost, $this->sirvHost) === false) {
                     $imgTag = preg_replace('#^<img#', '<img data-type=' . $bs . '"static' . $bs . '"', $imgTag);
+                } else {
+                    if ($this->usePlaceholders) {
+                        $src = strpos($srcMatches[2], '?') === false ? $srcMatches[2] . '?q=30' : $srcMatches[2] . '&q=30';
+                        $imgTag = preg_replace('#^<img#', '<img src=' . $bs . '"' . $src . $bs . '"', $imgTag);
+                    }
                 }
-
-                $imgTag = preg_replace('#\ssrc\s*+=\s*+#', ' data-src=', $imgTag);
 
                 $html = str_replace($tagMatches[0], $imgTag, $html);
             }
@@ -478,5 +521,150 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 $html = str_replace('SIRV_PLACEHOLDER_' . $i . '_MATCH', $code, $html);
             }
         }
+    }
+
+    /**
+     * Add width/height attributes for <img> tags
+     *
+     * @param string $html
+     * @return void
+     */
+    protected function addImageWidthHeight(&$html)
+    {
+        $backupCode = [];
+        $regExp = '<(div|a)\b[^>]*?' .
+            '(?:' .
+                '\bclass\s*+=\s*+\\\\?"' .
+                '[^"]*?' .
+                '(?<=\s|")(?:Sirv|Magic(?:Zoom(?:Plus)?|Thumb|360|Scroll|Slideshow))(?=\s|\\\\?")' .
+                '[^"]*+"' .
+                '|' .
+                '\bdata-(?:zoom|thumb)-id\s*+=\s*+\\\\?"' .
+            ')' .
+            '[^>]*+>' .
+            '(' .
+                '(?:' .
+                    '[^<]++' .
+                    '|' .
+                    '<(?!(?:\\\\?/)?\1\b|!--)' .
+                    '|' .
+                    '<!--.*?-->' .
+                    '|' .
+                    '<\1\b[^>]*+>' .
+                        '(?2)' .
+                    '<\\\\?/\1\s*+>' .
+                ')*+' .
+            ')' .
+            '<\\\\?/\1\s*+>';
+        $regExp .= '|<!-- Facebook Pixel Code -->.*?<!-- End Facebook Pixel Code -->';
+        $regExp .= '|<img\s[^>]*?\bclass\s*+=\s*+\\\\?"pdp-gallery-placeholder\\\\?"[^>]++>';
+
+        $matches = [];
+        if (preg_match_all('#' . $regExp . '#is', $html, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $i => $match) {
+                $count = 0;
+                $html = str_replace($match[0], 'SIRV_PLACEHOLDER_' . $i . '_MATCH', $html, $count);
+                if ($count) {
+                    $backupCode[$i] = $match[0];
+                }
+            }
+        }
+
+        $store = $this->storeManager->getStore();
+        $baseMediaDir = $store->getBaseMediaDir();
+        $baseMediaDir = trim($baseMediaDir, '/') . '/';
+        //NOTE: pub/media/
+
+        $matches = [];
+        if (preg_match_all('#<img\s[^>]++>#', $html, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $key => $tagMatches) {
+                $imgTag = $tagMatches[0];
+                //NOTE: backslash for escaping quotes (if need it) or empty
+                $bs = preg_match('#\\\\(?:"|\')#', $imgTag) ? '\\' : '';
+
+                $srcPattern = '#\ssrc\s*+=\s*+' . $bs . $bs . '("|\')([^"\']++)\1#';
+                $srcMatches = [];
+                if (!preg_match($srcPattern, $imgTag, $srcMatches)) {
+                    continue;
+                }
+
+                $srcHost = parse_url($srcMatches[2], PHP_URL_HOST) ?: '';
+                if (strpos($srcHost, $this->sirvHost) === false) {
+                    continue;
+                }
+
+                $widthPattern = '#\swidth\s*+=\s*+' . $bs . $bs . '("|\')([^"\']++)\1#';
+                $widthMatches = [];
+                if (!preg_match($widthPattern, $imgTag, $widthMatches)) {
+                    $width = 0;
+                    if (preg_match('#canvas.width=(\d++)#', $srcMatches[2], $widthMatches)) {
+                        $width = $widthMatches[1];
+                    } elseif (preg_match('#w=(\d++)#', $srcMatches[2], $widthMatches)) {
+                        $width = $widthMatches[1];
+                    } elseif (preg_match('#^https?://' . $this->sirvHost . $this->imageFolder . '#', $srcMatches[2])) {
+                        $filePath = preg_replace('#^https?://' . $this->sirvHost . $this->imageFolder . '/#', '', $srcMatches[2]);
+                        $filePath = preg_replace('#\?[^?]++$#', '', $filePath);
+                        $filePath = BP . '/'. $baseMediaDir . $filePath;
+                        $data = $this->getImageWidthHeight($filePath);
+                        $width = empty($data) ? 0 : $data['width'];
+                    }
+
+                    if ($width) {
+                        $imgTag = preg_replace('#^<img#', '<img width=' . $bs . '"' . $width . $bs . '"', $imgTag);
+                    }
+                }
+
+                $heightPattern = '#\sheight\s*+=\s*+' . $bs . $bs . '("|\')([^"\']++)\1#';
+                $heightMatches = [];
+                if (!preg_match($heightPattern, $imgTag, $heightMatches)) {
+                    $height = 0;
+                    if (preg_match('#canvas.height=(\d++)#', $srcMatches[2], $heightMatches)) {
+                        $height = $heightMatches[1];
+                    } elseif (preg_match('#h=(\d++)#', $srcMatches[2], $heightMatches)) {
+                        $height = $heightMatches[1];
+                    } elseif (preg_match('#^https?://' . $this->sirvHost . $this->imageFolder . '#', $srcMatches[2])) {
+                        $filePath = preg_replace('#^https?://' . $this->sirvHost . $this->imageFolder . '/#', '', $srcMatches[2]);
+                        $filePath = preg_replace('#\?[^?]++$#', '', $filePath);
+                        $filePath = BP . '/'. $baseMediaDir . $filePath;
+                        $data = $this->getImageWidthHeight($filePath);
+                        $height = empty($data) ? 0 : $data['height'];
+                    }
+
+                    if ($height) {
+                        $imgTag = preg_replace('#^<img#', '<img height=' . $bs . '"' . $height . $bs . '"', $imgTag);
+                    }
+                }
+
+                $html = str_replace($tagMatches[0], $imgTag, $html);
+            }
+        }
+
+        if (!empty($backupCode)) {
+            foreach ($backupCode as $i => $code) {
+                $html = str_replace('SIRV_PLACEHOLDER_' . $i . '_MATCH', $code, $html);
+            }
+        }
+    }
+
+    /**
+     * Get image width/height
+     *
+     * @param string $filePath
+     * @return array
+     */
+    protected function getImageWidthHeight($filePath)
+    {
+        static $data = [];
+
+        if (!isset($data[$filePath])) {
+            $data[$filePath] = [];
+            if (is_file($filePath)) {
+                list($fileWidth, $fileHeight,) = getimagesize($filePath);
+                $data[$filePath]['width'] = $fileWidth;
+                $data[$filePath]['height'] = $fileHeight;
+            }
+        }
+
+        return $data[$filePath];
     }
 }

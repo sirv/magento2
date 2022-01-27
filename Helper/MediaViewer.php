@@ -103,6 +103,20 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $activeSlideIndex;
 
     /**
+     * Use placeholder
+     *
+     * @var bool
+     */
+    protected $usePlaceholder = false;
+
+    /**
+     * Placeholder data
+     *
+     * @var array
+     */
+    protected $placeholder = [];
+
+    /**
      * Current product id
      *
      * @var integer
@@ -191,6 +205,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                     )
                 ) . '#';
         }
+        $this->usePlaceholder = $this->dataHelper->getConfig('use_placeholders') == 'true';
     }
 
     /**
@@ -267,6 +282,10 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             $options .= 'itemsOrder:[\'' . implode('\',\'', explode(',', $itemsOrder)) . '\'];';
         }
 
+        if ($this->usePlaceholder) {
+            $options .= 'thumbnails.target: .pdp-gallery-thumbnails;';
+        }
+
         return $options;
     }
 
@@ -282,6 +301,62 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return $this->viewerSlides;
+    }
+
+    /**
+     * Use placeholder
+     *
+     * @return bool
+     */
+    public function usePlaceholder()
+    {
+        return $this->usePlaceholder;
+    }
+
+    /**
+     * Get placeholder data
+     *
+     * @return array
+     */
+    public function getPlaceholder()
+    {
+        if (!isset($this->viewerSlides)) {
+            $this->initAssetsData();
+        }
+
+        if (empty($this->placeholder)) {
+            return [
+                'url' => '',
+                'width' => 0,
+                'height' => 0,
+            ];
+        }
+
+        $url = $this->placeholder['url'];
+        if (preg_match('#(\?|&)q=\d++#', $url)) {
+            $url = preg_replace('#(\?|&)q=\d++#', '$1q=30', $url);
+        } else if (preg_match('#\?.#', $url)) {
+            $url = $url . '&q=30';
+        } else {
+            $url = $url . '?q=30';
+        }
+
+        $width = empty($this->placeholder['width']) ? 100 : (int)$this->placeholder['width'];
+        $height = empty($this->placeholder['height']) ? 100 : (int)$this->placeholder['height'];
+        if ($width > $height ) {
+            $s = $width / 100;
+        }
+        if ($height >= $width ) {
+            $s = $height / 100;
+        }
+        $width = floor($width / $s);
+        $height = floor($height / $s);
+
+        return [
+            'url' => $url,
+            'width' => $width,
+            'height' => $height,
+        ];
     }
 
     /**
@@ -347,6 +422,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $this->viewerSlides = array_merge($this->viewerSlides, $data['slides']);
 
         $this->activeSlideIndex = $this->configurableData['active-slides'][$this->productId];
+        $this->placeholder = $data['placeholder'];
     }
 
     /**
@@ -425,11 +501,13 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
 
         $slides = [];
         $activeSlideIndex = 0;
+        $placeholder = [];
 
         if ($this->slideSources != self::SIRV_ASSETS) {
             $data = $this->getMagentoAssetsData($product);
             $slides = $data['slides'];
             $activeSlideIndex = $data['active-slide'];
+            $placeholder = $data['placeholder'];
         }
 
         if ($this->slideSources != self::MAGENTO_ASSETS) {
@@ -440,6 +518,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             case self::MAGENTO_AND_SIRV_ASSETS:
                 if (empty($slides)) {
                     $slides = $data['slides'];
+                    $placeholder = $data['placeholder'];
                 } else {
                     $slides = array_merge($slides, $data['slides']);
                 }
@@ -449,21 +528,27 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                     $slides = array_merge($data['slides'], $slides);
                     //$activeSlideIndex += count($data['slides']);
                     $activeSlideIndex = 0;
+                    $placeholder = $data['placeholder'];
                 }
                 break;
             case self::SIRV_ASSETS:
                 $slides = $data['slides'];
+                $placeholder = $data['placeholder'];
                 break;
         }
 
         if (empty($slides) && $this->productId == $productId) {
             $slideId = 'item-' . $productId . '-0';
             $url = $this->imageHelper->getDefaultPlaceholderUrl('image');
+            $placeholder['url'] = $url;
+            $placeholder['width'] = 100;
+            $placeholder['height'] = 100;
             $slides[$slideId] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" />';
         }
 
         self::$assetsData[$productId] = [
             'active-slide' => $activeSlideIndex,
+            'placeholder' => $placeholder,
             'slides' => $slides
         ];
 
@@ -480,6 +565,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $slides = [];
         $activeSlideIndex = 0;
+        $placeholder = [];
 
         $images = $product->getMediaGalleryImages();
         if ($images instanceof \Magento\Framework\Data\Collection) {
@@ -513,6 +599,21 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
 
                 if ($baseImage == $image->getData('file')) {
                     $activeSlideIndex = $index;
+                    if ($this->usePlaceholder) {
+                        $absPath = $image->getData('path');
+                        if (is_file($absPath)) {
+                            list($fileWidth, $fileHeight,) = getimagesize($absPath);
+                            $placeholder['width'] = $fileWidth;
+                            $placeholder['height'] = $fileHeight;
+                        }
+                        if ($imageUrlBuilder) {
+                            $placeholder['url'] = $imageUrlBuilder->getUrl($image->getData('file'), 'product_page_image_large');
+                        } else {
+                            $placeholder['url'] = $this->imageHelper->init($product, 'product_page_image_large')
+                                ->setImageFile($image->getData('file'))
+                                ->getUrl();
+                        }
+                    }
                 }
 
                 $slideId = $idPrefix . $index;
@@ -563,6 +664,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
 
         return [
             'active-slide' => $activeSlideIndex,
+            'placeholder' => $placeholder,
             'slides' => $slides,
         ];
     }
@@ -588,11 +690,13 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $productId = $product->getId();
         $productSku = $product->getSku();
 
-        if (strpos($assetsFolder, '{product-id}') !== false) {
-            $assetsFolder = str_replace('{product-id}', $productId, $assetsFolder);
-        } elseif (strpos($assetsFolder, '{product-sku}') !== false) {
-            $assetsFolder = str_replace('{product-sku}', $productSku, $assetsFolder);
-        } else {
+        $assetsFolder = str_replace(
+            ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
+            [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
+            $assetsFolder,
+            $found
+        );
+        if (!$found) {
             $assetsFolder = $assetsFolder . '/' . $productSku;
         }
 
@@ -603,7 +707,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $contents = $assetsModel->getData('contents');
         if ($contents === null) {
             $url = $folderUrl . '.view?info';
-            $contents = $this->downloadViewContents($url);
+            $contents = $this->downloadContents($url);
             $assetsModel->setData('product_id', $productId);
             $assetsModel->setData('contents', $contents);
             $assetsModel->setData(
@@ -633,7 +737,8 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             $profile = '';
         }
 
-        foreach ($assets as $asset) {
+        $placeholder = [];
+        foreach ($assets as &$asset) {
             $slideId = $idPrefix . $index;
             switch ($asset->type) {
                 case 'image':
@@ -643,12 +748,49 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                         $pinnedAttr = '';
                     }
                     $url .= $profile;
+                    if (empty($placeholder)) {
+                        $placeholder['url'] = $url;
+                        $placeholder['width'] = $asset->width;
+                        $placeholder['height'] = $asset->height;
+                    }
                     $slides[$slideId] = '<div data-id="' . $slideId . '"' . $dataType . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
                     $index++;
                     break;
                 case 'spin':
                 case 'video':
-                    $url = $folderUrl . '/' . $asset->name . $profile;;
+                    $url = $folderUrl . '/' . $asset->name . $profile;
+                    if (empty($placeholder) && $this->usePlaceholder) {
+                        if (!isset($asset->width) || !isset($asset->height)) {
+                            $info = $this->downloadContents($folderUrl . '/' . $asset->name . '?info');
+                            $info = json_decode($info);
+                            $layer = is_object($info) && isset($info->layers) ? reset($info->layers) : false;
+                            $fileName = $layer ? reset($layer) : false;
+                            if ($fileName) {
+                                $fileUrl = preg_replace('#/[^/]++$#', '/', $folderUrl . '/' . $asset->name) . $fileName;
+                                $info = $this->downloadContents($fileUrl . '?info');
+                                $info = json_decode($info);
+                                isset($asset->width) || $asset->width = $info->width;
+                                isset($asset->height) || $asset->height = $info->height;
+                                $contents->assets = $assets;
+                                $assetsModel->setData('product_id', $productId);
+                                $assetsModel->setData('contents', json_encode($contents));
+                                $assetsModel->setData(
+                                    'timestamp',
+                                    $this->assetsCacheData['timestamps'][$productId] = time()
+                                );
+                                $assetsModel->save();
+                            }
+                        }
+
+                        if ($asset->type == 'video') {
+                            $placeholder['url'] = $url . (strpos($url, '?') === false ? '?' : '&') . 'thumbnail=' . $asset->height;
+                        } else {
+                            $placeholder['url'] = $url . (strpos($url, '?') === false ? '?' : '&') .'thumb=spin&image.frames=1';
+                        }
+
+                        $placeholder['width'] = $asset->width;
+                        $placeholder['height'] = $asset->height;
+                    }
                     $slides[$slideId] = '<div data-id="' . $slideId . '"' . $disabled . ' data-src="' . $url . '"' . $this->pinnedItems[$asset->type . 's'] . '></div>';
                     $index++;
                     break;
@@ -657,17 +799,18 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
 
         return [
             'active-slide' => 0,
+            'placeholder' => $placeholder,
             'slides' => $slides
         ];
     }
 
     /**
-     * Download view contents
+     * Download contents
      *
      * @param string $url
      * @return string
      */
-    protected function downloadViewContents($url)
+    protected function downloadContents($url)
     {
         if (!isset(self::$curlHandle)) {
             self::$curlHandle = curl_init();

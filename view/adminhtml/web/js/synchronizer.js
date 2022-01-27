@@ -134,8 +134,8 @@ define([
             this.counters.queued = Number(this.options.queued);
             this.counters.failed = Number(this.options.failed);
             this.counters.cached = this.counters.synced + this.counters.queued + this.counters.failed;
-
             this._bind();
+            this._getStorageSize();
         },
 
         /**
@@ -352,6 +352,25 @@ define([
                 {'syncStage': this.syncStage, 'doClean': this.doDeleteCachedImages},
                 this._syncSuccessed,
                 this._syncFailed
+            );
+        },
+
+        /**
+         * Get storage size via AJAX request
+         */
+        _getStorageSize: function () {
+            this._doRequest(
+                'get_storage_size',
+                {},
+                function (data) {
+                    $('.approximate-storage-size').html(Math.ceil(data.size / 1000000) + ' MB');
+                },
+                function (message) {
+                    uiAlert({
+                        title: $.mage.__('Error'),
+                        content: $.mage.__(message)
+                    });
+                }
             );
         },
 

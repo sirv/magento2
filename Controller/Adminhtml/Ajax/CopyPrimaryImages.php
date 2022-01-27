@@ -181,15 +181,6 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 }
 
                 $baseUrl = 'https://' . $dataHelper->getSirvDomain();
-                if (strpos($productAssetsFolder, '{product-id}') !== false) {
-                    $replace = '{product-id}';
-                    $key = 'id';
-                } else if (strpos($productAssetsFolder, '{product-sku}') !== false) {
-                    $replace = '{product-sku}';
-                    $key = 'sku';
-                } else {
-                    $replace = false;
-                }
 
                 $storeCode = 0;
                 $this->storeManager->setCurrentStore($storeCode);
@@ -204,7 +195,17 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
                 foreach ($products as &$product) {
                     $product['copied'] = false;
-                    $assetsFolder = $replace ? str_replace($replace, $product[$key], $productAssetsFolder) : $productAssetsFolder . '/' . $product['sku'];
+
+                    $assetsFolder = str_replace(
+                        ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
+                        [$product['id'], $product['sku'], substr($product['sku'], 0, 2), substr($product['sku'], 0, 3)],
+                        $productAssetsFolder,
+                        $found
+                    );
+                    if (!$found) {
+                        $assetsFolder = $productAssetsFolder . '/' . $product['sku'];
+                    }
+
                     $url = $baseUrl . '/' . $assetsFolder . '.view?info';
                     $contents = $this->downloadContents($url);
                     $contents = json_decode($contents);
@@ -229,7 +230,8 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                                 $spinInfoUrl = $baseUrl . '/' . $assetsFolder . '/' . $asset->name . '?info';
                                 $contents = $this->downloadContents($spinInfoUrl);
                                 $contents = json_decode($contents);
-                                $fileName = is_object($contents) && isset($contents->layers) && isset($contents->layers->{'1'}) && isset($contents->layers->{'1'}->{'1'}) ? $contents->layers->{'1'}->{'1'} : false;
+                                $layer = is_object($contents) && isset($contents->layers) ? reset($contents->layers) : false;
+                                $fileName = $layer ? reset($layer) : false;
                                 if ($fileName) {
                                     $url = preg_replace('#/[^/]++$#', '/', $spinInfoUrl) . $fileName;
                                     $tmpAbsPath = $mediaDirAbsPath . '/tmp/sirv/' . $fileName;

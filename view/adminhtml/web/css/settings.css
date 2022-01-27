@@ -380,6 +380,11 @@ a.save-message {
   display: none;
 }
 
+.admin__field-control > .admin__field .admin__field-sub-option {
+  margin-top: 0;
+  padding-left: 2.6rem;
+}
+
 .admin__control-switcher {
   box-sizing: border-box;
   position: relative;
@@ -630,6 +635,15 @@ a.save-message {
 */
 .modal-content .sirv-sync-content .hidden-in-modal-view {
   display: none;
+}
+
+.approximate-storage-size-label {
+  padding-top: 7px;
+  padding-bottom: 8px;
+}
+.approximate-storage-size .spinner {
+  font-size: 1.6rem;
+  margin-right: 0;
 }
 
 .sirv-sync-content .sync-status-header {

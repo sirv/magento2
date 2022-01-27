@@ -178,12 +178,12 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
                         'Sirv user %1 does not have permission to connect. Your role must be either Admin or Owner.',
                         $email
                     );
+                    $this->messageManager->addWarning($errorMsg);
                 } else {
-                    $errorMsg = __('Your Sirv access credentials were rejected. Please check and try again.');
+                    $dataHelper->saveConfig('display_credentials_rejected_message', 'true');
                 }
 
                 $dataHelper->saveConfig('password', '');
-                $this->messageManager->addWarningMessage($errorMsg);
             } else {
                 if (count($accounts) == 1) {
                     $account = reset($accounts);

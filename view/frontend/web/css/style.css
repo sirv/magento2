@@ -1,0 +1,48 @@
+/**
+ * Product gallery styles
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ */
+
+.pdp-gallery-container {
+  display: flex;
+  height: 100%;
+  max-height: 100%;
+  /* comment next line for thumbnails position: left */
+  flex-direction: column-reverse;
+}
+.pdp-gallery-thumbnails .smv-thumbnails.smv-v.smv-external .smv-selectors {
+  min-width: unset !important;
+}
+.pdp-gallery-thumbnails .smv-thumbnails.smv-h.smv-external .smv-selectors {
+  min-height: unset !important;
+}
+.pdp-gallery-thumbnails .smv-selector > img {
+  width: auto !important;
+  height: auto !important;
+}
+.pdp-gallery-main {
+  flex: 1 1;
+  position: relative;
+}
+.pdp-gallery-main .Sirv.mainimage {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+/* Non-first item should overlap placeholder */
+.pdp-gallery-main .Sirv .smv-slides-box .smv-slides .smv-slide.smv-shown:not(:first-child) {
+  background-color: #fff;
+}
+/* Placeholder */
+.pdp-gallery-main .pdp-gallery-placeholder {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}

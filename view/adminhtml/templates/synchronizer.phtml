@@ -22,6 +22,9 @@ $failedBarWidth = $queuedBarWidth + $data['failed-percent'];
 
 $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidden-element');
 ?>
+<div class="row approximate-storage-size-label">
+  A rough estimate of the storage size: <span class="approximate-storage-size"><div class="spinner"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></span>
+</div>
 <div class="sirv-sync-container">
   <div class="sirv-sync-status" data-role="sirv-synchronizer">
     <div class="sirv-sync-content">

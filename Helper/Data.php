@@ -142,6 +142,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         's3_rate_limit_data' => true,
         'assets_cache' => true,
         'assets_cache_ttl' => true,
+        'display_credentials_rejected_message' => true,
     ];
 
     /**
