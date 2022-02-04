@@ -97,6 +97,13 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
     protected $usePlaceholders = false;
 
     /**
+     * Sirv options
+     *
+     * @var array
+     */
+    protected $dataOptions = [];
+
+    /**
      * Constructor
      *
      * @param \Sirv\Magento2\Helper\Data $dataHelper
@@ -124,6 +131,10 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 $this->isAutoFetchEnabled = $autoFetch == 'custom' || $autoFetch == 'all';
                 $this->isLazyLoadEnabled = $dataHelper->getConfig('lazy_load') == 'true';
             }
+
+            $imageScaling = $dataHelper->getConfig('image_scaling');
+            in_array($imageScaling, ['contain', 'cover', 'crop']) || ($imageScaling = 'contain');
+            $this->dataOptions['fit'] = $imageScaling;
 
             $this->isSirvMediaViewerUsed = $dataHelper->useSirvMediaViewer();
             $this->sirvJsComponents = $dataHelper->getConfig('js_components');
@@ -501,6 +512,20 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 }
 
                 $imgTag = preg_replace('#\ssrc\s*+=\s*+#', ' data-src=', $imgTag);
+
+                $optionsPattern = '#\sdata-options\s*+=\s*+' . $bs . $bs . '("|\')([^"\']++)\1#';
+                $optionsMatches = [];
+                if (preg_match($optionsPattern, $imgTag, $optionsMatches)) {
+                    if (!preg_match('#(?:^|\s|;)fit\s*+\:\s*+[a-z]++(?:;|\s|' . $bs . $bs . '$)#', $optionsMatches[2])) {
+                        $imgTag = preg_replace(
+                            $optionsPattern,
+                            ' data-options=' . $bs . $optionsMatches[1] . 'fit:' . $this->dataOptions['fit'] . ';' . $optionsMatches[2] . $optionsMatches[1],
+                            $imgTag
+                        );
+                    }
+                } else {
+                    $imgTag = preg_replace('#^<img#', '<img data-options=' . $bs . '"fit:' . $this->dataOptions['fit'] . ';' . $bs . '"', $imgTag);
+                }
 
                 $srcHost = parse_url($srcMatches[2], PHP_URL_HOST) ?: '';
                 if (strpos($srcHost, $this->sirvHost) === false) {

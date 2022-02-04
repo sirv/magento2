@@ -92,9 +92,17 @@ class InstallData implements InstallDataInterface
                         if (!isset($field->install)) {
                             continue;
                         }
+
+                        $name = (string)$field->name;
+                        $value = (string)$field->value;
+                        //NOTE: change defaults for new users
+                        if ($name == 'add_img_width_height' || $name == 'use_placeholders') {
+                            $value = 'true';
+                        }
+
                         $data[] = [
-                            'name' => (string)$field->name,
-                            'value' => (string)$field->value
+                            'name' => $name,
+                            'value' => $value
                         ];
                     }
                     unset($xml);

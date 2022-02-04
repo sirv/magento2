@@ -776,6 +776,7 @@ a.save-message {
   display: inline-block;
   padding-left: 10px;
   width: 120px;
+  white-space: nowrap;
 }
 .progress-counters-list .list-item-value {
   display: inline-block;
@@ -784,6 +785,7 @@ a.save-message {
 }
 .progress-counters-list .list-item-link {
   padding-left: 10px;
+  white-space: nowrap;
 }
 .progress-counters-list .list-item-link + .list-item-link {
   padding-left: 20px;

@@ -407,7 +407,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $data = $this->dataHelper->getAccountUsageData();
                         if (!isset($data['plan']) ||
                             !isset($data['plan']['name']) ||
-                            preg_match('#beta|free|demo|trial#i', $data['plan']['name'])) {
+                            preg_match('#free#i', $data['plan']['name'])) {
                             $fieldConfig['note'] .= '<span style="color: red;">To use Sirv assets, <a target="_blank" href="https://my.sirv.com/#/account/billing/plan">upgrade to a paid plan</a>.</span>';
                         }
                         break;

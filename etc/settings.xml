@@ -199,9 +199,9 @@
             <field>
                 <name>lazy_load</name>
                 <label>Lazy loading</label>
-                <tooltip><![CDATA[Whether to load images on demand.]]></tooltip>
+                <tooltip><![CDATA[Only load images when they enter the viewport and perfectly scale them to fit the container.]]></tooltip>
                 <type>radios</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\LazyLoad</type_class>
                 <options>
                     <option>
                         <label>On</label>
@@ -213,6 +213,28 @@
                     </option>
                 </options>
                 <value>true</value>
+            </field>
+            <field>
+                <name>image_scaling</name>
+                <label>Image scaling</label>
+                <tooltip><![CDATA[How to scale/crop the image to fit the container.]]></tooltip>
+                <type>select</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
+                <options>
+                    <option>
+                        <label>Fit into container</label>
+                        <value>contain</value>
+                    </option>
+                    <option>
+                        <label>Cover container</label>
+                        <value>cover</value>
+                    </option>
+                    <option>
+                        <label>Crop into container</label>
+                        <value>crop</value>
+                    </option>
+                </options>
+                <value>contain</value>
             </field>
             <!--
             <field>
@@ -313,6 +335,7 @@
                     </option>
                 </options>
                 <value>false</value>
+                <install/>
             </field>
             <field>
                 <name>use_placeholders</name>
@@ -331,6 +354,7 @@
                     </option>
                 </options>
                 <value>false</value>
+                <install/>
             </field>
         </fields>
     </group>

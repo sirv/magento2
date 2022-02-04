@@ -1,5 +1,5 @@
 /**
- * Product gallery view switcher widget
+ * Lazy load switcher widget
  *
  * @author    Sirv Limited <support@sirv.com>
  * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
@@ -12,14 +12,15 @@ define([
 ], function ($) {
     'use strict';
 
-    $.widget('sirv.productGalleryViewSwitcher', {
+    $.widget('sirv.lazyLoadSwitcher', {
 
         options: {},
 
         /** @inheritdoc */
         _create: function () {
-            var value = $('[name=mt-config\\[product_gallery_view\\]]:checked').val();
-            if (value != 'smv') {
+            var value = $('[name=mt-config\\[lazy_load\\]]:checked').val();
+
+            if (value != 'true') {
                 this._switchDisabled(true);
             }
             this.element.on('change', $.proxy(this._eventHandler, this));
@@ -31,7 +32,7 @@ define([
          * @param {Object} data - event data object
          */
         _eventHandler: function (e, data) {
-            this._switchDisabled(!(this.element.attr('value') == 'smv'));
+            this._switchDisabled(!(this.element.attr('value') == 'true'));
         },
 
         /**
@@ -40,16 +41,7 @@ define([
          */
         _switchDisabled: function (disabled) {
             var options = [
-                'viewer_contents',
-                'product_assets_folder',
-                'smv_js_options',
-                'image_zoom',
-                'slides_order',
-                'smv_max_height',
-                'pinned_items',
-                'smv_custom_css',
-                'assets_cache',
-                'assets_cache_ttl'
+                'image_scaling',
             ];
             var i, l, selector, display;
             l = options.length;
@@ -61,5 +53,5 @@ define([
         }
     });
 
-    return $.sirv.productGalleryViewSwitcher;
+    return $.sirv.lazyLoadSwitcher;
 });
