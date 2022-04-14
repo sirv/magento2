@@ -23,6 +23,19 @@ $usePlaceholder = $viewerHelper->usePlaceholder();
 $placeholder = $viewerHelper->getPlaceholder();
 $jsonConfig = $block->escapeHtmlAttr($viewerHelper->getJsonConfig());
 $jsOptions = $viewerHelper->getViewerJsOptions();
+
+$isThumbsLayoutH = true;
+if (preg_match('#\bposition\s*+:\s*+("|\')(bottom|left|right|top)\1#', $jsOptions, $match)) {
+    if (in_array($match[2], ['left', 'right'])) {
+        $isThumbsLayoutH = false;
+    }
+}
+
+$thumbSize = 70;
+if (preg_match('#\bsize\s*+:\s*+(\d++)#', $jsOptions, $match)) {
+    $thumbSize = $match[1];
+}
+
 $maxHeight = $viewerHelper->getMaxHeight();
 $customCss = $viewerHelper->getViewerCss();
 $dataOptions = $viewerHelper->getViewerDataOptions();
@@ -43,11 +56,14 @@ $assetsCacheData = $viewerHelper->getAssetsCacheData();
     max-height: <?= $maxHeight ?>px;
 }
 <?php endif; ?>
+.pdp-gallery-thumbnails {
+    <?= ($isThumbsLayoutH ? 'height' : 'width') . ': ' . $thumbSize . 'px;' ?>
+}
 <?= $customCss ?>
 </style>
 <?php if ($usePlaceholder) : ?>
 <div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>" data-mage-init='{"sirvAssetsCache":<?= $assetsCacheData ?>}'>
-    <div class="pdp-gallery-container">
+    <div class="pdp-gallery-container<?= $isThumbsLayoutH ? ' pdp-gallery-container-h' : '' ?>">
         <div class="pdp-gallery-thumbnails"></div>
         <div class="pdp-gallery-main">
             <img width="<?= $placeholder['width'] ?>" height="<?= $placeholder['height'] ?>" class="pdp-gallery-placeholder" src="<?= $placeholder['url'] ?>" alt="" loading="lazy">

@@ -134,10 +134,15 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $productTable = $resource->getTable('catalog_product_entity');
                 $mediaToEntityTable = $resource->getTable(\Magento\Catalog\Model\ResourceModel\Product\Gallery::GALLERY_VALUE_TO_ENTITY_TABLE);
 
+                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $statement */
+                $statement = $connection->query("SHOW COLUMNS FROM `{$mediaToEntityTable}` LIKE 'entity_id'");
+                $columns = $statement->fetchAll();
+                $fieldName = empty($columns) ? 'row_id' : 'entity_id';
+
                 $select->reset()
                     ->from(
                         ['pt' => $productTable],
-                        ['total' => 'COUNT(`pt`.`entity_id`)']
+                        ['total' => 'COUNT(`pt`.`' . $fieldName . '`)']
                     );
                 /** @var int $totalProductsCount */
                 $totalProductsCount = (int)$connection->fetchOne($select);
@@ -147,13 +152,13 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     ->from(
                         ['mtet' => $mediaToEntityTable]
                     )
-                    ->where('`pt`.`entity_id` = `mtet`.`entity_id`');
+                    ->where('`pt`.`' . $fieldName . '` = `mtet`.`' . $fieldName . '`');
 
                 $select->reset()
                     ->from(
                         ['pt' => $productTable],
                         [
-                            'id' => 'pt.entity_id',
+                            'id' => 'pt.' . $fieldName,
                             'sku' => 'pt.sku',
                         ]
                     )
@@ -220,6 +225,7 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                         if ($asset->type == 'image') {
                             $url = $baseUrl . '/' . $assetsFolder . '/' . $asset->name;
                             $fileName = basename($asset->name);
+                            $fileName = $this->getCorrectFileName($fileName);
                             $tmpAbsPath = $mediaDirAbsPath . '/tmp/sirv/' . $fileName;
                             break;
                         }
@@ -234,6 +240,7 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                                 $fileName = $layer ? reset($layer) : false;
                                 if ($fileName) {
                                     $url = preg_replace('#/[^/]++$#', '/', $spinInfoUrl) . $fileName;
+                                    $fileName = $this->getCorrectFileName($fileName);
                                     $tmpAbsPath = $mediaDirAbsPath . '/tmp/sirv/' . $fileName;
                                     break;
                                 }
@@ -297,6 +304,37 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $resultJson->setData($result);
 
         return $resultJson;
+    }
+
+    /**
+     * Get correct file name
+     *
+     * @param string $fileName
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    protected function getCorrectFileName($fileName)
+    {
+        $fileName = preg_replace('/[^a-z0-9_\\-\\.]+/i', '_', $fileName);
+        $fileInfo = pathinfo($fileName);
+        $fileInfo['extension'] = $fileInfo['extension'] ?? '';
+
+        $length = strlen($fileInfo['basename']);
+        if ($length > 90) {
+            $fileInfo['filename'] = substr($fileInfo['filename'], 0, 90 - $length);
+            if (empty($fileInfo['filename'])) {
+                throw new \InvalidArgumentException('Filename is too long; must be 90 characters or less');
+            }
+        }
+
+        if (preg_match('/^_+$/', $fileInfo['filename'])) {
+            $fileInfo['filename'] = 'file';
+        }
+
+        $fileInfo['basename'] = $fileInfo['filename'] .
+            (empty($fileInfo['extension']) ? '' : '.' . $fileInfo['extension']);
+
+        return $fileInfo['basename'];
     }
 
     /**

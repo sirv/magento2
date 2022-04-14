@@ -74,17 +74,22 @@ class Assets extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $data = [];
         if (!empty($assetsData)) {
             $table = $resource->getTable('catalog_product_entity');
+            /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $statement */
+            $statement = $connection->query("SHOW COLUMNS FROM `{$table}` LIKE 'row_id'");
+            $columns = $statement->fetchAll();
+            $fieldName = empty($columns) ? 'entity_id' : 'row_id';
+
             $ids = array_keys($assetsData);
             $select->reset()
                 ->from(
                     ['t' => $table],
                     [
-                        'id' => 't.entity_id',
+                        'id' => 't.' . $fieldName,
                         'sku' => 't.sku',
                     ]
                 )
                 ->where(
-                    't.entity_id IN (?)',
+                    't.' . $fieldName . ' IN (?)',
                     $ids
                 );
             $skus = $connection->fetchPairs($select, []);

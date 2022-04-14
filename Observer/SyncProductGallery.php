@@ -87,6 +87,11 @@ class SyncProductGallery implements \Magento\Framework\Event\ObserverInterface
         switch ($eventName) {
             case 'catalog_product_delete_before':
                 try {
+                    /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $statement */
+                    $statement = $connection->query("SHOW COLUMNS FROM `{$mediaToEntityTable}` LIKE 'entity_id'");
+                    $columns = $statement->fetchAll();
+                    $fieldName = empty($columns) ? 'row_id' : 'entity_id';
+
                     $select->reset()
                         ->distinct()
                         ->from(
@@ -96,11 +101,11 @@ class SyncProductGallery implements \Magento\Framework\Event\ObserverInterface
                         ->joinInner(
                             ['mtet' => $mediaToEntityTable],
                             '`mt`.`value_id` = `mtet`.`value_id`',
-                            [/*'entity_id'*/]
+                            [/* $fieldName */]
                         )
                         ->where('`mt`.`value` IS NOT NULL')
                         ->where('`mt`.`value` != ?', '')
-                        ->where('`mtet`.`entity_id` = ?', $productId);
+                        ->where('`mtet`.`' . $fieldName . '` = ?', $productId);
 
                     $this->productImages = $connection->fetchCol($select) ?: [];
                 } catch (\Exception $e) {
