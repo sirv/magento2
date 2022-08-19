@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Controller\Adminhtml\Ajax;
  * Cache ajax controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -49,7 +49,7 @@ class Cache extends \Sirv\Magento2\Controller\Adminhtml\Settings
     }
 
     /**
-     * Cache action
+     * Execute action
      *
      * @return \Magento\Framework\Controller\Result\Json
      */
@@ -94,7 +94,7 @@ class Cache extends \Sirv\Magento2\Controller\Adminhtml\Settings
     /**
      * Method to get cached image data
      *
-     * @param int|array $status
+     * @param string $status
      * @param int $page
      * @param int $size
      * @param int $pId
@@ -283,7 +283,7 @@ class Cache extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     'fileSize' => $fileSize
                 ];
             }
-            $messageEx = $message .  ' See <a href="https://my.sirv.com/#/events/" target="_blank">Sirv notification section</a> for more information.';
+            $messageEx = $message .  ' See <a href="https://my.sirv.com/#/events/" target="_blank" class="sirv-open-in-new-window">Sirv notification section</a> for more information.';
             $failedData[$messageEx] = $failedData[$message];
             unset($failedData[$message]);
         }

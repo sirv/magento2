@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Helper;
  * Sirv Media Viewer helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -73,13 +73,6 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      * @var integer
      */
     protected $slideSources;
-
-    /**
-     * cURL resource
-     *
-     * @var resource
-     */
-    protected static $curlHandle = null;
 
     /**
      * Assets data
@@ -189,7 +182,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             if (isset($pinnedItems[$key])) {
                 if ($pinnedItems[$key] == 'left') {
                     $this->pinnedItems[$key] = ' data-pinned="start"';
-                } else if ($pinnedItems[$key] == 'right') {
+                } elseif ($pinnedItems[$key] == 'right') {
                     $this->pinnedItems[$key] = ' data-pinned="end"';
                 }
             }
@@ -335,7 +328,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $url = $this->placeholder['url'];
         if (preg_match('#(\?|&)q=\d++#', $url)) {
             $url = preg_replace('#(\?|&)q=\d++#', '$1q=30', $url);
-        } else if (preg_match('#\?.#', $url)) {
+        } elseif (preg_match('#\?.#', $url)) {
             $url = $url . '&q=30';
         } else {
             $url = $url . '?q=30';
@@ -343,10 +336,10 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
 
         $width = empty($this->placeholder['width']) ? 100 : (int)$this->placeholder['width'];
         $height = empty($this->placeholder['height']) ? 100 : (int)$this->placeholder['height'];
-        if ($width > $height ) {
+        if ($width > $height) {
             $s = $width / 100;
         }
-        if ($height >= $width ) {
+        if ($height >= $width) {
             $s = $height / 100;
         }
         $width = floor($width / $s);
@@ -677,50 +670,19 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getSirvAssetsData($product)
     {
-        $assetsFolder = $this->dataHelper->getConfig('product_assets_folder') ?: '';
-        $assetsFolder = trim($assetsFolder);
-        $assetsFolder = trim($assetsFolder, '/');
-        if (empty($assetsFolder)) {
+        $assetsData = $this->dataHelper->getAssetsData($product);
+        if (empty($assetsData)) {
             return [
                 'active-slide' => 0,
+                'placeholder' => [],
                 'slides' => []
             ];
         }
 
+        $assets = $assetsData['assets'] ?? [];
         $productId = $product->getId();
-        $productSku = $product->getSku();
-
-        $assetsFolder = str_replace(
-            ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
-            [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
-            $assetsFolder,
-            $found
-        );
-        if (!$found) {
-            $assetsFolder = $assetsFolder . '/' . $productSku;
-        }
-
-        $folderUrl = $this->syncHelper->getBaseUrl() . '/' . $assetsFolder;
-
-        $assetsModel = $this->assetsModelFactory->create();
-        $assetsModel->load($productId, 'product_id');
-        $contents = $assetsModel->getData('contents');
-        if ($contents === null) {
-            $url = $folderUrl . '.view?info';
-            $contents = $this->downloadContents($url);
-            $assetsModel->setData('product_id', $productId);
-            $assetsModel->setData('contents', $contents);
-            $assetsModel->setData(
-                'timestamp',
-                $this->assetsCacheData['timestamps'][$productId] = time()
-            );
-            $assetsModel->save();
-        } else {
-            $this->assetsCacheData['timestamps'][$productId] = $assetsModel->getData('timestamp');
-        }
-
-        $contents = json_decode($contents);
-        $assets = is_object($contents) && isset($contents->assets) && is_array($contents->assets) ? $contents->assets : [];
+        $this->assetsCacheData['timestamps'][$productId] = $assetsData['timestamp'];
+        $folderUrl = $this->syncHelper->getBaseUrl() . $assetsData['dirname'];
 
         $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
         $dataType = $zoom == 'enabled' ? ' data-type="zoom"' : '';
@@ -738,60 +700,37 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         $placeholder = [];
-        foreach ($assets as &$asset) {
+        foreach ($assets as $asset) {
             $slideId = $idPrefix . $index;
-            switch ($asset->type) {
+            switch ($asset['type']) {
                 case 'image':
-                    $url = $folderUrl . '/' . $asset->name;
+                    $url = $folderUrl . '/' . $asset['name'];
                     $pinnedAttr = $this->pinnedItems['images'];
                     if (!(empty($pinnedAttr) || empty($this->pinnedItems['mask']) || preg_match($this->pinnedItems['mask'], $url))) {
                         $pinnedAttr = '';
                     }
                     $url .= $profile;
-                    if (empty($placeholder)) {
+                    if (empty($placeholder) && $this->usePlaceholder) {
                         $placeholder['url'] = $url;
-                        $placeholder['width'] = $asset->width;
-                        $placeholder['height'] = $asset->height;
+                        $placeholder['width'] = $asset['width'];
+                        $placeholder['height'] = $asset['height'];
                     }
                     $slides[$slideId] = '<div data-id="' . $slideId . '"' . $dataType . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
                     $index++;
                     break;
                 case 'spin':
                 case 'video':
-                    $url = $folderUrl . '/' . $asset->name . $profile;
+                    $url = $folderUrl . '/' . $asset['name'] . $profile;
                     if (empty($placeholder) && $this->usePlaceholder) {
-                        if (!isset($asset->width) || !isset($asset->height)) {
-                            $info = $this->downloadContents($folderUrl . '/' . $asset->name . '?info');
-                            $info = json_decode($info);
-                            $layer = is_object($info) && isset($info->layers) ? reset($info->layers) : false;
-                            $fileName = $layer ? reset($layer) : false;
-                            if ($fileName) {
-                                $fileUrl = preg_replace('#/[^/]++$#', '/', $folderUrl . '/' . $asset->name) . $fileName;
-                                $info = $this->downloadContents($fileUrl . '?info');
-                                $info = json_decode($info);
-                                isset($asset->width) || $asset->width = $info->width;
-                                isset($asset->height) || $asset->height = $info->height;
-                                $contents->assets = $assets;
-                                $assetsModel->setData('product_id', $productId);
-                                $assetsModel->setData('contents', json_encode($contents));
-                                $assetsModel->setData(
-                                    'timestamp',
-                                    $this->assetsCacheData['timestamps'][$productId] = time()
-                                );
-                                $assetsModel->save();
-                            }
-                        }
-
-                        if ($asset->type == 'video') {
-                            $placeholder['url'] = $url . (strpos($url, '?') === false ? '?' : '&') . 'thumbnail=' . $asset->height;
+                        if ($asset['type'] == 'video') {
+                            $placeholder['url'] = $url . (strpos($url, '?') === false ? '?' : '&') . 'thumbnail=' . $asset['width']/*height*/;
                         } else {
                             $placeholder['url'] = $url . (strpos($url, '?') === false ? '?' : '&') .'thumb=spin&image.frames=1';
                         }
-
-                        $placeholder['width'] = $asset->width;
-                        $placeholder['height'] = $asset->height;
+                        $placeholder['width'] = $asset['width'];
+                        $placeholder['height'] = $asset['height'];
                     }
-                    $slides[$slideId] = '<div data-id="' . $slideId . '"' . $disabled . ' data-src="' . $url . '"' . $this->pinnedItems[$asset->type . 's'] . '></div>';
+                    $slides[$slideId] = '<div data-id="' . $slideId . '"' . $disabled . ' data-src="' . $url . '"' . $this->pinnedItems[$asset['type'] . 's'] . '></div>';
                     $index++;
                     break;
             }
@@ -802,48 +741,6 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             'placeholder' => $placeholder,
             'slides' => $slides
         ];
-    }
-
-    /**
-     * Download contents
-     *
-     * @param string $url
-     * @return string
-     */
-    protected function downloadContents($url)
-    {
-        if (!isset(self::$curlHandle)) {
-            self::$curlHandle = curl_init();
-        }
-
-        curl_setopt_array(
-            self::$curlHandle,
-            [
-                CURLOPT_URL => $url,
-                CURLOPT_HEADER => false,
-                CURLOPT_NOBODY => false,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => false,
-                CURLOPT_SSL_VERIFYPEER => false,
-            ]
-        );
-
-        $contents = curl_exec(self::$curlHandle);
-
-        $error = curl_errno(self::$curlHandle);
-        $code = curl_getinfo(self::$curlHandle, CURLINFO_HTTP_CODE);
-
-        if ($error || $code != 200) {
-            $contents = [
-                'curl' => [
-                    'code' => $code,
-                    'error' => $error
-                ]
-            ];
-            $contents = json_encode($contents);
-        }
-
-        return $contents;
     }
 
     /**
@@ -864,21 +761,5 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return $imageUrlBuilder;
-    }
-
-    /**
-     * Destructor
-     *
-     * @return void
-     */
-    public function __destruct()
-    {
-        if (isset(self::$curlHandle)) {
-            curl_close(self::$curlHandle);
-            self::$curlHandle = null;
-        }
-        if (method_exists(get_parent_class(__CLASS__), '__destruct')) {
-            parent::__destruct();
-        }
     }
 }

@@ -4,7 +4,7 @@
  * Frontend module configuration
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -81,4 +81,11 @@
 
     <!-- NOTE: override template filter for cms block -->
     <preference for="Magento\Widget\Model\Template\Filter" type="Sirv\Magento2\Model\Template\Filter" />
+
+    <!-- NOTE: for product image builder block override product image factory with Sirv one -->
+    <type name="Magento\Catalog\Block\Product\ImageBuilder">
+        <arguments>
+            <argument name="imageFactory" xsi:type="object">Sirv\Magento2\Block\Product\ImageFactory</argument>
+        </arguments>
+    </type>
 </config>

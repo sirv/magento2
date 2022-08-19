@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Block\Adminhtml;
  * Synchronizer block
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -113,6 +113,7 @@ class Synchronizer extends \Magento\Backend\Block\Template
                     'failed-percent' => $failedPercent,
                 ];
             }
+            $this->syncData['fetch-file-limit'] = $syncHelper->getFetchFileLimit();
         }
 
         return $this->syncData;
@@ -126,7 +127,7 @@ class Synchronizer extends \Magento\Backend\Block\Template
     public function getEstimatedDurationMessage()
     {
         $data = $this->getSyncData();
-        $speed = 2000;//images per hour
+        $speed = $data['fetch-file-limit'];//images per hour
         $imagesToSync = $data['total'] - $data['synced'] - $data['failed'];
         if ($imagesToSync < 1) {
             return '';

@@ -2,7 +2,7 @@
  * Settings page styles
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -385,6 +385,17 @@ a.save-message {
   padding-left: 2.6rem;
 }
 
+.sirv-open-in-new-window[target="_blank"]::after {
+  content: '';
+  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c3ZnanM9Imh0dHA6Ly9zdmdqcy5jb20vc3ZnanMiIHZlcnNpb249IjEuMSIgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHg9IjAiIHk9IjAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNTEyIDUxMiIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgY2xhc3M9IiI+PGc+PGcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJtMTggMjNoLTE0Yy0xLjY1NCAwLTMtMS4zNDYtMy0zdi0xNGMwLTEuNjU0IDEuMzQ2LTMgMy0zaDhjLjU1MiAwIDEgLjQ0NyAxIDFzLS40NDggMS0xIDFoLThjLS41NTEgMC0xIC40NDgtMSAxdjE0YzAgLjU1Mi40NDkgMSAxIDFoMTRjLjU1MSAwIDEtLjQ0OCAxLTF2LThjMC0uNTUzLjQ0OC0xIDEtMXMxIC40NDcgMSAxdjhjMCAxLjY1NC0xLjM0NiAzLTMgM3oiIGZpbGw9IiMyMjcxYjEiIGRhdGEtb3JpZ2luYWw9IiMwMDAwMDAiIHN0eWxlPSIiIGNsYXNzPSIiLz48L2c+PHBhdGggeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBkPSJtMjIgMWgtNmMtLjQwNCAwLS43NjkuMjQzLS45MjQuNjE3cy0uMDY5LjgwNC4yMTcgMS4wOWwyLjI5MyAyLjI5My03LjI5MyA3LjI5M2MtLjM5MS4zOTEtLjM5MSAxLjAyMyAwIDEuNDE0LjE5NS4xOTUuNDUxLjI5My43MDcuMjkzcy41MTItLjA5OC43MDctLjI5M2w3LjI5My03LjI5MyAyLjI5MyAyLjI5M2MuMTkxLjE5MS40NDcuMjkzLjcwNy4yOTMuMTI5IDAgLjI1OS0uMDI0LjM4My0uMDc2LjM3My0uMTU0LjYxNy0uNTIuNjE3LS45MjR2LTZjMC0uNTUzLS40NDgtMS0xLTF6IiBmaWxsPSIjMjI3MWIxIiBkYXRhLW9yaWdpbmFsPSIjMDAwMDAwIiBzdHlsZT0iIiBjbGFzcz0iIi8+PC9nPjwvc3ZnPgo=);
+  background-size: 100% auto;
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+  margin: 0 3px 0 3px;
+  vertical-align: top;
+}
+
 .admin__control-switcher {
   box-sizing: border-box;
   position: relative;
@@ -637,6 +648,10 @@ a.save-message {
   display: none;
 }
 
+.admin__field.field-mt-how_sync_works .admin__field-control .admin__field-note {
+  margin: 0;
+}
+.sync-description-label,
 .approximate-storage-size-label {
   padding-top: 7px;
   padding-bottom: 8px;
@@ -734,6 +749,7 @@ a.save-message {
   left: 50%;
   transform: translate(-50%, -50%);
   content: attr(data-content);
+  font-weight: 600;
 }
 .sirv-sync-content .progress-bar-holder.timer-on .progress-bar-timer {
   display: block;

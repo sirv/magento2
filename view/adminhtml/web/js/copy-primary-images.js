@@ -2,7 +2,7 @@
  * Primary images synchronizer
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -41,53 +41,75 @@ define([
             copied: 0,
             failed: 0
         },
+        structure: null,
+        stIndex: 0,
         failedData: {},
         modalWindow: null,
         confirmMessage: $.mage.__('Are you sure you want to stop copying?'),
         errorMessage: $.mage.__('Some errors occurred during the copying!'),
+        tempData: null,
 
         /** @inheritdoc */
         _create: function () {
             $(this.element).attr('disabled', true).addClass('disabled');
-            this.element.on('click', $.proxy(this._processStart, this));
-            this._getProductsData();
-        },
-
-        _getProductsData: function () {
+            this.element.on('click', $.proxy(this._onClickHandler, this));
             this._doRequest(
                 'get_magento_data',
                 {},
-                this._productsDataSuccessed,
-                this._productsDataFailed
+                this._displayCounters,
+                this._widgetFailed
             );
         },
 
-        _productsDataSuccessed: function (data) {
+        /**
+         * Display counters
+         * @param {Object} data
+         * @protected
+         */
+        _displayCounters: function (data) {
             var total = Number(data.total),
                 withoutMedia = data.products.length,
                 withMedia = total - withoutMedia;
+
+            this.tempData = data;
 
             $('body .products_with_images_counter').html(withMedia);
             $('body .products_without_images_counter').html(withoutMedia);
             $(this.element).removeClass('disabled').attr('disabled', false);
         },
 
-        _processStart: function () {
+        /**
+         * Click handler
+         * @protected
+         */
+        _onClickHandler: function () {
             if (!this.isBusy) {
                 this.isBusy = true;
                 $(this.element).attr('disabled', true).addClass('disabled');
                 $('body').trigger('processStart');
-                this._doRequest(
-                    'get_magento_data',
-                    {},
-                    this._preparingForCopying,
-                    this._productsDataFailed
-                );
+
+                if (this.tempData) {
+                    this._preparingData(this.tempData);
+                    this.tempData = null;
+                } else {
+                    this._doRequest(
+                        'get_magento_data',
+                        {},
+                        this._preparingData,
+                        this._widgetFailed
+                    );
+                }
             }
+
             return false;
         },
 
-        _preparingForCopying: function (data) {
+        /**
+         * Preparing data
+         * @param {Object} data
+         * @protected
+         */
+        _preparingData: function (data) {
             this.isInProgress = false;
             this.isFailed = false;
             this.isCanceled = false;
@@ -106,6 +128,9 @@ define([
             this.percents.copied = 0;
             this.percents.failed = 0;
 
+            this.structure = null;
+            this.stIndex = 0;
+
             this.failedData = {};
 
             $('body').trigger('processStop');
@@ -122,7 +147,7 @@ define([
             if (this.counters.total == this.counters.withMedia) {
                 uiAlert({
                     title: $.mage.__('Notice'),
-                    content: $.mage.__('No products found!'),
+                    content: $.mage.__('No products without images found!'),
                     actions: {always: function(){}}
                 });
                 return;
@@ -131,36 +156,178 @@ define([
             this._displayModalWindow();
             this.modalWindow.find('.progress-bar-holder').addClass('stripes');
             this.isInProgress = true;
-            this._doCopying();
+
+            this._doRequest(
+                'get_sirv_data',
+                {},
+                function (data) {
+                    //console.log(JSON.parse(JSON.stringify(data)));
+                    this.structure = data.structure;
+                    this._processData();
+                },
+                this._widgetFailed
+            );
         },
 
-        _productsDataFailed: function (message) {
-            $('body').trigger('processStop');
-            uiAlert({
-                title: $.mage.__('Error'),
-                content: $.mage.__(message),
-                actions: {always: function(){}}
-            });
+        /**
+         * Process data
+         * @protected
+         */
+        _processData: function () {
+            var products = [],
+                skipped = [],
+                dirList = [],
+                pathTemplate = '',
+                path = '',
+                product,
+                replacers,
+                placeholder,
+                dir,
+                found,
+                message;
+
+            while (this.products.length) {
+                product = this.products.pop();
+
+                replacers = {
+                    '{product-id}': product.id,
+                    '{product-sku}': product.sku,
+                    '{product-sku-2-char}': product.sku.substring(0, 2),
+                    '{product-sku-3-char}': product.sku.substring(0, 3)
+                };
+                dir = this.structure[this.stIndex].template;
+                for (placeholder in replacers) {
+                    dir = dir.replace(placeholder, replacers[placeholder]);
+                }
+
+                found = this.structure[this.stIndex].list.find(function (value) {
+                    return value == dir;
+                });
+                if (found) {
+                    products.push(product);
+                    dirList.push(dir);
+                } else {
+                    skipped.push(product);
+                }
+            }
+
+            if (skipped.length) {
+                message = 'Product has no assets on Sirv';
+                if (typeof(this.failedData[message]) == 'undefined') {
+                    this.failedData[message] = skipped.length;
+                } else {
+                    this.failedData[message] += skipped.length;
+                }
+                this.counters.failed += skipped.length;
+                this.counters.processed = this.counters.copied + this.counters.failed;
+                this._calculatePercents();
+                this._updateProgressView();
+            }
+
+            this.products = products;
+
+            if (products.length) {
+                dirList = dirList.filter(function (value, index, self) {
+                    return self.indexOf(value) === index;
+                });
+
+                this.structure[this.stIndex].list = dirList;
+
+                if (this.structure[this.stIndex].unique) {
+                    this._doCopying();
+                } else {
+                    if (typeof this.structure[this.stIndex + 1] == 'undefined') {
+                        this._widgetFailed('Folder structure is not unique!');
+                        return;
+                    }
+
+                    pathTemplate = '';
+                    for (var i = 0; i <= this.stIndex; i++) {
+                        pathTemplate += this.structure[i].path ? this.structure[i].path + '/' : '';
+                        pathTemplate += this.structure[i].template + '/';
+                    }
+                    pathTemplate += this.structure[this.stIndex + 1].path ? this.structure[this.stIndex + 1].path : '';
+                    pathTemplate = pathTemplate.replace(/\/$/, '');
+
+                    dirList = [];
+                    for (var i = 0, l = products.length; i < l; i++) {
+                        replacers = {
+                            '{product-id}': products[i].id,
+                            '{product-sku}': products[i].sku,
+                            '{product-sku-2-char}': products[i].sku.substring(0, 2),
+                            '{product-sku-3-char}': products[i].sku.substring(0, 3)
+                        };
+                        path = pathTemplate;
+                        for (placeholder in replacers) {
+                            path = path.replace(placeholder, replacers[placeholder]);
+                        }
+                        dirList.push(path);
+                    }
+                    dirList = dirList.filter(function (value, index, self) {
+                        return self.indexOf(value) === index;
+                    });
+
+                    this.structure[this.stIndex + 1].list = [];
+                    this._getDirList(dirList);
+                }
+            } else {
+                this._copyingCompleted();
+            }
         },
 
-        _displayModalWindow: function () {
-            this._createModalWindow();
-            this.modalWindow.html('');
-            $(mageTemplate(copyPrimaryImagesTpl, {
-                'counters': this.counters
-            })).appendTo(this.modalWindow);
-            this.modalWindow.modal('openModal');
+        /**
+         * Get dir list
+         * @param {Array} srcList
+         * @protected
+         */
+        _getDirList: function (srcList) {
+            if (this.isCanceled) {
+                return;
+            }
+
+            var list = [],
+                chunkSize = 10,
+                i = 0;
+
+            while (srcList.length) {
+                list.push(srcList.pop());
+                i++;
+                if (i == chunkSize) {
+                    break;
+                }
+            }
+
+            if (list.length) {
+                this._doRequest(
+                    'get_dir_list',
+                    {'list': list},
+                    function (data) {
+                        while (data.length) {
+                            this.structure[this.stIndex + 1].list.push(data.pop());
+                        }
+                        this._getDirList(srcList);
+                    },
+                    this._widgetFailed
+                );
+            } else {
+                this.stIndex++;
+                this._processData();
+            }
         },
 
         /**
          * Copy primary images
+         * @protected
          */
         _doCopying: function () {
             if (this.isCanceled) {
                 return;
             }
 
-            var products = [], chunkSize = 10, i = 0;
+            var products = [],
+                chunkSize = 10,
+                i = 0;
+
             while (this.products.length) {
                 products.push(this.products.pop());
                 i++;
@@ -174,15 +341,21 @@ define([
                     'copy_primary_images',
                     {'products': products},
                     this._copyingSuccessed,
-                    this._copyingFailed
+                    this._widgetFailed
                 );
             } else {
                 this._copyingCompleted();
             }
         },
 
+        /**
+         * Copying successed
+         * @param {Object} data
+         * @protected
+         */
         _copyingSuccessed: function (data) {
             var product, message, copied = 0, failed = 0;
+
             for (var i = data.products.length - 1; i >= 0; i--) {
                 product = data.products[i];
                 if (product.copied) {
@@ -217,11 +390,13 @@ define([
         },
 
         /**
-         * Copying failed
+         * Widget failed
+         * @param {String} message
          * @protected
          */
-        _copyingFailed: function (mesaage) {
+        _widgetFailed: function (mesaage) {
             this.isFailed = true;
+            $('body').trigger('processStop');
             this._calculatePercents();
             this._updateProgressView();
             this._copyingCompleted();
@@ -244,6 +419,10 @@ define([
             this.isInProgress = false;
         },
 
+        /**
+         * Close modal window
+         * @protected
+         */
         _closeModalWindow: function () {
             if (this.isInProgress && !window.confirm(this.confirmMessage)) {
                 return;
@@ -258,6 +437,7 @@ define([
 
         /**
          * Calculate percents
+         * @protected
          */
         _calculatePercents: function () {
             var counters = this.counters,
@@ -288,6 +468,7 @@ define([
 
         /**
          * Update progress view
+         * @protected
          */
         _updateProgressView: function () {
             var counters = this.counters,
@@ -321,6 +502,48 @@ define([
         },
 
         /**
+         * Display modal window
+         * @protected
+         */
+        _displayModalWindow: function () {
+            this._createModalWindow();
+            this.modalWindow.html('');
+            $(mageTemplate(copyPrimaryImagesTpl, {
+                'counters': this.counters
+            })).appendTo(this.modalWindow);
+
+            this.modalWindow.find('.list-item-products-with-images, .list-item-products-without-images').on(
+                'click',
+                $.proxy(this._displayItems, this)
+            );
+
+            this.modalWindow.modal('openModal');
+        },
+
+        /**
+         * Display items
+         * @param {Object} e - event object
+         * @protected
+         */
+        _displayItems: function (e) {
+            var el = (e.target || e.srcElement), data;
+
+            while (el && el.tagName.toLowerCase() != 'a') {
+                el = el.parentNode || null;
+            }
+
+            if (el) {
+                el = $(el);
+                data = el.attr('data-mage-init');
+                data = JSON.parse(data);
+                data = data.sirvButton;
+                $(data.target).trigger(data.event, data.eventData);
+            }
+
+            return false;
+        },
+
+        /**
          * Create modal window
          * @protected
          */
@@ -334,9 +557,11 @@ define([
                 content;
 
             dialogProperties = {
+                /* NOTE: unique wrapper classes to avoid overlay issue */
+                wrapperClass: 'modals-wrapper sirv-modals-wrapper sirv-modals-wrapper-cpi',
                 overlayClass: 'modals-overlay sirv-modals-overlay',
                 modalClass:  'sirv-cmi-modal',
-                title: $.mage.__('Copy primary images from Sirv to Magento'),
+                title: $.mage.__('Copy primary images from Sirv to Adobe Commerce'),
                 autoOpen: false,
                 clickableOverlay: false,
                 type: 'popup',

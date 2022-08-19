@@ -6,14 +6,14 @@ namespace Sirv\Magento2\Controller\Adminhtml\Settings;
  * Settings backend controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
 class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
     /**
-     * Edit action
+     * Execute action
      *
      * @return \Magento\Backend\Model\View\Result\Page
      */
@@ -114,7 +114,7 @@ class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $outdatedModules = $this->getOutdatedModules();
         foreach ($outdatedModules as $name => $version) {
             $this->messageManager->addWarning(__(
-                'Your extension %1 v%2 should be updated to work with the Sirv extension. <a target="_blank" href="%3">Download here</a>.',
+                'Your extension %1 v%2 should be updated to work with the Sirv extension. <a class="sirv-open-in-new-window" target="_blank" href="%3">Download here</a>.',
                 $name,
                 $version,
                 /*'https://www.magictoolbox.com/my-account/'*/

@@ -2,7 +2,7 @@
  * Synchronizer widget
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -126,6 +126,9 @@ define([
         timeIsLeft: 0,
 
         doDeleteCachedImages: false,
+        useHttpAuth: false,
+        httpAuthUser: '',
+        httpAuthPass: '',
 
         /** @inheritdoc */
         _create: function () {
@@ -250,6 +253,11 @@ define([
             }
 
             this.doDeleteCachedImages = $('[name=mt-config\\[delete_cached_images\\]]:checked').val();
+            if ($('[name=mt-config\\[http_auth\\]\\[\\]]').prop('checked')) {
+                this.httpAuthUser = $('[name=mt-config\\[http_auth_user\\]]').val();
+                this.httpAuthPass = $('[name=mt-config\\[http_auth_pass\\]]').val();
+                this.useHttpAuth = !!(this.httpAuthUser && this.httpAuthPass);
+            }
 
             this._doSync();
         },
@@ -288,7 +296,10 @@ define([
                 content;
 
             dialogProperties = {
+                /* NOTE: unique wrapper classes to avoid overlay issue */
+                wrapperClass: 'modals-wrapper sirv-modals-wrapper sirv-modals-wrapper-sync',
                 overlayClass: 'modals-overlay sirv-modals-overlay',
+                modalClass:  'sirv-sync-modal',
                 /* title: $.mage.__('Synchronize media'), */
                 autoOpen: false,
                 clickableOverlay: false,
@@ -347,9 +358,19 @@ define([
                 this._getSimulator().start();
             }
 
+            var data = {
+                'syncStage': this.syncStage,
+                'doClean': this.doDeleteCachedImages
+            };
+
+            if (this.useHttpAuth) {
+                data.httpAuthUser = this.httpAuthUser;
+                data.httpAuthPass = this.httpAuthPass;
+            }
+
             this._doRequest(
                 'synchronize',
-                {'syncStage': this.syncStage, 'doClean': this.doDeleteCachedImages},
+                data,
                 this._syncSuccessed,
                 this._syncFailed
             );
@@ -578,7 +599,7 @@ define([
         _updateEstimatedDurationMessage: function () {
             var estimatedDurationNoticeSelector = this.selectors.texts.estimatedDurationNotice,
                 counters = this.counters,
-                speed = 2000,
+                speed = this.options.maxSpeed,
                 imagesToSync,
                 estimatedDuration,
                 timeUnits,
@@ -719,7 +740,7 @@ define([
             var selectors = this.selectors,
                 timeIsLeft = (data.expireTime - data.currentTime) * 1000;
 
-            $(selectors.bars.timer).attr('data-content', this._timeToString(timeIsLeft));
+            $(selectors.bars.timer).attr('data-content', this._getTimerMessage(timeIsLeft));
             $(selectors.bars.holder).addClass('timer-on');
 
             this._displayNotification({
@@ -743,27 +764,16 @@ define([
         /**
          * Improve rate limit message
          * @param {String} message
-         * @param {Integer} timeIsLeft
          */
-        _improveRateLimitMessage: function (message, timeIsLeft) {
-            var matches, fph, h, m, s;
+        _improveRateLimitMessage: function (message) {
+            var matches, fph;
 
             matches = message.match(/\((\d+)\)\.\s+Retry\s+after/);
-            if (matches && timeIsLeft > 0) {
+            if (matches) {
                 fph = matches[1].replace(/(\d)(\d\d\d)$/, '$1,$2');
 
-                s = Math.floor(timeIsLeft / 1000);
-                h = Math.floor(s / 3600);
-                s -= h * 3600;
-                m = Math.floor(s / 60);
-                s -= m * 60;
-
-                h = h == 0 ? '' : (' ' + h + ' hour' + (h == 1 ? '' : 's'));
-                m = m == 0 ? '' : (' ' + m + ' min');
-                s = s == 0 ? '' : (' ' + s + ' sec');
-                s = h == '' && m == '' && s == '' ? ' 0 sec' : s;
-
-                message = 'Rate limit exceeded (' + fph + ' files per hour). Sync will resume in' + h + m + s + '.';
+                message = 'Rate limit exceeded (' + fph + ' files per hour). ' +
+                    'Sync will resume once the hourly limit refreshes.'
             }
 
             return message;
@@ -776,7 +786,7 @@ define([
             var selectors = this.selectors;
 
             this.timeIsLeft -= 1000;
-            $(selectors.bars.timer).attr('data-content', this._timeToString(this.timeIsLeft));
+            $(selectors.bars.timer).attr('data-content', this._getTimerMessage(this.timeIsLeft));
 
             if (this.isSyncCanceled || this.timeIsLeft <= 0) {
                 $(selectors.bars.holder).removeClass('timer-on');
@@ -820,6 +830,39 @@ define([
             s = (s < 10 ? '0' : '') + s;
 
             return h + ':' + m + ':' + s;
+        },
+
+        /**
+         * Get timer message (Resuming in {hh} hr {mm} min {ss} sec)
+         * @param {Integer} time
+         */
+        _getTimerMessage: function (time) {
+            var h, m, s, msg = 'Resuming in';
+
+            if (time <= 0) {
+                return 'Resuming in 0 sec';
+            }
+
+            s = Math.floor(time / 1000);
+
+            h = Math.floor(s / 3600);
+            s -= h * 3600;
+
+            m = Math.floor(s / 60);
+            s -= m * 60;
+
+            if (h > 0) {
+                h = (h < 10 ? '0' : '') + h;
+                msg += ' ' + h + ' hr';
+            }
+            if (m > 0) {
+                m = (m < 10 ? '0' : '') + m;
+                msg += ' ' + m + ' min';
+            }
+            s = (s < 10 ? '0' : '') + s;
+            msg += ' ' + s + ' sec';
+
+            return msg;
         },
 
         /**

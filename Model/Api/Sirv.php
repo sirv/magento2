@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Model\Api;
  * Sirv api
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -870,6 +870,38 @@ class Sirv
     }
 
     /**
+     * Read folder contents
+     *
+     * @param string $dirname
+     * @return array
+     */
+    public function getFolderContents($dirname)
+    {
+        $contents = [];
+
+        if ($this->getToken()) {
+            $dirname = '/' . str_replace('%2F', '/', rawurlencode(trim($dirname, '/')));
+            $continuation = '';
+            do {
+                $data = $this->sendRequest(
+                    'v2/files/readdir?dirname=' . $dirname .
+                        (empty($continuation) ? '' : '&continuation=' . rawurlencode($continuation)),
+                    'GET'
+                );
+
+                if ($this->responseCode == 200 && is_object($data) && is_array($data->contents)) {
+                    $contents = array_merge($contents, $data->contents);
+                    $continuation = $data->continuation ?? '';
+                } else {
+                    $continuation = '';
+                }
+            } while (!empty($continuation));
+        }
+
+        return $contents;
+    }
+
+    /**
      * Get folder options
      *
      * @param string $filename
@@ -983,7 +1015,7 @@ class Sirv
         $this->errorMsg = '';
         if ($result === false) {
             $this->errorMsg = curl_error(self::$curlHandle);
-        } else if ($this->responseCode == 504) {
+        } elseif ($this->responseCode == 504) {
             $this->errorMsg = '504 Gateway Time-out';
         } else {
             $result = empty($result) ? '' : json_decode($result);

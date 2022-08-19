@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Helper;
  * Data helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -158,6 +158,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var bool
      */
     protected static $useSirvMediaViewer = false;
+
+    /**
+     * cURL resource
+     *
+     * @var resource
+     */
+    protected static $curlHandle = null;
 
     /**
      * Constructor
@@ -630,5 +637,188 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return $versions[$name];
+    }
+
+    /**
+     * Get assets data
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @return array
+     */
+    public function getAssetsData($product)
+    {
+        static $productAssetsFolder = null, $assetsModelFactory = null, $assetsData = [];
+
+        if ($productAssetsFolder === null) {
+            $productAssetsFolder = $this->getConfig('product_assets_folder') ?: '';
+            $productAssetsFolder = trim(trim($productAssetsFolder), '/');
+        }
+
+        if (empty($productAssetsFolder)) {
+            return [];
+        }
+
+        $productId = $product->getId();
+
+        if (isset($assetsData[$productId])) {
+            return $assetsData[$productId];
+        }
+
+        if ($assetsModelFactory === null) {
+            $assetsModelFactory = $this->objectManager->get(\Sirv\Magento2\Model\AssetsFactory::class);
+        }
+
+        $assetsModel = $assetsModelFactory->create();
+        $assetsModel->load($productId, 'product_id');
+        $contents = $assetsModel->getData('contents');
+        if ($contents !== null) {
+            $contents = json_decode($contents, true);
+            if (!isset($contents['featured_image'])) {
+                //NOTE: update data to get featured image
+                $contents = null;
+            }
+        }
+
+        if ($contents === null) {
+            $productSku = $product->getSku();
+            $assetsFolder = str_replace(
+                ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
+                [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
+                $productAssetsFolder,
+                $found
+            );
+            if (!$found) {
+                $assetsFolder = $productAssetsFolder . '/' . $productSku;
+            }
+
+            $contents = [];
+            $assetsInfo = $this->downloadAssetsInfo(
+                'https://' . $this->getSirvDomain() . '/' . $assetsFolder . '.view?info'
+            );
+            $assetsInfo = json_decode($assetsInfo, true);
+            if (is_array($assetsInfo)) {
+                $contents = $this->prepareAssetsInfo($assetsInfo);
+            }
+            $assetsModel->setData('product_id', $productId);
+            $assetsModel->setData('contents', json_encode($contents));
+            $assetsModel->setData('timestamp', time());
+            $assetsModel->save();
+        }
+
+        $assetsData[$productId] = $contents;
+        $assetsData[$productId]['timestamp'] = $assetsModel->getData('timestamp');
+
+        return $assetsData[$productId];
+    }
+
+    /**
+     * Prepare assets info
+     *
+     * @param array $assetsInfo
+     * @return array
+     */
+    public function prepareAssetsInfo($assetsInfo)
+    {
+        $contents = [];
+        $modified = $assetsInfo['modified'] ?? '';
+        $contents['modified'] = empty($modified) ? false : strtotime($modified);
+        $contents['dirname'] = $assetsInfo['dirname'] ?? '';
+        $contents['assets'] = (isset($assetsInfo['assets']) && is_array($assetsInfo['assets'])) ? $assetsInfo['assets'] : [];
+        $contents['curl'] = $assetsInfo['curl'] ?? [];
+
+        $assetsFolder = ltrim($contents['dirname'], '/');
+        $folderUrl = 'https://' . $this->getSirvDomain() . '/' . $assetsFolder;
+        $f = [];
+        foreach ($contents['assets'] as &$asset) {
+            switch ($asset['type']) {
+                case 'image':
+                    isset($f['image']) || ($f['image'] = $assetsFolder . '/' . $asset['name']);
+                    break;
+                case 'spin':
+                    if (!(isset($f['spin']) && isset($asset['width']) && isset($asset['height']))) {
+                        $spinInfoUrl = $folderUrl . '/' . $asset['name'] . '?info';
+                        $spinInfo = $this->downloadAssetsInfo($spinInfoUrl);
+                        $spinInfo = json_decode($spinInfo);
+                        $layer = is_object($spinInfo) && isset($spinInfo->layers) ? reset($spinInfo->layers) : false;
+                        $slide = $layer ? reset($layer) : false;
+                        if ($slide) {
+                            isset($f['spin']) || ($f['spin'] = preg_replace('#/[^/]++$#', '/', $assetsFolder . '/' . $asset['name']) . $slide);
+                            if (!(isset($asset['width']) && isset($asset['height']))) {
+                                $slideUrl = preg_replace('#/[^/]++$#', '/', $folderUrl . '/' . $asset['name']) . $slide;
+                                $slideInfo = $this->downloadAssetsInfo($slideUrl . '?info');
+                                $slideInfo = json_decode($slideInfo);
+                                isset($asset['width']) || $asset['width'] = $slideInfo->width;
+                                isset($asset['height']) || $asset['height'] = $slideInfo->height;
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                case 'video':
+                    isset($f['video']) || ($f['video'] = $assetsFolder . '/' . $asset['name'] . '?thumbnail=' . $asset['width']/*height*/);
+                    break;
+            }
+        }
+        $contents['featured_image'] = isset($f['image']) ? $f['image'] : (isset($f['spin']) ? $f['spin'] : (isset($f['video']) ? $f['video'] : ''));
+
+        return $contents;
+    }
+
+    /**
+     * Download assets info
+     *
+     * @param string $url
+     * @return string
+     */
+    public function downloadAssetsInfo($url)
+    {
+        if (!isset(self::$curlHandle)) {
+            self::$curlHandle = curl_init();
+        }
+
+        curl_setopt_array(
+            self::$curlHandle,
+            [
+                CURLOPT_URL => $url,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HEADER => false,
+                CURLOPT_NOBODY => false,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_SSL_VERIFYPEER => false,
+            ]
+        );
+
+        $contents = curl_exec(self::$curlHandle);
+        $error = curl_errno(self::$curlHandle);
+        $code = curl_getinfo(self::$curlHandle, CURLINFO_HTTP_CODE);
+
+        if ($error || $code != 200) {
+            $contents = [
+                'curl' => [
+                    'code' => $code,
+                    'error' => $error
+                ]
+            ];
+            $contents = json_encode($contents);
+        }
+
+        return $contents;
+    }
+
+    /**
+     * Destructor
+     *
+     * @return void
+     */
+    public function __destruct()
+    {
+        if (isset(self::$curlHandle)) {
+            curl_close(self::$curlHandle);
+            self::$curlHandle = null;
+        }
+        if (method_exists(get_parent_class(__CLASS__), '__destruct')) {
+            parent::__destruct();
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Model\View\Asset;
  * Image file asset
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -205,6 +205,10 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
         //NOTE: absolute file path
         $absPath = static::$mediaDirectory->getAbsolutePath($srcPath);
 
+        if (!static::$syncHelper->isNotExcluded($absPath)) {
+            return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
+        }
+
         $isFileCached = true;
         $isFileSynced = false;
 
@@ -221,23 +225,19 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
             }
         }
 
-        if (static::$syncHelper->isNotExcluded($absPath)) {
-            if ($isFileCached) {
-                $isFileSynced = static::$syncHelper->isSynced($relPath);
-            } else {
-                $isFileSynced = static::$syncHelper->save($absPath, $pathType);
-            }
+        if ($isFileCached) {
+            $isFileSynced = static::$syncHelper->isSynced($relPath);
+        } else {
+            $isFileSynced = static::$syncHelper->save($absPath, $pathType);
         }
 
         //NOTE: to sync watermark file with product image
         if (isset($this->miscParams['watermark_file'])) {
             $watermarkAbsPath = $this->getWatermarkFilePath($this->miscParams['watermark_file']);
-            if ($watermarkAbsPath) {
+            if ($watermarkAbsPath && static::$syncHelper->isNotExcluded($watermarkAbsPath)) {
                 $watermarkRelPath = static::$syncHelper->getRelativePath($watermarkAbsPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH);
-                if (static::$syncHelper->isNotExcluded($watermarkAbsPath)) {
-                    if (!static::$syncHelper->isCached($watermarkRelPath)) {
-                        static::$syncHelper->save($watermarkAbsPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH);
-                    }
+                if (!static::$syncHelper->isCached($watermarkRelPath)) {
+                    static::$syncHelper->save($watermarkAbsPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH);
                 }
             }
         }
@@ -246,9 +246,12 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
             return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
         }
 
+        //NOTE: this is commented out to display images that don't exist locally but have been synced
+        /*
         if (!is_file($absPath)) {
             return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
         }
+        */
 
         $url = static::$syncHelper->getUrl($relPath);
         $url .= $this->getUrlQuery($absPath);
@@ -419,6 +422,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
             $processor = static::$imageFactory->create($absPath, 'SIRV');
         } catch (\Exception $e) {
             $this->context->getLogger()->critical($e);
+            return '';
         }
 
         if (isset($this->miscParams['keep_aspect_ratio'])) {

@@ -23,14 +23,14 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
     public function execute()
     {
         $result = [];
-
         $productIds = $this->getRequest()->getParam('ids');
 
         if (is_array($productIds) && !empty($productIds)) {
+            /** @var \Magento\Framework\ObjectManagerInterface $objectManager */
+            $objectManager = $this->_objectManager::getInstance();
             /** @var \Sirv\Magento2\Helper\Data $dataHelper */
-            $dataHelper = $this->_objectManager::getInstance()->get(
-                \Sirv\Magento2\Helper\Data::class
-            );
+            $dataHelper = $objectManager->get(\Sirv\Magento2\Helper\Data::class);
+
             $productAssetsFolder = $dataHelper->getConfig('product_assets_folder') ?: '';
             $productAssetsFolder = trim($productAssetsFolder);
             $productAssetsFolder = trim($productAssetsFolder, '/');
@@ -38,22 +38,17 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
             if (empty($productAssetsFolder)) {
                 $result = ['message' => 'Product assets folder is empty!'];
             } else {
-                $baseUrl = 'https://' . $dataHelper->getSirvDomain(/*false*/);
-
                 /** @var \Sirv\Magento2\Model\Assets $assetsModel */
-                $assetsModel = $this->_objectManager::getInstance()->get(
-                    \Sirv\Magento2\Model\Assets::class
-                );
-
+                $assetsModel = $objectManager->get(\Sirv\Magento2\Model\Assets::class);
                 /** @var \Magento\Catalog\Model\ProductRepository $productRepository */
-                $productRepository = $this->_objectManager::getInstance()->get(
-                    \Magento\Catalog\Model\ProductRepository::class
-                );
+                $productRepository = $objectManager->get(\Magento\Catalog\Model\ProductRepository::class);
+
+                $baseUrl = 'https://' . $dataHelper->getSirvDomain();
 
                 foreach ($productIds as $productId) {
                     $product = $productRepository->getById($productId);
-                    $productSku = $product->getSku();
 
+                    $productSku = $product->getSku();
                     $assetsFolder = str_replace(
                         ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
                         [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
@@ -63,35 +58,47 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
                     if (!$found) {
                         $assetsFolder = $productAssetsFolder . '/' . $productSku;
                     }
-
                     $url = $baseUrl . '/' . $assetsFolder . '.view?info';
 
                     $assetsModel->load($productId, 'product_id');
                     $contents = $assetsModel->getData('contents');
+                    $assetsModel->setData('product_id', $productId);
                     if ($contents === null) {
-                        $contents = $this->downloadContents($url);
-                        $assetsModel->setData('product_id', $productId);
-                        $assetsModel->setData('contents', $contents);
+                        $assetsInfo = $dataHelper->downloadAssetsInfo($url);
+                        $assetsInfo = json_decode($assetsInfo, true);
+                        if (is_array($assetsInfo)) {
+                            $contents = $dataHelper->prepareAssetsInfo($assetsInfo);
+                            $assetsModel->setData('contents', json_encode($contents));
+                        }
                     } else {
-                        $contents = json_decode($contents);
-                        $modified = is_object($contents) && isset($contents->modified) ? $contents->modified : '';
-                        $modified = empty($modified) ? false : strtotime($modified);
+                        $contents = json_decode($contents, true);
+                        $modified = isset($contents['modified']) ? (int)$contents['modified'] : false;
                         $lastModifiedTime = $this->getLastModifiedTime($url, $code, $error);
                         $lastModifiedTime = empty($lastModifiedTime) ? false : strtotime($lastModifiedTime);
+
                         if ($modified) {
                             if ($lastModifiedTime) {
                                 if ($lastModifiedTime - $modified > 1) {
-                                    $contents = $this->downloadContents($url);
-                                    $assetsModel->setData('contents', $contents);
+                                    $assetsInfo = $dataHelper->downloadAssetsInfo($url);
+                                    $assetsInfo = json_decode($assetsInfo, true);
+                                    if (is_array($assetsInfo)) {
+                                        $contents = $dataHelper->prepareAssetsInfo($assetsInfo);
+                                        $assetsModel->setData('contents', json_encode($contents));
+                                    }
                                 }
                             } else {
-                                $contents = json_encode(['curl' => ['code' => $code, 'error' => $error]]);
-                                $assetsModel->setData('contents', $contents);
+                                $assetsInfo = ['curl' => ['code' => $code, 'error' => $error]];
+                                $contents = $dataHelper->prepareAssetsInfo($assetsInfo);
+                                $assetsModel->setData('contents', json_encode($contents));
                             }
                         } else {
                             if ($lastModifiedTime) {
-                                $contents = $this->downloadContents($url);
-                                $assetsModel->setData('contents', $contents);
+                                $assetsInfo = $dataHelper->downloadAssetsInfo($url);
+                                $assetsInfo = json_decode($assetsInfo, true);
+                                if (is_array($assetsInfo)) {
+                                    $contents = $dataHelper->prepareAssetsInfo($assetsInfo);
+                                    $assetsModel->setData('contents', json_encode($contents));
+                                }
                             }
                         }
                     }
@@ -148,48 +155,6 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
         }
 
         return '';
-    }
-
-    /**
-     * Download contents
-     *
-     * @param string $url
-     * @return string
-     */
-    protected function downloadContents($url)
-    {
-        if (!isset(self::$curlHandle)) {
-            self::$curlHandle = curl_init();
-        }
-
-        curl_setopt_array(
-            self::$curlHandle,
-            [
-                CURLOPT_URL => $url,
-                CURLOPT_CUSTOMREQUEST => 'GET',
-                CURLOPT_HEADER => false,
-                CURLOPT_NOBODY => false,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => false,
-                CURLOPT_SSL_VERIFYPEER => false,
-            ]
-        );
-
-        $contents = curl_exec(self::$curlHandle);
-        $error = curl_errno(self::$curlHandle);
-        $code = curl_getinfo(self::$curlHandle, CURLINFO_HTTP_CODE);
-
-        if ($error || $code != 200) {
-            $contents = [
-                'curl' => [
-                    'code' => $code,
-                    'error' => $error
-                ]
-            ];
-            $contents = json_encode($contents);
-        }
-
-        return $contents;
     }
 
     /**

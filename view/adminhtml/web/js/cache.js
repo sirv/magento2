@@ -2,7 +2,7 @@
  * Cache widget
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -112,7 +112,7 @@ define([
             var id, t;
             for (id in data.items) {
                 t = data.items[id].mtime;
-                data.items[id]['mtimestr'] = new Date(t).toLocaleString(
+                data.items[id]['mtimestr'] = new Date(t * 1000).toLocaleString(
                     'en-US',
                     {
                         month: 'short',
@@ -320,6 +320,8 @@ define([
             }
 
             dialogProperties = {
+                /* NOTE: unique wrapper classes to avoid overlay issue */
+                wrapperClass: 'modals-wrapper sirv-modals-wrapper sirv-modals-wrapper-cache',
                 overlayClass: 'modals-overlay sirv-modals-overlay',
                 modalClass:  'sirv-assets-modal',
                 title: $.mage.__(title),

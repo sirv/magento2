@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Model\Image\Adapter;
  * Sirv adapter
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -120,6 +120,16 @@ class Sirv extends \Magento\Framework\Image\Adapter\AbstractAdapter
     {
         $this->_fileMimeType = null;
         $this->_fileType = null;
+    }
+
+    /**
+     * Checks is adapter can work with image
+     *
+     * @return bool
+     */
+    protected function _canProcess()
+    {
+        return !empty($this->_fileName) && is_file($this->_fileName) && filesize($this->_fileName) > 0;
     }
 
     /**

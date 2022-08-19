@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Controller\Adminhtml\Ajax;
  * Synchronize ajax controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -39,7 +39,7 @@ class Synchronize extends \Sirv\Magento2\Controller\Adminhtml\Settings
     }
 
     /**
-     * Synchronize action
+     * Execute action
      *
      * @return \Magento\Framework\Controller\Result\Json
      */
@@ -62,7 +62,16 @@ class Synchronize extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $stage = isset($postData['syncStage']) ? (int)$postData['syncStage'] : 0;
                 if ($stage) {
                     $doClean = isset($postData['doClean']) ? $postData['doClean'] == 'true' : false;
-                    $data = $this->syncHelper->syncMediaGallery($stage, $doClean);
+                    $httpAuthUser = isset($postData['httpAuthUser']) ? $postData['httpAuthUser'] : '';
+                    $httpAuthPass = isset($postData['httpAuthPass']) ? $postData['httpAuthPass'] : '';
+                    $data = $this->syncHelper->syncMediaGallery(
+                        $stage,
+                        [
+                            'doClean' => $doClean,
+                            'httpAuthUser' => $httpAuthUser,
+                            'httpAuthPass' => $httpAuthPass
+                        ]
+                    );
                 } else {
                     $data = $this->syncHelper->getSyncData(true);
                 }
@@ -134,7 +143,7 @@ class Synchronize extends \Sirv\Magento2\Controller\Adminhtml\Settings
                             'fileSize' => $fileSize
                         ];
                     }
-                    $messageEx = $message .  ' See <a href="https://my.sirv.com/#/events/" target="_blank">Sirv notification section</a> for more information.';
+                    $messageEx = $message .  ' See <a href="https://my.sirv.com/#/events/" target="_blank" class="sirv-open-in-new-window">Sirv notification section</a> for more information.';
                     $failedData[$messageEx] = $failedData[$message];
                     unset($failedData[$message]);
                 }
@@ -196,7 +205,7 @@ class Synchronize extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 }
                 $data = ['size' => $size];
                 $result['success'] = true;
-            break;
+                break;
             default:
                 $data['error'] = __('Unknown action: "%1"', $action);
                 break;

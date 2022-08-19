@@ -6,14 +6,14 @@ namespace Sirv\Magento2\Controller\Adminhtml\Settings;
  * Settings backend controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
 class Disconnect extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
     /**
-     * Disconnect action
+     * Execute action
      *
      * @return \Magento\Backend\Model\View\Result\Redirect
      */
@@ -71,6 +71,7 @@ class Disconnect extends \Sirv\Magento2\Controller\Adminhtml\Settings
             'assets_cache_ttl' => '1440',
             'excluded_pages' => null,
             'excluded_files' => null,
+            'excluded_from_lazy_load' => null,
             'sirv_rate_limit_data' => null,
             's3_rate_limit_data' => null,
         ];

@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Helper;
  * Sync helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -173,6 +173,27 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
     protected $mediaDirectory;
 
     /**
+     * Use HTTP authentication
+     *
+     * @var bool
+     */
+    protected $useHttpAuth = false;
+
+    /**
+     * HTTP authentication user
+     *
+     * @var string
+     */
+    protected $httpAuthUser = '';
+
+    /**
+     * HTTP authentication password
+     *
+     * @var string
+     */
+    protected $httpAuthPass = '';
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\App\Helper\Context $context
@@ -219,6 +240,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         // phpcs:ignore Magento2.Functions.DiscouragedFunction
         $this->rootDirAbsPath = realpath($this->rootDirAbsPath);
         $this->rootDirAbsPath = rtrim($this->rootDirAbsPath, '\\/');
+        //NOTE: /abs_path_to_magento/pub
 
         /** @var \Magento\Framework\Filesystem\Directory\ReadInterface $baseDirectory */
         $baseDirectory = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::ROOT);
@@ -227,13 +249,16 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
 
         /** @var \Magento\Framework\Filesystem\Directory\ReadInterface $mediaDirectory */
         $mediaDirectory = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+
         //NOTE: absolute path to pub/media folder
         $this->mediaDirAbsPath = $mediaDirectory->getAbsolutePath();
         $this->mediaDirAbsPath = rtrim($this->mediaDirAbsPath, '\\/');
+        //NOTE: /abs_path_to_magento/pub/media
 
         $this->productMediaRelPath = $catalogProductMediaConfig->getBaseMediaPath();
         $this->productMediaRelPath = trim($this->productMediaRelPath, '\\/');
         $this->productMediaRelPath = '/' . $this->productMediaRelPath;
+        //NOTE: /catalog/product
 
         if (class_exists('\Magento\Catalog\Model\Category\FileInfo', false)) {
             $this->categoryMediaRelPath = \Magento\Catalog\Model\Category\FileInfo::ENTITY_MEDIA_PATH;
@@ -268,6 +293,12 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         $this->mediaDirectory = $filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+
+        if ($dataHelper->getConfig('http_auth') == 'yes') {
+            $this->httpAuthUser = $dataHelper->getConfig('http_auth_user');
+            $this->httpAuthPass = $dataHelper->getConfig('http_auth_pass');
+            $this->useHttpAuth = !(empty($this->httpAuthUser) || empty($this->httpAuthPass));
+        }
     }
 
     /**
@@ -616,6 +647,15 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 //NOTE: wait flag
                 'wait' => $wait
             ];
+        }
+
+        if ($this->useHttpAuth) {
+            foreach ($imagesData as &$imageData) {
+                $imageData['auth'] = [
+                    'username' => $this->httpAuthUser,
+                    'password' => $this->httpAuthPass
+                ];
+            }
         }
 
         $chunkedData = array_chunk($imagesData, 20);

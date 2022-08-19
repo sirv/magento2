@@ -2,7 +2,7 @@
  * Validator widget
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -618,6 +618,8 @@ define([
                     notificationContainer.append(templateHTML);
                 } else {
                     uiAlert({
+                        /* NOTE: unique wrapper classes to avoid overlay issue */
+                        wrapperClass: 'modals-wrapper sirv-modals-wrapper sirv-modals-wrapper-validator',
                         modalClass: 'confirm sirv-modal-popup-error',
                         title: $.mage.__('Error'),
                         content: message,

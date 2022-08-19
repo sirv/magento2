@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit;
  * Adminhtml settings form
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -140,7 +140,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 $xpaths[] = '/settings/group[@id="user"]/fields/field[name="account"]';
                 if ($this->dataHelper->getConfig('display_credentials_rejected_message')) {
                     $comment = __(
-                        'Your Sirv email or password were incorrect. Please check and try again or <a target="_blank" href="%1">reset your password</a>.',
+                        'Your Sirv email or password were incorrect. Please check and try again or <a class="sirv-open-in-new-window" target="_blank" href="%1">reset your password</a>.',
                         'https://my.sirv.com/#/password/forgot'
                     );
                     $this->dataHelper->deleteConfig('display_credentials_rejected_message');
@@ -373,7 +373,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         if (!isset($fieldConfig['value']) || empty($fieldConfig['value'])) {
                             $fieldConfig['value'] = $config['account'];
                         }
-                    break;
+                        break;
                     /*
                     case 'url_prefix':
                         $urlPrefix = $this->dataHelper->syncConfig('url_prefix');
@@ -408,11 +408,12 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         if (!isset($data['plan']) ||
                             !isset($data['plan']['name']) ||
                             preg_match('#free#i', $data['plan']['name'])) {
-                            $fieldConfig['note'] .= '<span style="color: red;">To use Sirv assets, <a target="_blank" href="https://my.sirv.com/#/account/billing/plan">upgrade to a paid plan</a>.</span>';
+                            $fieldConfig['note'] .= '<span style="color: red;">To use Sirv assets, <a class="sirv-open-in-new-window" target="_blank" href="https://my.sirv.com/#/account/billing/plan">upgrade to a paid plan</a>.</span>';
                         }
                         break;
                     case 'excluded_pages':
                     case 'excluded_files':
+                    case 'excluded_from_lazy_load':
                     case 'smv_js_options':
                     case 'smv_custom_css':
                         $fieldConfig['rows'] = 7;

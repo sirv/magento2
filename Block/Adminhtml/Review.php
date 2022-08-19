@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Block\Adminhtml;
  * Review block
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -46,19 +46,14 @@ class Review extends \Magento\Framework\View\Element\Template
     {
         $doDisplayBanner = $this->dataHelper->getConfig('display_review_banner');
         if ($doDisplayBanner === null) {
-            $accountCreated = $this->dataHelper->getConfig('account_created');
-            if ($accountCreated === null) {
-                $accountInfo = $this->dataHelper->getAccountConfig();
-                $accountCreated = empty($accountInfo) ? '' : $accountInfo['date_created'];
-                if (!empty($accountCreated)) {
-                    $this->dataHelper->saveConfig('account_created', $accountCreated);
-                }
+            $installDate = $this->dataHelper->getConfig('installation_date');
+            if ($installDate === null) {
+                $installDate = time();
+                $this->dataHelper->saveConfig('installation_date', $installDate);
             }
-            if (!empty($accountCreated)) {
-                if ((time() - strtotime($accountCreated)) >= 5184000/*60 days*/) {
-                    $doDisplayBanner = 'true';
-                    $this->dataHelper->saveConfig('display_review_banner', $doDisplayBanner);
-                }
+            if ((time() - (int)$installDate) >= 5184000/*60 days*/) {
+                $doDisplayBanner = 'true';
+                $this->dataHelper->saveConfig('display_review_banner', $doDisplayBanner);
             }
         }
 

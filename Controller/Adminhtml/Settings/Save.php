@@ -6,14 +6,14 @@ namespace Sirv\Magento2\Controller\Adminhtml\Settings;
  * Settings backend controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
 class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
 {
     /**
-     * Save action
+     * Execute action
      *
      * @return \Magento\Backend\Model\View\Result\Redirect
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -53,6 +53,14 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
         if (isset($config['pinned_items'])) {
             $config['pinned_items'] = json_encode($config['pinned_items']);
+        }
+
+        if (isset($config['http_auth'])) {
+            $config['http_auth'] = 'yes';
+        } else {
+            $config['http_auth'] = 'no';
+            $config['http_auth_user'] = '';
+            $config['http_auth_pass'] = '';
         }
 
         $configTmp = $config;
@@ -266,7 +274,7 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
             }
         }
 
-        foreach (['excluded_pages', 'excluded_files'] as $optionId) {
+        foreach (['excluded_pages', 'excluded_files', 'excluded_from_lazy_load'] as $optionId) {
             $excludedList = isset($config[$optionId]) ? $config[$optionId] : null;
             if ($excludedList !== null) {
                 $excludedList = trim($excludedList);

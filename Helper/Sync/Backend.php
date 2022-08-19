@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Helper\Sync;
  * Backend sync helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -749,10 +749,10 @@ class Backend extends \Sirv\Magento2\Helper\Sync
      * Method to synchronize media gallery
      *
      * @param int $stage
-     * @param bool $doClean
+     * @param array $options
      * @return array
      */
-    public function syncMediaGallery($stage, $doClean = false)
+    public function syncMediaGallery($stage, $options)
     {
         if (!$this->isAuth) {
             return ['error' => 'Not authenticated!'];
@@ -765,7 +765,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
         }
 
         //NOTE: 10 seconds to complete
-        $breakTime = $maxExecutionTime + $startTime - 10;
+        $options['breakTime'] = $maxExecutionTime + $startTime - 10;
         $limit = 100;
 
         $data = [
@@ -790,9 +790,9 @@ class Backend extends \Sirv\Magento2\Helper\Sync
         }
 
         if ($this->isLocalHost) {
-            $result = $this->syncWithUploading($images, $breakTime, $doClean);
+            $result = $this->syncWithUploading($images, $options);
         } else {
-            $result = $this->syncWithFetching($images, $breakTime, $doClean);
+            $result = $this->syncWithFetching($images, $options);
         }
 
         $data = array_merge($data, $result);
@@ -808,11 +808,10 @@ class Backend extends \Sirv\Magento2\Helper\Sync
      * Synchronize images using uploading method
      *
      * @param array $images
-     * @param int $breakTime
-     * @param bool $doClean
+     * @param array $options
      * @return array
      */
-    protected function syncWithUploading($images, $breakTime, $doClean = false)
+    protected function syncWithUploading($images, $options)
     {
         $synced = 0;
         $failed = 0;
@@ -868,7 +867,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                 $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_SYNCED, $modificationTime);
                 $synced++;
 
-                if ($doClean) {
+                if ($options['doClean']) {
                     $this->cleanMagentoImagesCache($imagePath);
                 }
             } else {
@@ -877,7 +876,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                 $failed++;
             }
 
-            if ($breakTime - time() <= 0) {
+            if ($options['breakTime'] - time() <= 0) {
                 $aborted = true;
                 break;
             }
@@ -895,11 +894,10 @@ class Backend extends \Sirv\Magento2\Helper\Sync
      * Synchronize images using fetching method
      *
      * @param array $images
-     * @param int $breakTime
-     * @param bool $doClean
+     * @param array $options
      * @return array
      */
-    protected function syncWithFetching($images, $breakTime, $doClean = false)
+    protected function syncWithFetching($images, $options)
     {
         $synced = 0;
         $failed = 0;
@@ -941,10 +939,20 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                 continue;
             }
 
+            if (!(empty($options['httpAuthUser']) || empty($options['httpAuthPass']))) {
+                foreach ($fetchData as &$imageData) {
+                    $imageData['auth'] = [
+                        'username' => $options['httpAuthUser'],
+                        'password' => $options['httpAuthPass']
+                    ];
+                }
+            }
+
             try {
                 $result = $this->sirvClient->fetchImages($fetchData);
                 if (!$result) {
-                    if ($expireTime = $this->sirvClient->getRateLimitExpireTime('POST', 'v2/files/fetch')) {
+                    $expireTime = $this->sirvClient->getRateLimitExpireTime('POST', 'v2/files/fetch');
+                    if ($expireTime) {
                         $rateLimit = [
                             'expireTime' => $expireTime,
                             'currentTime' => time(),
@@ -1015,7 +1023,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_SYNCED, $modificationTime);
                     $synced++;
 
-                    if ($doClean) {
+                    if ($options['doClean']) {
                         $this->cleanMagentoImagesCache(
                             preg_replace('#^' . preg_quote($this->productMediaRelPath, '#') . '#', '', $relPath)
                         );
@@ -1047,7 +1055,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                 break;
             }
 
-            if ($breakTime - time() <= 0) {
+            if ($options['breakTime'] - time() <= 0) {
                 $aborted = true;
                 break;
             }
@@ -1129,5 +1137,16 @@ class Backend extends \Sirv\Magento2\Helper\Sync
     public function getMediaBaseUrl()
     {
         return $this->mediaBaseUrl;
+    }
+
+    /**
+     * Get fetch file limit
+     *
+     * @return integer
+     */
+    public function getFetchFileLimit()
+    {
+        $data = $this->dataHelper->getAccountUsageData();
+        return (int)$data['fetch_file_limit'];
     }
 }

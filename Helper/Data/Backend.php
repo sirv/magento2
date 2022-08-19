@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Helper\Data;
  * Backend helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -217,6 +217,29 @@ class Backend extends \Sirv\Magento2\Helper\Data
         }
 
         return $profiles;
+    }
+
+    /**
+     * Get list of Sirv folders
+     *
+     * @param string $path
+     * @return array
+     */
+    public function getSirvDirList($path)
+    {
+        static $list = [];
+
+        if (!isset($list[$path])) {
+            $list[$path] = [];
+            $contents = $this->getSirvClient()->getFolderContents($path);
+            foreach ($contents as $item) {
+                if ($item->isDirectory) {
+                    $list[$path][] = $item->filename;
+                }
+            }
+        }
+
+        return $list[$path];
     }
 
     /**
@@ -601,6 +624,7 @@ class Backend extends \Sirv\Magento2\Helper\Data
         $limitsData = $this->getApiLimitsData();
         $data['limits'] = empty($limitsData) ? [] : $limitsData['limits'];
         $data['current_time'] = empty($limitsData) ? date('H:i:s e', time()) : $limitsData['current_time'];
+        $data['fetch_file_limit'] = isset($limitsData['fetch_file_limit']) ? $limitsData['fetch_file_limit'] : 0;
 
         return $data;
     }
@@ -641,6 +665,7 @@ class Backend extends \Sirv\Magento2\Helper\Data
                 ];
             }
             $data['current_time'] = date('H:i:s e', $currentTime);
+            $data['fetch_file_limit'] = $limits->{'fetch:file'}->limit;
         }
 
         return $data;

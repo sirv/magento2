@@ -3,7 +3,7 @@
  * Sirv usage block template
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  *
@@ -17,7 +17,7 @@
 $data = $block->getUsageData();
 
 if (empty($data)) {
-    echo '<a target="_blank" href="https://my.sirv.com/#/account/usage">Usage data</a> is currently unavailable.';
+    echo '<a target="_blank" class="sirv-open-in-new-window" href="https://my.sirv.com/#/account/usage">Usage data</a> is currently unavailable.';
     return;
 }
 
@@ -35,7 +35,7 @@ $disconnectUrl = $this->getUrl('*/*/disconnect');
             </div>
             <div class="row">
                 <div class="col-sm-3"><label>Plan</label></div>
-                <div class="col-sm-9"><?= $data['plan']['name'] ?>&nbsp;&nbsp;<a target="_blank" href="https://my.sirv.com/#/account/billing/plan/">Upgrade plan</a></div>
+                <div class="col-sm-9"><?= $data['plan']['name'] ?>&nbsp;&nbsp;<a target="_blank" class="sirv-open-in-new-window" href="https://my.sirv.com/#/account/billing/plan/">Upgrade plan</a></div>
             </div>
             <?php /* ?>
             <div class="row">

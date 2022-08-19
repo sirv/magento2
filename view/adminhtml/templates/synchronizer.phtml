@@ -3,7 +3,7 @@
  * Synchronizer widget template
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  *
@@ -22,9 +22,6 @@ $failedBarWidth = $queuedBarWidth + $data['failed-percent'];
 
 $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidden-element');
 ?>
-<div class="row approximate-storage-size-label">
-  A rough estimate of the storage size: <span class="approximate-storage-size"><div class="spinner"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></span>
-</div>
 <div class="sirv-sync-container">
   <div class="sirv-sync-status" data-role="sirv-synchronizer">
     <div class="sirv-sync-content">
@@ -66,7 +63,7 @@ $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidde
       </div>
       <div class="row">
         <div class="progress-bar-holder">
-          <div class="progress-bar progress-bar-timer" role="timerbar" data-content="00:00:00"></div>
+          <div class="progress-bar progress-bar-timer" role="timerbar" data-content="Resuming in ..."></div>
           <div class="progress-bar progress-bar-synced" role="progressbar" style="width: <?= $syncedBarWidth ?>%"></div>
           <div class="progress-bar progress-bar-queued" role="progressbar" style="width: <?= $queuedBarWidth ?>%"></div>
           <div class="progress-bar progress-bar-failed" role="progressbar" style="width: <?= $failedBarWidth ?>%"></div>
@@ -122,7 +119,8 @@ $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidde
                 "total": <?= /* @escapeNotVerified */ $data['total'] ?>,
                 "synced": <?= /* @escapeNotVerified */ $data['synced'] ?>,
                 "queued": <?= /* @escapeNotVerified */ $data['queued'] ?>,
-                "failed": <?= /* @escapeNotVerified */ $data['failed'] ?>
+                "failed": <?= /* @escapeNotVerified */ $data['failed'] ?>,
+                "maxSpeed": <?= /* @escapeNotVerified */ $data['fetch-file-limit'] ?>
             },
             "sirvCache": {
                 "ajaxUrl": "<?= $block->escapeUrl($block->getCacheAjaxUrl()) ?>"

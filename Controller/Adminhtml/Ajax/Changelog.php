@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Controller\Adminhtml\Ajax;
  * Changelog ajax controller
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -20,7 +20,7 @@ class Changelog extends \Sirv\Magento2\Controller\Adminhtml\Settings
     protected $changelogUrl = 'https://sirv.com/help/articles/magento-cdn-sirv-extension/#changelog';
 
     /**
-     * Synchronize action
+     * Execute action
      *
      * @return \Magento\Framework\Controller\Result\Json
      */
@@ -51,7 +51,7 @@ class Changelog extends \Sirv\Magento2\Controller\Adminhtml\Settings
         } else {
             $result['error'] = __(
                 'An error occurred while receiving the %1changelog%2.',
-                '<a href="' . $this->changelogUrl . '" target="_blank">',
+                '<a href="' . $this->changelogUrl . '" target="_blank" class="sirv-open-in-new-window">',
                 '</a>'
             );
         }

@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Observer;
  * Observer that processes the responses
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2021 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -18,6 +18,13 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
      * @var bool
      */
     protected $isSirvEnabled = false;
+
+    /**
+     * Data helper
+     *
+     * @var \Sirv\Magento2\Helper\Data
+     */
+    protected $dataHelper = null;
 
     /**
      * Sync helper
@@ -118,6 +125,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
     ) {
         $this->isSirvEnabled = $dataHelper->isSirvEnabled();
         if ($this->isSirvEnabled) {
+            $this->dataHelper = $dataHelper;
             $this->syncHelper = $syncHelper;
             $this->storeManager = $storeManager;
 
@@ -233,7 +241,12 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 $replace = "<script type=\"text/javascript\" src=\"https://scripts.sirv.com/sirvjs/v3/sirv.js\" data-components=\"" . $this->sirvJsComponents . "\"></script>";
             }
             */
-            $replace = "<script type=\"text/javascript\" src=\"https://scripts.sirv.com/sirvjs/v3/sirv.js\"></script>\n";
+            $src = 'https://scripts.sirv.com/sirvjs/v3/sirv.js';
+            //NOTE: if SMV is off and Lazy is on, use this v2 script:
+            if (!$this->isSirvMediaViewerUsed) {
+                $src = 'https://scripts.sirv.com/sirv.nospin.js';
+            }
+            $replace = "<script type=\"text/javascript\" src=\"{$src}\"></script>\n";
             $html = preg_replace(
                 '#<script[^>]++>#',
                 $replace . '$0',
@@ -256,23 +269,27 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
         $pathType = \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH;
 
         $mediaDirAbsPath = $this->syncHelper->getMediaDirAbsPath();
-        //NOTE: /abs_path_to_www_root/path_to_magento/pub/media/
+        //NOTE: /abs_path_to_magento/pub/media
 
         $store = $this->storeManager->getStore();
         $baseMediaUrl = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA, false);
         //NOTE: protocol://host/path_to_magento/pub/media/
+        //      protocol://host/path_to_magento/media/
 
         $baseMediaPath = parse_url($baseMediaUrl, PHP_URL_PATH) ?: '/';
         $baseMediaPath = rtrim($baseMediaPath, '/') . '/';
         //NOTE: /path_to_magento/pub/media/
+        //      /path_to_magento/media/
 
         $baseMediaUrl = preg_replace('#^(?:https?\:)?//#', '', $baseMediaUrl);
         $baseMediaUrl = rtrim($baseMediaUrl, '/') . '/';
         //NOTE: host/path_to_magento/pub/media/
+        //      host/path_to_magento/media/
 
         $baseMediaDir = $store->getBaseMediaDir();
         $baseMediaDir = trim($baseMediaDir, '/') . '/';
         //NOTE: pub/media/
+        //      media/
 
         $baseMediaUrlPattern =
             '(?:' .
@@ -363,18 +380,22 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
 
         $baseMediaUrl = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA, false);
         //NOTE: protocol://host/path_to_magento/pub/media/
+        //      protocol://host/path_to_magento/media/
 
         $baseMediaPath = parse_url($baseMediaUrl, PHP_URL_PATH) ?: '/';
         $baseMediaPath = rtrim($baseMediaPath, '/') . '/';
         //NOTE: /path_to_magento/pub/media/
+        //      /path_to_magento/media/
 
         $baseMediaUrl = preg_replace('#^(?:https?\:)?//#', '', $baseMediaUrl);
         $baseMediaUrl = rtrim($baseMediaUrl, '/') . '/';
         //NOTE: host/path_to_magento/pub/media/
+        //      host/path_to_magento/media/
 
         $baseMediaDir = $store->getBaseMediaDir();
         $baseMediaDir = trim($baseMediaDir, '/') . '/';
         //NOTE: pub/media/
+        //      media/
 
         $searchPattern =
             '(?:' .
@@ -495,6 +516,10 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                     continue;
                 }
 
+                if ($this->isExcludedFromLazyLoad($srcMatches[2])) {
+                    continue;
+                }
+
                 $classPattern = '#\sclass\s*+=\s*+' . $bs . $bs . '("|\')([^"\']++)\1#';
                 $classMatches = [];
                 if (preg_match($classPattern, $imgTag, $classMatches)) {
@@ -549,6 +574,47 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
     }
 
     /**
+     * Check the file is excluded from lazy-load
+     *
+     * @param string $path
+     * @return bool
+     */
+    public function isExcludedFromLazyLoad($path)
+    {
+        static $regExp = null, $list = [];
+
+        if ($regExp === null) {
+            $excludedFiles = $this->dataHelper->getConfig('excluded_from_lazy_load') ?: '';
+            if (empty($excludedFiles)) {
+                $regExp = '';
+            } else {
+                $excludedFiles = explode("\n", $excludedFiles);
+                foreach ($excludedFiles as &$pattern) {
+                    $pattern = str_replace(
+                        '__ASTERISK__',
+                        '.*',
+                        preg_quote(
+                            str_replace('*', '__ASTERISK__', $pattern),
+                            '#'
+                        )
+                    );
+                }
+                $regExp = '#' . implode('|', $excludedFiles) . '#';
+            }
+        }
+
+        if (empty($regExp)) {
+            return false;
+        }
+
+        if (!isset($list[$path])) {
+            $list[$path] = preg_match($regExp, $path);
+        }
+
+        return $list[$path];
+    }
+
+    /**
      * Add width/height attributes for <img> tags
      *
      * @param string $html
@@ -595,10 +661,37 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
             }
         }
 
+        $mediaDirAbsPath = $this->syncHelper->getMediaDirAbsPath();
+        //NOTE: /abs_path_to_magento/pub/media
+
         $store = $this->storeManager->getStore();
+        $baseMediaUrl = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA, false);
+        //NOTE: protocol://host/path_to_magento/pub/media/
+        //      protocol://host/path_to_magento/media/
+
+        $baseMediaPath = parse_url($baseMediaUrl, PHP_URL_PATH) ?: '/';
+        $baseMediaPath = rtrim($baseMediaPath, '/') . '/';
+        //NOTE: /path_to_magento/pub/media/
+        //      /path_to_magento/media/
+
+        $baseMediaUrl = preg_replace('#^(?:https?\:)?//#', '', $baseMediaUrl);
+        $baseMediaUrl = rtrim($baseMediaUrl, '/') . '/';
+        //NOTE: host/path_to_magento/pub/media/
+        //      host/path_to_magento/media/
+
         $baseMediaDir = $store->getBaseMediaDir();
         $baseMediaDir = trim($baseMediaDir, '/') . '/';
         //NOTE: pub/media/
+        //      media/
+
+        $baseMediaUrlPattern =
+            '(?:' .
+            '(?:https?\:)?//' . preg_quote($baseMediaUrl, '#') .
+            '|' .
+            preg_quote($baseMediaPath, '#') .
+            '|' .
+            preg_quote($baseMediaDir, '#') .
+            ')';
 
         $matches = [];
         if (preg_match_all('#<img\s[^>]++>#', $html, $matches, PREG_SET_ORDER)) {
@@ -610,13 +703,18 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 $srcPattern = '#\ssrc\s*+=\s*+' . $bs . $bs . '("|\')([^"\']++)\1#';
                 $srcMatches = [];
                 if (!preg_match($srcPattern, $imgTag, $srcMatches)) {
-                    continue;
+                    $srcPattern = '#\sdata-src\s*+=\s*+' . $bs . $bs . '("|\')([^"\']++)\1#';
+                    if (!preg_match($srcPattern, $imgTag, $srcMatches)) {
+                        continue;
+                    }
                 }
 
+                /*
                 $srcHost = parse_url($srcMatches[2], PHP_URL_HOST) ?: '';
                 if (strpos($srcHost, $this->sirvHost) === false) {
                     continue;
                 }
+                */
 
                 $widthPattern = '#\swidth\s*+=\s*+' . $bs . $bs . '("|\')([^"\']++)\1#';
                 $widthMatches = [];
@@ -629,7 +727,13 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                     } elseif (preg_match('#^https?://' . $this->sirvHost . $this->imageFolder . '#', $srcMatches[2])) {
                         $filePath = preg_replace('#^https?://' . $this->sirvHost . $this->imageFolder . '/#', '', $srcMatches[2]);
                         $filePath = preg_replace('#\?[^?]++$#', '', $filePath);
-                        $filePath = BP . '/'. $baseMediaDir . $filePath;
+                        $filePath = $mediaDirAbsPath . '/'. $filePath;
+                        $data = $this->getImageWidthHeight($filePath);
+                        $width = empty($data) ? 0 : $data['width'];
+                    } elseif (preg_match('#^' . $baseMediaUrlPattern . '#', $srcMatches[2])) {
+                        $filePath = preg_replace('#^' . $baseMediaUrlPattern . '#', '', $srcMatches[2]);
+                        $filePath = preg_replace('#\?[^?]++$#', '', $filePath);
+                        $filePath = $mediaDirAbsPath . '/'. $filePath;
                         $data = $this->getImageWidthHeight($filePath);
                         $width = empty($data) ? 0 : $data['width'];
                     }
@@ -650,7 +754,13 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                     } elseif (preg_match('#^https?://' . $this->sirvHost . $this->imageFolder . '#', $srcMatches[2])) {
                         $filePath = preg_replace('#^https?://' . $this->sirvHost . $this->imageFolder . '/#', '', $srcMatches[2]);
                         $filePath = preg_replace('#\?[^?]++$#', '', $filePath);
-                        $filePath = BP . '/'. $baseMediaDir . $filePath;
+                        $filePath = $mediaDirAbsPath . '/' . $filePath;
+                        $data = $this->getImageWidthHeight($filePath);
+                        $height = empty($data) ? 0 : $data['height'];
+                    } elseif (preg_match('#^' . $baseMediaUrlPattern . '#', $srcMatches[2])) {
+                        $filePath = preg_replace('#^' . $baseMediaUrlPattern . '#', '', $srcMatches[2]);
+                        $filePath = preg_replace('#\?[^?]++$#', '', $filePath);
+                        $filePath = $mediaDirAbsPath . '/'. $filePath;
                         $data = $this->getImageWidthHeight($filePath);
                         $height = empty($data) ? 0 : $data['height'];
                     }
