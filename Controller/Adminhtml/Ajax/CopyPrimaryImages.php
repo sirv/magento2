@@ -348,7 +348,7 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                             $connection->insertOnDuplicate(
                                 $table,
                                 ['value_id' => $valueId, $fieldName => $product['id']],
-                                ['value_id', $fieldName],
+                                ['value_id', $fieldName]
                             );
 
                             $table = $resource->getTable('catalog_product_entity_media_gallery_value');

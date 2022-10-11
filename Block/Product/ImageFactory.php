@@ -74,6 +74,24 @@ class ImageFactory extends \Magento\Catalog\Block\Product\ImageFactory
     }
 
     /**
+     * Retrieve image custom attributes for HTML element
+     *
+     * @param array $attributes
+     * @return string
+     */
+    protected function getStringCustomAttributes(array $attributes)
+    {
+        $result = [];
+        foreach ($attributes as $name => $value) {
+            if ($name != 'class') {
+                $result[] = $name . '="' . $value . '"';
+            }
+        }
+
+        return empty($result) ? '' : implode(' ', $result);
+    }
+
+    /**
      * Retrieve image class for HTML element
      *
      * @param array $attributes
@@ -158,6 +176,11 @@ class ImageFactory extends \Magento\Catalog\Block\Product\ImageFactory
 
         $attributes = $attributes === null ? [] : $attributes;
 
+        $productMetadata = $this->objectManager->get(\Magento\Framework\App\ProductMetadataInterface::class);
+        $version = $productMetadata->getVersion();
+        $magentoVersion4x = version_compare($version, '2.4.0', '>=');
+        $customAttributes = $magentoVersion4x ? $this->filterCustomAttributes($attributes) : $this->getStringCustomAttributes($attributes);
+
         $data = [
             'data' => [
                 'template' => 'Magento_Catalog::product/image_with_borders.phtml',
@@ -166,7 +189,7 @@ class ImageFactory extends \Magento\Catalog\Block\Product\ImageFactory
                 'height' => $imageMiscParams['image_height'],
                 'label' => $this->getLabel($product, $imageMiscParams['image_type'] ?? ''),
                 'ratio' => $this->getRatio($imageMiscParams['image_width'] ?? 0, $imageMiscParams['image_height'] ?? 0),
-                'custom_attributes' => $this->filterCustomAttributes($attributes),
+                'custom_attributes' => $customAttributes,
                 'class' => $this->getClass($attributes),
                 'product_id' => $product->getId()
             ],

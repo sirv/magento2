@@ -222,7 +222,8 @@
                 <notice><![CDATA[Enter full URLs or use * to specify files with a certain path.]]></notice>
                 <type>textarea</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
-                <value></value>
+                <value>/captcha*</value>
+                <install/>
             </field>
             <field>
                 <name>image_scaling</name>
