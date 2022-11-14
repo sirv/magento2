@@ -738,9 +738,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     if (!(isset($f['spin']) && isset($asset['width']) && isset($asset['height']))) {
                         $spinInfoUrl = $folderUrl . '/' . $asset['name'] . '?info';
                         $spinInfo = $this->downloadAssetsInfo($spinInfoUrl);
-                        $spinInfo = json_decode($spinInfo);
-                        $layer = is_object($spinInfo) && isset($spinInfo->layers) ? reset($spinInfo->layers) : false;
-                        $slide = $layer ? reset($layer) : false;
+                        $spinInfo = json_decode($spinInfo, true);
+                        $layer = is_array($spinInfo) && isset($spinInfo['layers']) && is_array($spinInfo['layers']) ? reset($spinInfo['layers']) : false;
+                        $slide = is_array($layer) ? reset($layer) : false;
                         if ($slide) {
                             isset($f['spin']) || ($f['spin'] = preg_replace('#/[^/]++$#', '/', $assetsFolder . '/' . $asset['name']) . $slide);
                             if (!(isset($asset['width']) && isset($asset['height']))) {

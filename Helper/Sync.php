@@ -356,21 +356,38 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function isSynced($path)
     {
-        $status = self::IS_UNDEFINED;
-        try {
-            /** @var \Sirv\Magento2\Model\Cache $cacheModel */
-            $cacheModel = $this->cacheModel->clearInstance()->load($path, 'path');
-            $status = $cacheModel->getStatus();
-            if ($status == self::IS_PROCESSING && $this->fileExists($path)) {
-                $cacheModel->setStatus(self::IS_SYNCED);
-                $cacheModel->save();
-                $status = self::IS_SYNCED;
+        static $statusList = [];
+
+        if (!isset($statusList[$path])) {
+            $status = self::IS_UNDEFINED;
+            try {
+                /** @var \Sirv\Magento2\Model\Cache $cacheModel */
+                $cacheModel = $this->cacheModel->clearInstance()->load($path, 'path');
+                $status = $cacheModel->getStatus();
+                if ($status == self::IS_PROCESSING) {
+                    $attempt = (int)$cacheModel->getAttempt();
+                    if ($attempt < 10) {
+                        if ($this->fileExists($path)) {
+                            $cacheModel->setStatus(self::IS_SYNCED);
+                            $cacheModel->setAttempt(0);
+                            $status = self::IS_SYNCED;
+                        } else {
+                            $cacheModel->setAttempt(++$attempt);
+                        }
+                        $cacheModel->save();
+                    } else {
+                        $cacheModel->setStatus(self::IS_FAILED);
+                        $cacheModel->save();
+                        $status = self::IS_FAILED;
+                    }
+                }
+            } catch (\Exception $e) {
+                $this->logger->critical($e);
             }
-        } catch (\Exception $e) {
-            $this->logger->critical($e);
+            $statusList[$path] = $status;
         }
 
-        return $status == self::IS_SYNCED;
+        return $statusList[$path] == self::IS_SYNCED;
     }
 
     /**

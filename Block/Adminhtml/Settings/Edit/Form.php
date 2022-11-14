@@ -291,6 +291,14 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             $fieldConfig['values'][] = ['value' => $account, 'label' => $account];
                         }
                         break;
+                    case 'js_modules':
+                        $src = 'https://scripts.sirv.com/sirvjs/v3/sirv.js';
+                        if (!empty($value) && strpos($value, 'all') === false) {
+                            $src = 'https://scripts.sirv.com/sirvjs/v3/sirv.js?modules=' . $value;
+                        }
+                        $size = $this->dataHelper->getSirvJsFileSize($src);
+                        $fieldConfig['note'] = str_replace('{{SIZE}}', $size, $fieldConfig['note']);
+                        break;
                     case 'profile':
                         $profiles = $this->dataHelper->getProfiles();
                         if (!in_array($fieldConfig['value'], $profiles)) {

@@ -378,6 +378,11 @@ class Backend extends \Sirv\Magento2\Helper\Data
      */
     public function setAccountConfig($fetching, $url)
     {
+        if (!$fetching) {
+            //NOTE: this code in order to be able to use two instances of M2 with different option values
+            return;
+        }
+
         $config = $this->getAccountConfig();
         $data = [];
 
@@ -445,9 +450,12 @@ class Backend extends \Sirv\Magento2\Helper\Data
                 //      fetching_enabled: true|false
                 if ($config['fetching_enabled']) {
                     $value = $this->getConfig('auto_fetch');
+                    /*
+                    NOTE: this code is commented out so that two instances of M2 can be used with different option values
                     if ($value != 'custom' && $value != 'all') {
                         $value = 'custom';
                     }
+                    */
                 } else {
                     $value = 'none';
                 }
@@ -689,5 +697,66 @@ class Backend extends \Sirv\Magento2\Helper\Data
         }
 
         return $sign . round($size, $precision) . $units[$i];
+    }
+
+    /**
+     * Get Sirv JS file size
+     *
+     * @param string $url
+     * @return string
+     */
+    public function getSirvJsFileSize($url)
+    {
+        $cacheId = 'sirv_js_file_size';
+        $cache = $this->getAppCache();
+
+        $data = $cache->load($cacheId);
+        if (false !== $data) {
+            $data = $this->getUnserializer()->unserialize($data);
+        }
+
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        if (isset($data[$url])) {
+            return 'File size: ' . $this->getFormatedSize($data[$url]);
+        }
+
+        if (!isset(self::$curlHandle)) {
+            self::$curlHandle = curl_init();
+        }
+
+        curl_setopt_array(
+            self::$curlHandle,
+            [
+                CURLOPT_URL => $url,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HEADER => false,
+                CURLOPT_NOBODY => false,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_ENCODING => ''
+            ]
+        );
+
+        /*$contents = */curl_exec(self::$curlHandle);
+
+        if ($error = curl_errno(self::$curlHandle)) {
+            return "cURL Error ($error): " . curl_error(self::$curlHandle);
+        }
+
+        $code = curl_getinfo(self::$curlHandle, CURLINFO_HTTP_CODE);
+        if ($code != 200) {
+            return "HTTP Error ($code).";
+        }
+
+        $size = curl_getinfo(self::$curlHandle, CURLINFO_SIZE_DOWNLOAD);
+
+        $data[$url] = (int)$size;
+        $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 60 * 60 * 24);
+
+        return 'File size: ' . $this->getFormatedSize($data[$url]);
     }
 }

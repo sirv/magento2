@@ -42,7 +42,8 @@ define([
         _switchDisabled: function (disabled) {
             var options = [
                 'image_scaling',
-                'excluded_from_lazy_load'
+                'excluded_from_lazy_load',
+                'use_placeholders'
             ];
             var i, l, selector, display;
             l = options.length;

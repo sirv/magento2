@@ -96,7 +96,7 @@ class InstallData implements InstallDataInterface
                         $name = (string)$field->name;
                         $value = (string)$field->value;
                         //NOTE: change defaults for new users
-                        if ($name == 'add_img_width_height' || $name == 'use_placeholders') {
+                        if (in_array($name, ['add_img_width_height', 'use_placeholders', 'use_placeholder_with_smv'])) {
                             $value = 'true';
                         }
 

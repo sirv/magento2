@@ -28,6 +28,11 @@
                 <value id="data_img_src" type="host">data:</value>
             </values>
         </policy>
+        <policy id="media-src">
+            <values>
+                <value id="sirv_media_src" type="host">*.sirv.com</value>
+            </values>
+        </policy>
         <policy id="script-src">
             <values>
                 <value id="sirv_script_src" type="host">*.sirv.com</value>

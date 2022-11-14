@@ -76,11 +76,11 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
     protected $isSirvMediaViewerUsed = false;
 
     /**
-     * sirv.js components
+     * Sirv JS modules
      *
      * @return string
      */
-    protected $sirvJsComponents = '';
+    protected $sirvJsModules = '';
 
     /**
      * Add width/height for img tags
@@ -145,7 +145,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
             $this->dataOptions['fit'] = $imageScaling;
 
             $this->isSirvMediaViewerUsed = $dataHelper->useSirvMediaViewer();
-            $this->sirvJsComponents = $dataHelper->getConfig('js_components');
+            $this->sirvJsModules = $dataHelper->getConfig('js_modules');
 
             $this->addImgWidthHeight = $dataHelper->getConfig('add_img_width_height') == 'true';
             $imageFolder = $dataHelper->getConfig('image_folder');
@@ -233,19 +233,17 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                 1
             );
 
-            /*
-            $sirvJsComponents = explode(',', $this->sirvJsComponents);
-            if (count($sirvJsComponents) == 4) {
-                $replace = "<script type=\"text/javascript\" src=\"https://scripts.sirv.com/sirvjs/v3/sirv.full.js\"></script>\n";
-            } else {
-                $replace = "<script type=\"text/javascript\" src=\"https://scripts.sirv.com/sirvjs/v3/sirv.js\" data-components=\"" . $this->sirvJsComponents . "\"></script>";
-            }
-            */
             $src = 'https://scripts.sirv.com/sirvjs/v3/sirv.js';
+
             //NOTE: if SMV is off and Lazy is on, use this v2 script:
             if (!$this->isSirvMediaViewerUsed) {
                 $src = 'https://scripts.sirv.com/sirv.nospin.js';
             }
+
+            if (!empty($this->sirvJsModules) && strpos($this->sirvJsModules, 'all') === false) {
+                $src = 'https://scripts.sirv.com/sirvjs/v3/sirv.js?modules=' . $this->sirvJsModules;
+            }
+
             $replace = "<script type=\"text/javascript\" src=\"{$src}\"></script>\n";
             $html = preg_replace(
                 '#<script[^>]++>#',
@@ -516,7 +514,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                     continue;
                 }
 
-                if ($this->isExcludedFromLazyLoad($srcMatches[2])) {
+                if ($this->isExcludedFromLazyLoad($imgTag)) {
                     continue;
                 }
 
@@ -557,7 +555,11 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                     $imgTag = preg_replace('#^<img#', '<img data-type=' . $bs . '"static' . $bs . '"', $imgTag);
                 } else {
                     if ($this->usePlaceholders) {
-                        $src = strpos($srcMatches[2], '?') === false ? $srcMatches[2] . '?q=30' : $srcMatches[2] . '&q=30';
+                        if (preg_match('#(?:\?|&)q=\d++#', $srcMatches[2])) {
+                            $src = preg_replace('#(?<=\?|&)q=\d++#', 'q=30', $srcMatches[2]);
+                        } else {
+                            $src = strpos($srcMatches[2], '?') === false ? $srcMatches[2] . '?q=30' : $srcMatches[2] . '&q=30';
+                        }
                         $imgTag = preg_replace('#^<img#', '<img src=' . $bs . '"' . $src . $bs . '"', $imgTag);
                     }
                 }
@@ -576,10 +578,10 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
     /**
      * Check the file is excluded from lazy-load
      *
-     * @param string $path
+     * @param string $tagHtml
      * @return bool
      */
-    public function isExcludedFromLazyLoad($path)
+    public function isExcludedFromLazyLoad($tagHtml)
     {
         static $regExp = null, $list = [];
 
@@ -598,6 +600,12 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
                             '#'
                         )
                     );
+                    if (!preg_match('#^\*#', $pattern)) {
+                        $pattern = '\b' . $pattern;
+                    }
+                    if (!preg_match('#\*$#', $pattern)) {
+                        $pattern = $pattern . '\b';
+                    }
                 }
                 $regExp = '#' . implode('|', $excludedFiles) . '#';
             }
@@ -607,11 +615,21 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
             return false;
         }
 
-        if (!isset($list[$path])) {
-            $list[$path] = preg_match($regExp, $path);
+        if (!isset($list[$tagHtml])) {
+            $list[$tagHtml] = false;
+            $matches = [];
+            $attrRegExp = '#\b[^\s="\'>/]++\s*+=\s*+("|\')((?:.(?!\1))*+(?:.(?=\1))?)\1#';
+            if (preg_match_all($attrRegExp, $tagHtml, $matches, PREG_SET_ORDER)) {
+                foreach ($matches as $key => $attrMatches) {
+                    $list[$tagHtml] = preg_match($regExp, $attrMatches[2]);
+                    if ($list[$tagHtml]) {
+                        break;
+                    }
+                }
+            }
         }
 
-        return $list[$path];
+        return $list[$tagHtml];
     }
 
     /**

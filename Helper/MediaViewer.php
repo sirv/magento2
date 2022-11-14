@@ -198,7 +198,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                     )
                 ) . '#';
         }
-        $this->usePlaceholder = $this->dataHelper->getConfig('use_placeholders') == 'true';
+        $this->usePlaceholder = $this->dataHelper->getConfig('use_placeholder_with_smv') == 'true';
     }
 
     /**

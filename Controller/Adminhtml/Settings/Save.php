@@ -47,8 +47,8 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
             return $resultRedirect;
         }
 
-        if (isset($config['js_components'])) {
-            $config['js_components'] = implode(',', $config['js_components']);
+        if (isset($config['js_modules'])) {
+            $config['js_modules'] = implode(',', $config['js_modules']);
         }
 
         if (isset($config['pinned_items'])) {
@@ -283,7 +283,7 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     foreach ($excludedList as &$excludedUrl) {
                         $excludedUrl = preg_replace('#^(?:https?\:)?//[^/]+/#', '/', $excludedUrl);
                         $excludedUrl = preg_replace('#\*++#', '*', $excludedUrl);
-                        $excludedUrl = '/' . preg_replace('#^/#', '', $excludedUrl);
+                        //$excludedUrl = '/' . preg_replace('#^/#', '', $excludedUrl);
                     }
                     $excludedList = array_unique($excludedList);
                     $excludedList = implode("\n", $excludedList);

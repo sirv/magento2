@@ -154,6 +154,12 @@ abstract class AbstractSchema
             ['unsigned' => true, 'nullable' => false, 'default' => 0],
             'Sync status'
         )->addColumn(
+            'attempt',
+            Table::TYPE_SMALLINT,
+            null,
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
+            'Sync attempt'
+        )->addColumn(
             'modification_time',
             Table::TYPE_INTEGER,
             null,
@@ -429,6 +435,21 @@ abstract class AbstractSchema
                     'default' => 0,
                     'comment' => 'Sync status',
                     'after' => 'path_type'
+                ]
+            );
+        }
+
+        if (!$connection->tableColumnExists($tableName, 'attempt')) {
+            $connection->addColumn(
+                $tableName,
+                'attempt',
+                [
+                    'type' => Table::TYPE_SMALLINT,
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default' => 0,
+                    'comment' => 'Sync attempt',
+                    'after' => 'status'
                 ]
             );
         }

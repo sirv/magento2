@@ -215,11 +215,30 @@
                 <value>true</value>
             </field>
             <field>
+                <name>use_placeholders</name>
+                <label>Use placeholders</label>
+                <tooltip><![CDATA[Use placeholders for images and galleries.]]></tooltip>
+                <type>radios</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>false</value>
+                <install/>
+            </field>
+            <field>
                 <name>excluded_from_lazy_load</name>
                 <label>Exclude images</label>
                 <before_element_html>Disable lazy loading on specific images, such as your website logo:</before_element_html>
                 <placeholder><![CDATA[e.g.&#xa;/wysiwyg/home/home-main.jpg&#xa;/frontend/Magento/luma/en_US/images/logo.svg&#xa;]]></placeholder>
-                <notice><![CDATA[Enter full URLs or use * to specify files with a certain path.]]></notice>
+                <notice><![CDATA[Enter full URLs or use * to specify files with a certain path.<br/>You can also specify the value of any attribute of &lt;img&gt; tag.]]></notice>
                 <type>textarea</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
                 <value>/captcha*</value>
@@ -247,40 +266,42 @@
                 </options>
                 <value>contain</value>
             </field>
-            <!--
             <field>
-                <name>js_components</name>
-                <label>sirv.js components</label>
-                <tooltip><![CDATA[
-                    Reduce JS file size by
-                    <a target="_blank" href="https://sirv.com/help/articles/sirv-media-viewer/#selectively-load-compontents">
-                        selectively loading components
-                    </a>.
-                ]]></tooltip>
+                <name>js_modules</name>
+                <label>Sirv JS features</label>
+                <tooltip><![CDATA[Improve optimization by serving a smaller JS file, containing only the features you need.]]></tooltip>
+                <notice><![CDATA[{{SIZE}}]]></notice>
                 <type>checkboxes</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Checkboxes</type_class>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Checkboxes\JsModules</type_class>
                 <options>
                     <option>
-                        <label>Image</label>
-                        <value>image</value>
+                        <label>All</label>
+                        <value>all</value>
                     </option>
                     <option>
-                        <label>Spin</label>
-                        <value>spin</value>
+                        <label>Lazy &amp; responsive images</label>
+                        <value>lazyimage</value>
                     </option>
                     <option>
-                        <label>Zoom</label>
+                        <label>Image zoom</label>
                         <value>zoom</value>
                     </option>
                     <option>
-                        <label>Video</label>
+                        <label>360 spin</label>
+                        <value>spin</value>
+                    </option>
+                    <option>
+                        <label>Hotspots</label>
+                        <value>hotspots</value>
+                    </option>
+                    <option>
+                        <label>Video streaming</label>
                         <value>video</value>
                     </option>
                 </options>
-                <value>image,spin,zoom,video</value>
+                <value>all,lazyimage,zoom,spin,hotspots,video</value>
                 <install/>
             </field>
-            -->
             <field>
                 <name>profile</name>
                 <label>Image profile</label>
@@ -333,25 +354,6 @@
                 <name>add_img_width_height</name>
                 <label>Add width/height</label>
                 <tooltip><![CDATA[Try to add missing width/height attributes to <b>img</b> tags.]]></tooltip>
-                <type>radios</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
-                <options>
-                    <option>
-                        <label>Yes</label>
-                        <value>true</value>
-                    </option>
-                    <option>
-                        <label>No</label>
-                        <value>false</value>
-                    </option>
-                </options>
-                <value>false</value>
-                <install/>
-            </field>
-            <field>
-                <name>use_placeholders</name>
-                <label>Use placeholders</label>
-                <tooltip><![CDATA[Use placeholders for images and galleries.]]></tooltip>
                 <type>radios</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
                 <options>
@@ -499,6 +501,25 @@
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Text</type_class>
                 <tooltip><![CDATA[Maximum height of gallery & thumbnails. Leave empty to make it responsive.]]></tooltip>
                 <value></value>
+            </field>
+            <field>
+                <name>use_placeholder_with_smv</name>
+                <label>Use placeholder</label>
+                <tooltip><![CDATA[Use image placeholder for product page media gallery.]]></tooltip>
+                <type>radios</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>false</value>
+                <install/>
             </field>
             <field>
                 <name>smv_custom_css</name>
