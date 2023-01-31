@@ -422,7 +422,7 @@
             <field>
                 <name>product_assets_folder</name>
                 <label>Product folder names on Sirv</label>
-                <tooltip><![CDATA[Location of product assets for <b>Sirv Media Viewer</b>.<br/>Placeholders <b>{product-sku}</b>, <b>{product-id}</b>, <b>{product-sku-2-char}</b> or <b>{product-sku-3-char}</b> can be used here.<br/>e.g. products/{product-sku} <a target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#gallery/">Learn more</a>.]]></tooltip>
+                <tooltip><![CDATA[Folder location of product assets for <b>Sirv Media Viewer</b>. The following placeholders can be used:<br/><b>{product-sku}</b><br/><b>{product-id}</b><br/><b>{product-sku-2-char}</b><br/><b>{product-sku-3-char}</b><br/><b>{attribute:attribute_code}</b><br/>e.g. products/{product-sku} <a target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#gallery">Learn more</a>.]]></tooltip>
                 <notice><![CDATA[Folder structure on Sirv e.g. products/{product-sku}]]></notice>
                 <type>text</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Folder</type_class>
@@ -628,9 +628,16 @@
                     Sirv automatically copies product images to your Sirv account upon first request. <a href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#sync" target="_blank" class="sirv-open-in-new-window">Learn more</a>.<br/><br/>
                     It is also possible to pre-sync images via the "Sync Media Gallery" button below.
                     </div>
-                    <div class="row approximate-storage-size-label">Estimated storage of your media gallery: <span class="approximate-storage-size"><div class="spinner"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></span></div>
                 ]]></notice>
                 <value></value>
+            </field>
+            <field>
+                <name>media_storage_info</name>
+                <label>Media gallery size</label>
+                <type>button</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Button\MediaStorageInfo</type_class>
+                <value>Calculate</value>
+                <notice><![CDATA[Estimate how much storage your need on Sirv.]]></notice>
             </field>
             <field>
                 <name>delete_cached_images</name>

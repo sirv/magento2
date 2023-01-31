@@ -123,9 +123,9 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
             $alias = isset($config['alias']) ? trim($config['alias']) : '';
             $matches = [];
-            if (!preg_match('#^[a-z0-9-]{6,32}$#', $alias)) {
+            if (!preg_match('#^[a-z0-9-]{6,30}$#', $alias)) {
                 $this->messageManager->addWarningMessage(
-                    __('Account name is invalid. Account name must be 6-32 characters. It can contain lowercase characters, numbers and hyphens (no spaces).')
+                    __('Account name is invalid. Account name must be 6-30 characters. It can contain lowercase characters, numbers and hyphens (no spaces).')
                 );
                 $valid = false;
             } elseif (preg_match('#\-(?:cdn|direct)$#i', $alias, $matches)) {

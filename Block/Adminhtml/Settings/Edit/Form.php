@@ -411,6 +411,11 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $url = $this->getUrl('sirv/ajax/copyprimaryimages', []);
                         $fieldConfig['data-mage-init'] = '{"sirvCopyPrimaryImages": {"ajaxUrl":"' . $url . '"}}';
                         break;
+                    case 'media_storage_info':
+                        $fieldConfig['media_storage_info'] = $this->dataHelper->getMediaStorageInfo();
+                        $url = $this->getUrl('sirv/ajax/mediastorageinfo', []);
+                        $fieldConfig['data-mage-init'] = '{"sirvMediaStorageInfo": {"ajaxUrl":"' . $url . '"}}';
+                        break;
                     case 'viewer_contents':
                         $data = $this->dataHelper->getAccountUsageData();
                         if (!isset($data['plan']) ||

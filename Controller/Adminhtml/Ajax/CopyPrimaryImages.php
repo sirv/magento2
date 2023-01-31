@@ -156,6 +156,153 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $data['products'] = $productsWithoutMedia;
                 $result['success'] = true;
                 break;
+            case 'get_attributes':
+                $products = $postData['products'] ?? [];
+                if (empty($products)) {
+                    $data['error'] = 'No products found!';
+                    break;
+                }
+
+                $dataHelper = $this->getDataHelper();
+                $productAssetsFolder = $dataHelper->getConfig('product_assets_folder') ?: '';
+                $productAssetsFolder = trim(trim($productAssetsFolder), '/');
+                if (empty($productAssetsFolder)) {
+                    $data['error'] = 'Assets folder is not set!';
+                    break;
+                }
+
+                $matches = [];
+                $attributes = [];
+                if (preg_match_all('#{attribute:([a-zA-Z0-9_]++)}#', $productAssetsFolder, $matches, PREG_SET_ORDER)) {
+                    foreach ($matches as $match) {
+                        $attributes[] = $match[1];
+                    }
+                }
+
+                if (empty($attributes)) {
+                    $result['success'] = true;
+                    break;
+                }
+
+                /** @var \Sirv\Magento2\Model\Assets $assetsModel */
+                $assetsModel = $this->assetsModelFactory->create();
+                /** @var \Sirv\Magento2\Model\ResourceModel\Assets $resource */
+                $resource = $assetsModel->getResource();
+                /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+                $connection = $resource->getConnection();
+                /** @var \Magento\Framework\DB\Select $select */
+                $select = clone $connection->select();
+
+                $selectEntityTypeId = clone $connection->select();
+                $selectEntityTypeId->reset()
+                    ->from(
+                        ['eet' => $resource->getTable('eav_entity_type')],
+                        ['entity_type_id']
+                    )
+                    ->where('`entity_type_code` = ?', 'catalog_product');
+
+                $select = clone $connection->select();
+                $select->reset()
+                    ->from(
+                        ['ea' => $resource->getTable('eav_attribute')],
+                        [
+                            'attribute_code',
+                            'attribute_id'
+                        ]
+                    )
+                    ->where('`attribute_code` IN (?)', $attributes)
+                    ->where('`entity_type_id` = ?', new \Zend_Db_Expr("({$selectEntityTypeId})"));
+
+                $attributes = $connection->fetchPairs($select);
+
+                if (empty($attributes)) {
+                    $data['error'] = 'Attributes not found!';
+                    break;
+                }
+
+                $optSelect = clone $connection->select();
+                $optSelect->reset()
+                    ->from(
+                        ['eao' => $resource->getTable('eav_attribute_option')],
+                        [
+                            'eao.option_id',
+                            'eao.attribute_id',
+                            'eaov.value'
+                        ]
+                    )
+                    ->joinInner(
+                        ['eaov' => $resource->getTable('eav_attribute_option_value')],
+                        '`eao`.`option_id` = `eaov`.`option_id`',
+                        []
+                    )
+                    ->where('`eao`.`attribute_id` IN (?)', $attributes)
+                    ->where('`eaov`.`store_id` = ?', 0);
+
+                $select = clone $connection->select();
+                $select->reset()
+                    ->from(
+                        ['cpev' => $resource->getTable('catalog_product_entity_varchar')],
+                        [
+                            'pid' => 'cpev.entity_id',
+                            'aid' => 'cpev.attribute_id',
+                            'val' => 'cpev.value',
+                            'tval' => 'tt.value'
+                        ]
+                    )
+                    ->joinLeft(
+                        ['tt' => new \Zend_Db_Expr("({$optSelect})")],
+                        '`tt`.`attribute_id` = `cpev`.`attribute_id` AND ' .
+                        '`tt`.`option_id` = `cpev`.`value` ',
+                        []
+                    )
+                    ->where('`cpev`.`store_id` = ?', 0)
+                    ->where('`cpev`.`attribute_id` IN (?)', $attributes)
+                    ->where('`cpev`.`entity_id` IN (?)', $products);
+                $result = $connection->fetchAll($select);
+
+                $select = clone $connection->select();
+                $select->reset()
+                    ->from(
+                        ['cpev' => $resource->getTable('catalog_product_entity_int')],
+                        [
+                            'pid' => 'cpev.entity_id',
+                            'aid' => 'cpev.attribute_id',
+                            'val' => 'cpev.value',
+                            'tval' => 'tt.value'
+                        ]
+                    )
+                    ->joinLeft(
+                        ['tt' => new \Zend_Db_Expr("({$optSelect})")],
+                        '`tt`.`attribute_id` = `cpev`.`attribute_id` AND ' .
+                        '`tt`.`option_id` = `cpev`.`value` ',
+                        []
+                    )
+                    ->where('`cpev`.`store_id` = ?', 0)
+                    ->where('`cpev`.`attribute_id` IN (?)', $attributes)
+                    ->where('`cpev`.`entity_id` IN (?)', $products);
+                $result = array_merge($result, $connection->fetchAll($select));
+
+                $attributes = array_flip($attributes);
+
+                foreach ($result as $row) {
+                    $attrValue = trim($row['val']);
+                    if (empty($attrValue)) {
+                        continue;
+                    }
+
+                    if (is_string($row['tval'])) {
+                        $attrTextValue = trim($row['tval']);
+                        if (!empty($attrTextValue)) {
+                            $attrValue = $attrTextValue;
+                        }
+                    }
+
+                    isset($data[$row['pid']]) || $data[$row['pid']] = [];
+                    $data[$row['pid']][$attributes[$row['aid']]] = $attrValue;
+                }
+
+                $result['success'] = true;
+                break;
             case 'get_sirv_data':
                 /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
                 $dataHelper = $this->getDataHelper();
@@ -166,11 +313,12 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     $data['error'] = 'Assets folder is not set!';
                     break;
                 }
-                $placeholdersPattern = '#{product-(?:sku(?:-(?:2|3)-char)?|id)}#';
-                if (!preg_match($placeholdersPattern, $pathTemplate)) {
+                //NOTE: product assets folder must contain a unique pattern
+                if (!preg_match('#{product-(?:sku|id)}#', $pathTemplate)) {
                     $pathTemplate = $pathTemplate . '/{product-sku}';
                 }
 
+                $placeholdersPattern = '#{product-(?:sku(?:-(?:2|3)-char)?|id)}|{attribute:(?:[a-zA-Z0-9_]++)}#';
                 $parts = explode('/', $pathTemplate);
                 $structure = [];
                 $commonPath = [];
@@ -222,6 +370,19 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 if (empty($productAssetsFolder)) {
                     $data['error'] = 'Assets folder is not set!';
                     break;
+                }
+
+                $matches = [];
+                $attributes = [];
+                if (preg_match_all('#{attribute:([a-zA-Z0-9_]++)}#', $productAssetsFolder, $matches, PREG_SET_ORDER)) {
+                    foreach ($matches as $match) {
+                        $attributes[] = $match[1];
+                    }
+                }
+
+                //NOTE: product assets folder must contain a unique pattern
+                if (!preg_match('#{product-(?:sku|id)}#', $productAssetsFolder)) {
+                    $productAssetsFolder = $productAssetsFolder . '/{product-sku}';
                 }
 
                 $products = isset($postData['products']) ? $postData['products'] : [];
@@ -281,11 +442,25 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     $assetsFolder = str_replace(
                         ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
                         [$product['id'], $product['sku'], substr($product['sku'], 0, 2), substr($product['sku'], 0, 3)],
-                        $productAssetsFolder,
-                        $found
+                        $productAssetsFolder
                     );
-                    if (!$found) {
-                        $assetsFolder = $productAssetsFolder . '/' . $product['sku'];
+
+                    foreach ($attributes as $attribute) {
+                        if (isset($product[$attribute])) {
+                            $assetsFolder = str_replace('{attribute:' . $attribute . '}', $product[$attribute], $assetsFolder);
+                        } else {
+                            $assetsFolder = preg_replace(
+                                [
+                                    '#/{attribute:' . $attribute . '}/#',
+                                    '#^{attribute:' . $attribute . '}/|/{attribute:' . $attribute . '}$|{attribute:' . $attribute . '}#'
+                                ],
+                                [
+                                    '/',
+                                    ''
+                                ],
+                                $assetsFolder
+                            );
+                        }
                     }
 
                     $contents = [];

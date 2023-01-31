@@ -108,6 +108,10 @@ define([
                 this.options.sirvConfig.simpleProductId = response.variantProductId;
             } else {
                 this.options.sirvConfig.simpleProductId = null;
+                let productId = this.getProduct();
+                if (typeof(productId) != 'undefined') {
+                    this.options.sirvConfig.simpleProductId = productId;
+                }
             }
 
             this._super($this, response, isInProductView);

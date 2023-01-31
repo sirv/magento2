@@ -26,6 +26,7 @@
             <values>
                 <value id="sirv_img_src" type="host">*.sirv.com</value>
                 <value id="data_img_src" type="host">data:</value>
+                <value id="youtube_img_src" type="host">*.youtube.com</value>
             </values>
         </policy>
         <policy id="media-src">

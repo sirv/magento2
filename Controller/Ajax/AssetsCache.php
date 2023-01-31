@@ -32,8 +32,7 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
             $dataHelper = $objectManager->get(\Sirv\Magento2\Helper\Data::class);
 
             $productAssetsFolder = $dataHelper->getConfig('product_assets_folder') ?: '';
-            $productAssetsFolder = trim($productAssetsFolder);
-            $productAssetsFolder = trim($productAssetsFolder, '/');
+            $productAssetsFolder = trim(trim($productAssetsFolder), '/');
 
             if (empty($productAssetsFolder)) {
                 $result = ['message' => 'Product assets folder is empty!'];
@@ -45,6 +44,19 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
 
                 $baseUrl = 'https://' . $dataHelper->getSirvDomain();
 
+                $matches = [];
+                $attributes = [];
+                if (preg_match_all('#{attribute:([a-zA-Z0-9_]++)}#', $productAssetsFolder, $matches, PREG_SET_ORDER)) {
+                    foreach ($matches as $match) {
+                        $attributes[] = $match[1];
+                    }
+                }
+
+                //NOTE: product assets folder must contain a unique pattern
+                if (!preg_match('#{product-(?:sku|id)}#', $productAssetsFolder)) {
+                    $productAssetsFolder = $productAssetsFolder . '/{product-sku}';
+                }
+
                 foreach ($productIds as $productId) {
                     $product = $productRepository->getById($productId);
 
@@ -52,11 +64,42 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
                     $assetsFolder = str_replace(
                         ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
                         [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
-                        $productAssetsFolder,
-                        $found
+                        $productAssetsFolder
                     );
-                    if (!$found) {
-                        $assetsFolder = $productAssetsFolder . '/' . $productSku;
+                    foreach ($attributes as $attribute) {
+                        $attrValue = $product->getData($attribute);
+                        if (is_string($attrValue)) {
+                            $attrValue = trim($attrValue);
+                            if (empty($attrValue)) {
+                                $attrValue = false;
+                            } else {
+                                $attrTextValue = $product->getAttributeText($attribute);
+                                if (is_string($attrTextValue)) {
+                                    $attrTextValue = trim($attrTextValue);
+                                    if (!empty($attrTextValue)) {
+                                        $attrValue = $attrTextValue;
+                                    }
+                                }
+                            }
+                        } else {
+                            $attrValue = false;
+                        }
+
+                        if ($attrValue) {
+                            $assetsFolder = str_replace('{attribute:' . $attribute . '}', $attrValue, $assetsFolder);
+                        } else {
+                            $assetsFolder = preg_replace(
+                                [
+                                    '#/{attribute:' . $attribute . '}/#',
+                                    '#^{attribute:' . $attribute . '}/|/{attribute:' . $attribute . '}$|{attribute:' . $attribute . '}#'
+                                ],
+                                [
+                                    '/',
+                                    ''
+                                ],
+                                $assetsFolder
+                            );
+                        }
                     }
                     $url = $baseUrl . '/' . $assetsFolder . '.view?info';
 

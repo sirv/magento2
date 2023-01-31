@@ -302,14 +302,14 @@ class Sirv
             }
 
             //NOTE: this call requires user email/password to authenticate, not the JWT access token
-            $result = $this->sendRequest(
-                'v2/user/accounts',
-                'POST',
-                [
-                    'email' => $this->email,
-                    'password' => $this->password,
-                ]
-            );
+$result = $this->sendRequest(
+    'v2/user/accounts',
+    'POST',
+    [
+        'email' => $this->email,
+        'password' => $this->password,
+    ]
+);
 
             if ($this->responseCode != 200 || !is_array($result) || empty($result)) {
                 return false;

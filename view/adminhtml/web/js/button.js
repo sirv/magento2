@@ -24,6 +24,32 @@ define([
             confirmationButtonText: 'OK'
         },
 
+        isButtonDisabled: false,
+
+        /** @inheritdoc */
+        _create: function () {
+            this._super();
+            this._addClass('sirv-ui-button');
+        },
+
+        /**
+         * Do button disabled
+         * @protected
+         */
+        doButtonDisabled: function () {
+            this.isButtonDisabled = true;
+            $(this.element).addClass('disabled');
+        },
+
+        /**
+         * Do button enabled
+         * @protected
+         */
+        doButtonEnabled: function () {
+            this.isButtonDisabled = false;
+            $(this.element).removeClass('disabled');
+        },
+
         /**
          * Button click handler
          * @protected
@@ -36,6 +62,10 @@ define([
                     }
                     _super();
                 }, this);
+
+            if (this.isButtonDisabled) {
+                return false;
+            }
 
             if (this.options.needConfirmation) {
                 uiConfirm({

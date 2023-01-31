@@ -156,56 +156,6 @@ class Synchronize extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $data = ['failed' => $failedData];
                 $result['success'] = true;
                 break;
-            case 'get_storage_size':
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                /** @var \Magento\Framework\Shell $shell */
-                $shell = $objectManager->get(\Magento\Framework\Shell::class);
-                /** @var \Magento\Framework\Filesystem $filesystem */
-                $filesystem = $objectManager->get(\Magento\Framework\Filesystem::class);
-                /** @var \Magento\Framework\Filesystem\Directory\ReadInterface $mediaDirectory */
-                $mediaDirectory = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-                $mediaDirAbsPath = rtrim($mediaDirectory->getAbsolutePath(), '\\/') . '/';
-                $flags = \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::UNIX_PATHS;
-                $pathes = $mediaDirectory->read('catalog/product');
-                $pathes[] = 'catalog/category';
-                $pathes[] = 'wysiwyg';
-                $size = 0;
-                foreach ($pathes as $path) {
-                    if (('catalog/product/cache' != $path) && $mediaDirectory->isDirectory($path)) {
-                        $absPath = $mediaDirAbsPath . $path;
-                        try {
-                            $command = 'du --bytes --summarize ' . $absPath;
-                            $output = $shell->execute($command);
-                            if (preg_match('#^(\d++)\s#', $output, $match)) {
-                                $size += (int)$match[1];
-                            } else {
-                                throw new \Exception('Unexpected result when executing command: ' . $command);
-                            }
-                        } catch (\Exception $e) {
-                            try {
-                                $iterator = new \RecursiveIteratorIterator(
-                                    new \RecursiveDirectoryIterator($absPath, $flags),
-                                    \RecursiveIteratorIterator::CHILD_FIRST
-                                );
-                                $_size = 0;
-                                foreach ($iterator as $item) {
-                                    if ($item->isFile()) {
-                                        $_size += $item->getSize();
-                                    }
-                                }
-                                $size += $_size;
-                            } catch (\Exception $e) {
-                                throw new \Magento\Framework\Exception\FileSystemException(
-                                    new \Magento\Framework\Phrase($e->getMessage()),
-                                    $e
-                                );
-                            }
-                        }
-                    }
-                }
-                $data = ['size' => $size];
-                $result['success'] = true;
-                break;
             default:
                 $data['error'] = __('Unknown action: "%1"', $action);
                 break;

@@ -47,3 +47,10 @@
   max-height: 100%;
   object-fit: contain;
 }
+
+/* CSS to prevent missing image from showing */
+img.Sirv:not([src]){
+    font-size: 0;
+    line-height: 0;
+    opacity:0;
+}

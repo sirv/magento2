@@ -664,6 +664,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             return $assetsData[$productId];
         }
 
+        //NOTE: product assets folder must contain a unique pattern
+        if (!preg_match('#{product-(?:sku|id)}#', $productAssetsFolder)) {
+            $productAssetsFolder = $productAssetsFolder . '/{product-sku}';
+        }
+
         if ($assetsModelFactory === null) {
             $assetsModelFactory = $this->objectManager->get(\Sirv\Magento2\Model\AssetsFactory::class);
         }
@@ -684,11 +689,45 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $assetsFolder = str_replace(
                 ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
                 [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
-                $productAssetsFolder,
-                $found
+                $productAssetsFolder
             );
-            if (!$found) {
-                $assetsFolder = $productAssetsFolder . '/' . $productSku;
+            $matches = [];
+            if (preg_match_all('#{attribute:([a-zA-Z0-9_]++)}#', $assetsFolder, $matches, PREG_SET_ORDER)) {
+                foreach ($matches as $match) {
+                    $attrValue = $product->getData($match[1]);
+                    if (is_string($attrValue)) {
+                        $attrValue = trim($attrValue);
+                        if (empty($attrValue)) {
+                            $attrValue = false;
+                        } else {
+                            $attrTextValue = $product->getAttributeText($match[1]);
+                            if (is_string($attrTextValue)) {
+                                $attrTextValue = trim($attrTextValue);
+                                if (!empty($attrTextValue)) {
+                                    $attrValue = $attrTextValue;
+                                }
+                            }
+                        }
+                    } else {
+                        $attrValue = false;
+                    }
+
+                    if ($attrValue) {
+                        $assetsFolder = str_replace('{attribute:' . $match[1] . '}', $attrValue, $assetsFolder);
+                    } else {
+                        $assetsFolder = preg_replace(
+                            [
+                                '#/{attribute:' . $match[1] . '}/#',
+                                '#^{attribute:' . $match[1] . '}/|/{attribute:' . $match[1] . '}$|{attribute:' . $match[1] . '}#'
+                            ],
+                            [
+                                '/',
+                                ''
+                            ],
+                            $assetsFolder
+                        );
+                    }
+                }
             }
 
             $contents = [];
@@ -747,6 +786,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                                 $slideUrl = preg_replace('#/[^/]++$#', '/', $folderUrl . '/' . $asset['name']) . $slide;
                                 $slideInfo = $this->downloadAssetsInfo($slideUrl . '?info');
                                 $slideInfo = json_decode($slideInfo);
+                                if (isset($slideInfo->curl) && isset($slideInfo->curl->code) && (404 == (int)$slideInfo->curl->code)) {
+                                    unset($f['spin']);
+                                    break;
+                                }
                                 isset($asset['width']) || $asset['width'] = $slideInfo->width;
                                 isset($asset['height']) || $asset['height'] = $slideInfo->height;
                             }

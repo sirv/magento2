@@ -53,6 +53,12 @@ define([
         _create: function () {
             $(this.element).attr('disabled', true).addClass('disabled');
             this.element.on('click', $.proxy(this._onClickHandler, this));
+            var self = this,
+                buttons = $('.products_with_images_label a, .products_without_images_label a');
+            buttons.each(function() {
+                self._callWidgetMethod($(this), 'button', 'doButtonDisabled');
+            });
+
             this._doRequest(
                 'get_magento_data',
                 {},
@@ -69,13 +75,20 @@ define([
         _displayCounters: function (data) {
             var total = Number(data.total),
                 withoutMedia = data.products.length,
-                withMedia = total - withoutMedia;
+                withMedia = total - withoutMedia,
+                self = this,
+                buttons;
 
             this.tempData = data;
 
             $('body .products_with_images_counter').html(withMedia);
             $('body .products_without_images_counter').html(withoutMedia);
             $(this.element).removeClass('disabled').attr('disabled', false);
+
+            buttons = $('.products_with_images_label a, .products_without_images_label a');
+            buttons.each(function() {
+                self._callWidgetMethod($(this), 'button', 'doButtonEnabled');
+            });
         },
 
         /**
@@ -86,6 +99,13 @@ define([
             if (!this.isBusy) {
                 this.isBusy = true;
                 $(this.element).attr('disabled', true).addClass('disabled');
+
+                var self = this,
+                    buttons = $('.products_with_images_label a, .products_without_images_label a');
+                buttons.each(function() {
+                    self._callWidgetMethod($(this), 'button', 'doButtonDisabled');
+                });
+
                 $('body').trigger('processStart');
 
                 if (this.tempData) {
@@ -157,16 +177,38 @@ define([
             this.modalWindow.find('.progress-bar-holder').addClass('stripes');
             this.isInProgress = true;
 
+            var i, ids = [], widget = this;
+            for (i = 0; i < data.products.length; i++) {
+                ids.push(data.products[i].id);
+            }
             this._doRequest(
-                'get_sirv_data',
-                {},
+                'get_attributes',
+                {'products': ids},
                 function (data) {
-                    //console.log(JSON.parse(JSON.stringify(data)));
-                    this.structure = data.structure;
-                    this._processData();
+                    /* console.log(JSON.parse(JSON.stringify(data))); */
+                    let pid, aid;
+                    for (i = 0; i < widget.products.length; i++) {
+                        pid = widget.products[i].id;
+                        if (typeof(data[pid]) != 'undefined') {
+                            for (aid in data[pid]) {
+                                widget.products[i][aid] = data[pid][aid];
+                            }
+                        }
+                    }
+                    widget._doRequest(
+                        'get_sirv_data',
+                        {},
+                        function (data) {
+                            /* console.log(JSON.parse(JSON.stringify(data))); */
+                            widget.structure = data.structure;
+                            widget._processData();
+                        },
+                        widget._widgetFailed
+                    );
                 },
                 this._widgetFailed
             );
+
         },
 
         /**
@@ -180,26 +222,50 @@ define([
                 pathTemplate = '',
                 path = '',
                 product,
-                replacers,
-                placeholder,
+                replacerPlaceholders,
                 dir,
                 found,
                 message;
 
-            while (this.products.length) {
-                product = this.products.pop();
-
+            replacerPlaceholders = function (template, product) {
+                var placeholder, replacers, matches, match, regexp;
                 replacers = {
                     '{product-id}': product.id,
                     '{product-sku}': product.sku,
                     '{product-sku-2-char}': product.sku.substring(0, 2),
                     '{product-sku-3-char}': product.sku.substring(0, 3)
                 };
-                dir = this.structure[this.stIndex].template;
                 for (placeholder in replacers) {
-                    dir = dir.replace(placeholder, replacers[placeholder]);
+                    template = template.replace(placeholder, replacers[placeholder]);
+                }
+                matches = template.matchAll(/{attribute:([a-zA-Z0-9_]+)}/g);
+                for (match of matches) {
+                    if (typeof(product[match[1]]) == 'undefined') {
+                        regexp = RegExp('/({attribute:' + match[1] + '}/)+', 'g');
+                        template = template.replaceAll(regexp, '/');
+                        regexp = RegExp(
+                            '^{attribute:' + match[1] + '}/|' +
+                            '/{attribute:' + match[1] + '}$',
+                            'g'
+                        );
+                        template = template.replaceAll(regexp, '');
+                        regexp = RegExp('{attribute:' + match[1] + '}', 'g');
+                        template = template.replaceAll(regexp, '');
+                    } else {
+                        regexp = RegExp('/' + match[0] + '/', 'g');
+                        template = template.replaceAll(match[0], product[match[1]]);
+                    }
                 }
 
+                return template;
+            };
+
+            while (this.products.length) {
+                product = this.products.pop();
+                dir = replacerPlaceholders(
+                    this.structure[this.stIndex].template,
+                    product
+                );
                 found = this.structure[this.stIndex].list.find(function (value) {
                     return value == dir;
                 });
@@ -251,16 +317,10 @@ define([
 
                     dirList = [];
                     for (var i = 0, l = products.length; i < l; i++) {
-                        replacers = {
-                            '{product-id}': products[i].id,
-                            '{product-sku}': products[i].sku,
-                            '{product-sku-2-char}': products[i].sku.substring(0, 2),
-                            '{product-sku-3-char}': products[i].sku.substring(0, 3)
-                        };
-                        path = pathTemplate;
-                        for (placeholder in replacers) {
-                            path = path.replace(placeholder, replacers[placeholder]);
-                        }
+                        path = replacerPlaceholders(
+                            pathTemplate,
+                            products[i]
+                        );
                         dirList.push(path);
                     }
                     dirList = dirList.filter(function (value, index, self) {
@@ -412,9 +472,16 @@ define([
          * @protected
          */
         _copyingCompleted: function () {
-            this.modalWindow.find('.progress-bar-holder').removeClass('stripes');
+            if (this.modalWindow) {
+                this.modalWindow.find('.progress-bar-holder').removeClass('stripes');
+            }
             if (!this.isFailed) {
                 $(this.element).removeClass('disabled').attr('disabled', false);
+                var self = this,
+                    buttons = $('.list-item-products-with-images a, .list-item-products-without-images a');
+                buttons.each(function() {
+                    self._callWidgetMethod($(this), 'button', 'doButtonEnabled');
+                });
             }
             this.isInProgress = false;
         },
@@ -432,6 +499,12 @@ define([
             if (!this.isInProgress) {
                 this.isBusy = false;
                 $(this.element).removeClass('disabled').attr('disabled', false);
+
+                var self = this,
+                    buttons = $('.products_with_images_label a, .products_without_images_label a');
+                buttons.each(function() {
+                    self._callWidgetMethod($(this), 'button', 'doButtonEnabled');
+                });
             }
         },
 
@@ -474,26 +547,28 @@ define([
             var counters = this.counters,
                 percents = this.percents;
 
-            this.modalWindow.find('.progress-bar-copied').css('width', percents.copied + '%');
-            this.modalWindow.find('.progress-bar-failed').css('width', (percents.copied  + percents.failed) + '%');
-            this.modalWindow.find('.progress-value').html(counters.processed);
+            if (this.modalWindow) {
+                this.modalWindow.find('.progress-bar-copied').css('width', percents.copied + '%');
+                this.modalWindow.find('.progress-bar-failed').css('width', (percents.copied  + percents.failed) + '%');
+                this.modalWindow.find('.progress-value').html(counters.processed);
 
-            this.modalWindow.find('.list-item-products-with-images .list-item-value').html(counters.withMedia);
-            this.modalWindow.find('.list-item-products-without-images .list-item-value').html(counters.withoutMedia);
+                this.modalWindow.find('.list-item-products-with-images .list-item-value').html(counters.withMedia);
+                this.modalWindow.find('.list-item-products-without-images .list-item-value').html(counters.withoutMedia);
 
-            var message, count, idClass, li,
-                ul = this.modalWindow.find('.progress-counters-list');
-            for (message in this.failedData) {
-                count = this.failedData[message];
-                idClass = message.replace(/[^a-zA-Z]/g, '_').toLowerCase();
-                if (ul.find('.' + idClass).length) {
-                    ul.find('.' + idClass + ' .list-item-value').html(count);
-                } else {
-                    li = ul.find('.list-item').last().clone();
-                    li.removeClass().addClass('list-item list-item-failed').addClass(idClass);
-                    li.find('.list-item-title').html(message);
-                    li.find('.list-item-value').html(count);
-                    ul.append(li);
+                var message, count, idClass, li,
+                    ul = this.modalWindow.find('.progress-counters-list');
+                for (message in this.failedData) {
+                    count = this.failedData[message];
+                    idClass = message.replace(/[^a-zA-Z]/g, '_').toLowerCase();
+                    if (ul.find('.' + idClass).length) {
+                        ul.find('.' + idClass + ' .list-item-value').html(count);
+                    } else {
+                        li = ul.find('.list-item').last().clone();
+                        li.removeClass().addClass('list-item list-item-failed').addClass(idClass);
+                        li.find('.list-item-title').html(message);
+                        li.find('.list-item-value').html(count);
+                        ul.append(li);
+                    }
                 }
             }
 
@@ -512,12 +587,39 @@ define([
                 'counters': this.counters
             })).appendTo(this.modalWindow);
 
-            this.modalWindow.find('.list-item-products-with-images, .list-item-products-without-images').on(
+            /*
+            this.modalWindow.find('.list-item-products-with-images a, .list-item-products-without-images a').on(
                 'click',
                 $.proxy(this._displayItems, this)
             );
+            */
+            this.modalWindow.find('.progress-counters-list').trigger('contentUpdated');
+
+            var self = this,
+                buttons = $('.list-item-products-with-images a, .list-item-products-without-images a');
+            buttons.each(function() {
+                self._callWidgetMethod($(this), 'button', 'doButtonDisabled');
+            });
 
             this.modalWindow.modal('openModal');
+        },
+
+        /**
+         * Call widget method
+         * @param {Object} el - element
+         * @param {String} widgetName - widget name
+         * @param {String} widgetMethod - widget method
+         * @protected
+         */
+        _callWidgetMethod: function (el, widgetName, widgetMethod) {
+            var onWidgetInit = function() {
+                if (el[widgetName]('instance')) {
+                    el[widgetName](widgetMethod);
+                } else {
+                    setTimeout(onWidgetInit, 200);
+                }
+            };
+            onWidgetInit();
         },
 
         /**

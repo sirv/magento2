@@ -26,7 +26,8 @@ var config = {
             sirvSynchronizer: 'Sirv_Magento2/js/synchronizer',
             sirvCache: 'Sirv_Magento2/js/cache',
             sirvProductsList: 'Sirv_Magento2/js/products-list',
-            sirvUsage: 'Sirv_Magento2/js/usage'
+            sirvUsage: 'Sirv_Magento2/js/usage',
+            sirvMediaStorageInfo: 'Sirv_Magento2/js/media-storage-info'
         }
     }
 };

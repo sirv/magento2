@@ -170,6 +170,31 @@ class Backend extends \Sirv\Magento2\Helper\Data
     }
 
     /**
+     * Get Magento media storage info
+     *
+     * @return array
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
+    public function getMediaStorageInfo()
+    {
+        static $data = null;
+        if ($data !== null) {
+            return $data;
+        }
+
+        $cache = $this->getAppCache();
+        $cacheId = 'sirv_media_storage_info';
+        $cachedData = $cache->load($cacheId);
+        if (false !== $cachedData) {
+            $cachedData = $this->getUnserializer()->unserialize($cachedData);
+        }
+
+        $data = is_array($cachedData) ? $cachedData : ['count' => 0, 'size' => 0, 'timestamp' => 0];
+
+        return $data;
+    }
+
+    /**
      * Get list of user accounts
      *
      * @param bool $force

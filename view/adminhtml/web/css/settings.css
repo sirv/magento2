@@ -459,6 +459,7 @@ a.save-message {
 .admin__field-control .admin__control-value-text {
   border: 1px solid rgba(173, 173, 173, 0);
   padding: 0.6rem 0;
+  max-width: 440px;
 }
 .admin__field-control .admin__control-value-text .value-prefix {
   color: #adadad;
@@ -578,9 +579,19 @@ a.save-message {
   display: inline-block;
   width: 170px;
 }
+.admin__field.field-mt-copy_primary_images_to_magento .products_with_images_label a,
+.admin__field.field-mt-copy_primary_images_to_magento .products_without_images_label a {
+  font-size: 1.4rem;
+}
 .admin__field.field-mt-copy_primary_images_to_magento .spinner {
   font-size: 1.8rem;
   margin-right: 0;
+}
+.sirv-ui-button.disabled {
+  color: #7d7d7d;
+  cursor: default;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 .admin__fieldset > .admin__field.field-mt-synchronizer > .admin__field-control {
@@ -651,14 +662,24 @@ a.save-message {
 .admin__field.field-mt-how_sync_works .admin__field-control .admin__field-note {
   margin: 0;
 }
-.sync-description-label,
-.approximate-storage-size-label {
+.sync-description-label {
   padding-top: 7px;
   padding-bottom: 8px;
 }
-.approximate-storage-size .spinner {
+
+.media-storage-info-spinner {
   font-size: 1.6rem;
   margin-right: 0;
+}
+.media-storage-info-spinner.hidden {
+  display: none !important;
+}
+.media-storage-info-size {
+  font-weight: bold;
+}
+#mt-media_storage_info-button {
+  width: 120px;
+  margin-left: 10px;
 }
 
 .sirv-sync-content .sync-status-header {
