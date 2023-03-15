@@ -44,13 +44,8 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
 
                 $baseUrl = 'https://' . $dataHelper->getSirvDomain();
 
-                $matches = [];
-                $attributes = [];
-                if (preg_match_all('#{attribute:([a-zA-Z0-9_]++)}#', $productAssetsFolder, $matches, PREG_SET_ORDER)) {
-                    foreach ($matches as $match) {
-                        $attributes[] = $match[1];
-                    }
-                }
+                $attrMatches = [];
+                preg_match_all('#{attribute:(admin:)?([a-zA-Z0-9_]++)}#', $productAssetsFolder, $attrMatches, PREG_SET_ORDER);
 
                 //NOTE: product assets folder must contain a unique pattern
                 if (!preg_match('#{product-(?:sku|id)}#', $productAssetsFolder)) {
@@ -66,14 +61,21 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
                         [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
                         $productAssetsFolder
                     );
-                    foreach ($attributes as $attribute) {
-                        $attrValue = $product->getData($attribute);
+                    foreach ($attrMatches as $match) {
+                        $attrValue = $product->getData($match[2]);
                         if (is_string($attrValue)) {
                             $attrValue = trim($attrValue);
                             if (empty($attrValue)) {
                                 $attrValue = false;
                             } else {
-                                $attrTextValue = $product->getAttributeText($attribute);
+                                if (empty($match[1])) {
+                                    $attrTextValue = $product->getAttributeText($match[2]);
+                                } else {
+                                    $pAttr = $product->getResource()->getAttribute($match[2]);
+                                    $storeId = $pAttr->getStoreId();
+                                    $attrTextValue = $pAttr->setStoreId(0)->getSource()->getOptionText($attrValue);
+                                    $pAttr->setStoreId($storeId);
+                                }
                                 if (is_string($attrTextValue)) {
                                     $attrTextValue = trim($attrTextValue);
                                     if (!empty($attrTextValue)) {
@@ -86,12 +88,13 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
                         }
 
                         if ($attrValue) {
-                            $assetsFolder = str_replace('{attribute:' . $attribute . '}', $attrValue, $assetsFolder);
+                            $assetsFolder = str_replace('{attribute:' . $match[1] . $match[2] . '}', $attrValue, $assetsFolder);
                         } else {
+                            $pattern = '{attribute:' . $match[1] . $match[2] . '}';
                             $assetsFolder = preg_replace(
                                 [
-                                    '#/{attribute:' . $attribute . '}/#',
-                                    '#^{attribute:' . $attribute . '}/|/{attribute:' . $attribute . '}$|{attribute:' . $attribute . '}#'
+                                    '#/' . $pattern . '/#',
+                                    '#^' . $pattern . '/|/' . $pattern . '$|' . $pattern . '#'
                                 ],
                                 [
                                     '/',

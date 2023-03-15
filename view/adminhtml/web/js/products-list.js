@@ -181,18 +181,24 @@ define([
          */
         _addPageSupportText: function (data) {
             var pageSupportText, pageSupportTextSpan, modalParent;
+
+            modalParent = this.modalWindow.parents('.' + this.modalClass);
+            pageSupportTextSpan = modalParent.find('.modal-footer .page-support-text');
+
             if (data.total) {
-                modalParent = this.modalWindow.parents('.' + this.modalClass);
                 pageSupportText = (this.pageNum * this.pageSize + 1) + '-' +
                     (this.pageNum * this.pageSize + (data.next ? this.pageSize : data.count)) +
                     ' of ' + data.total + ' images';
-                pageSupportTextSpan = modalParent.find('.modal-footer .page-support-text');
                 if (pageSupportTextSpan.length) {
                     pageSupportTextSpan.html(pageSupportText);
                     pageSupportTextSpan.removeClass('hidden-element');
                 } else {
                     pageSupportText = '<span class="page-support-text">' + pageSupportText + '</span>';
                     modalParent.find('.modal-footer .action-previous-button').after(pageSupportText);
+                }
+            } else {
+                if (pageSupportTextSpan.length) {
+                    pageSupportTextSpan.addClass('hidden-element');
                 }
             }
         },

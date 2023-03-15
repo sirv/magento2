@@ -173,9 +173,9 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
                 $matches = [];
                 $attributes = [];
-                if (preg_match_all('#{attribute:([a-zA-Z0-9_]++)}#', $productAssetsFolder, $matches, PREG_SET_ORDER)) {
+                if (preg_match_all('#{attribute:(admin:)?([a-zA-Z0-9_]++)}#', $productAssetsFolder, $matches, PREG_SET_ORDER)) {
                     foreach ($matches as $match) {
-                        $attributes[] = $match[1];
+                        $attributes[] = $match[2];
                     }
                 }
 
@@ -318,7 +318,7 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     $pathTemplate = $pathTemplate . '/{product-sku}';
                 }
 
-                $placeholdersPattern = '#{product-(?:sku(?:-(?:2|3)-char)?|id)}|{attribute:(?:[a-zA-Z0-9_]++)}#';
+                $placeholdersPattern = '#{product-(?:sku(?:-(?:2|3)-char)?|id)}|{attribute:(?:admin:)?(?:[a-zA-Z0-9_]++)}#';
                 $parts = explode('/', $pathTemplate);
                 $structure = [];
                 $commonPath = [];
@@ -374,9 +374,9 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
                 $matches = [];
                 $attributes = [];
-                if (preg_match_all('#{attribute:([a-zA-Z0-9_]++)}#', $productAssetsFolder, $matches, PREG_SET_ORDER)) {
+                if (preg_match_all('#{attribute:(admin:)?([a-zA-Z0-9_]++)}#', $productAssetsFolder, $matches, PREG_SET_ORDER)) {
                     foreach ($matches as $match) {
-                        $attributes[] = $match[1];
+                        $attributes[] = $match[2];
                     }
                 }
 
@@ -447,12 +447,17 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
                     foreach ($attributes as $attribute) {
                         if (isset($product[$attribute])) {
-                            $assetsFolder = str_replace('{attribute:' . $attribute . '}', $product[$attribute], $assetsFolder);
+                            $assetsFolder = preg_replace(
+                                '#{attribute:(admin:)?' . $attribute . '}#',
+                                $product[$attribute],
+                                $assetsFolder
+                            );
                         } else {
+                            $pattern = '{attribute:(admin:)?' . $attribute . '}';
                             $assetsFolder = preg_replace(
                                 [
-                                    '#/{attribute:' . $attribute . '}/#',
-                                    '#^{attribute:' . $attribute . '}/|/{attribute:' . $attribute . '}$|{attribute:' . $attribute . '}#'
+                                    '#/' . $pattern . '/#',
+                                    '#^' . $pattern . '/|/' . $pattern . '$|' . $pattern . '#'
                                 ],
                                 [
                                     '/',

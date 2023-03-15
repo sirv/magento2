@@ -136,14 +136,52 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         if ($passwordRequired || empty($account)) {
             $xpaths[] = '/settings/group[not(@id="user")]';
 
+            //NOTE: in case of a long period of time between entering the OTP code
+            //      and selecting the account
+            if (!$passwordRequired && empty($account) && !$this->dataHelper->getConfig('need_otp_code')) {
+                $accounts = $this->dataHelper->getSirvAccounts();
+
+                if (empty($accounts)) {
+                    $responseCode = $this->dataHelper->getSirvClient()->getResponseCode();
+                    if ($responseCode == 417) {
+                        $this->dataHelper->saveConfig('need_otp_code', 'true');
+                    } else if ($responseCode != 200) {
+                        $passwordRequired = true;
+                        $this->dataHelper->saveConfig('display_credentials_rejected_message', 'true');
+                        $this->dataHelper->deleteConfig('password');
+                    }
+                }
+            }
+
             if ($passwordRequired) {
                 $xpaths[] = '/settings/group[@id="user"]/fields/field[name="account"]';
+                $xpaths[] = '/settings/group[@id="user"]/fields/field[name="otp_code"]';
+                $this->dataHelper->deleteConfig('otp_code');
                 if ($this->dataHelper->getConfig('display_credentials_rejected_message')) {
                     $comment = __(
                         'Your Sirv email or password were incorrect. Please check and try again or <a class="sirv-open-in-new-window" target="_blank" href="%1">reset your password</a>.',
                         'https://my.sirv.com/#/password/forgot'
                     );
                     $this->dataHelper->deleteConfig('display_credentials_rejected_message');
+                }
+            } else if ($this->dataHelper->getConfig('need_otp_code')) {
+                $fieldNames = [
+                    'email',
+                    'password',
+                    'account_exists',
+                    'first_and_last_name',
+                    'alias',
+                    'register',
+                    'connect',
+                    'account'
+                ];
+                $fieldNames = 'name="' . implode('" or name="', $fieldNames) . '"';
+                $xpaths[] = '/settings/group[@id="user"]/fields/field[' . $fieldNames . ']';
+                if ($this->dataHelper->getConfig('display_otp_code_rejected_message')) {
+                    $comment = __(
+                        'Your authentication code was incorrect. Please try again.'
+                    );
+                    $this->dataHelper->deleteConfig('display_otp_code_rejected_message');
                 }
             } else {
                 $fieldNames = [
@@ -153,12 +191,14 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     'first_and_last_name',
                     'alias',
                     'register',
+                    'otp_code'
                 ];
                 $fieldNames = 'name="' . implode('" or name="', $fieldNames) . '"';
                 $xpaths[] = '/settings/group[@id="user"]/fields/field[' . $fieldNames . ']';
             }
         } else {
-            $this->dataHelper->saveConfig('password', '');
+            $this->dataHelper->deleteConfig('password');
+            $this->dataHelper->deleteConfig('otp_code');
             $xpaths[] = '/settings/group[@id="user"]';
         }
 
@@ -286,9 +326,37 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $fieldConfig['hidden'] = $isNewAccount;
                         break;
                     case 'account':
-                        $accounts = $this->dataHelper->getSirvUsersList();
-                        foreach ($accounts as $account) {
-                            $fieldConfig['values'][] = ['value' => $account, 'label' => $account];
+                        $accounts = $this->dataHelper->getSirvAccounts();
+                        $accountsList = array_keys($accounts);
+                        natsort($accountsList);
+                        $irAccounts = [];//NOTE: accounts with an insufficient role
+                        foreach ($accountsList as $account) {
+                            $role = $accounts[$account];
+                            if (in_array($role, ['primaryOwner', 'admin', 'owner'])) {
+                                $fieldConfig['values'][] = [
+                                    'value' => $account,
+                                    'label' => $account
+                                ];
+                            } else {
+                                $irAccounts[] = [
+                                    'value' => $account,
+                                    'label' => $account . ' (' . $role . ')',
+                                    'disabled' => 'true'
+                                ];
+                            }
+                        }
+                        if (!empty($irAccounts)) {
+                            $fieldConfig['values'][] = [
+                                'value' => 'empty',
+                                'label' => ' ',
+                                'disabled' => 'true',
+                            ];
+                            $fieldConfig['values'][] = [
+                                'value' => 'empty',
+                                'label' => 'Accounts with an insufficient role:',
+                                'disabled' => 'true',
+                            ];
+                            $fieldConfig['values'] = array_merge($fieldConfig['values'], $irAccounts);
                         }
                         break;
                     case 'js_modules':

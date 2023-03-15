@@ -219,7 +219,6 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
         $this->messagesModelFactory = $messagesModelFactory;
 
         $this->logger = $context->getLogger();
-        $this->sirvClient = $dataHelper->getSirvClient();
 
         $this->baseDirectUrl = 'https://' . $dataHelper->getSirvDomain();
         $this->baseUrl = 'https://' . $dataHelper->getSirvDomain(false);
@@ -290,6 +289,7 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                 $dataHelper->getConfig('client_id') &&
                 $dataHelper->getConfig('client_secret')
             );
+            $this->sirvClient = $dataHelper->getSirvClient();
         }
 
         $this->mediaDirectory = $filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);

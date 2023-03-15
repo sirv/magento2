@@ -53,11 +53,6 @@ define([
         _create: function () {
             $(this.element).attr('disabled', true).addClass('disabled');
             this.element.on('click', $.proxy(this._onClickHandler, this));
-            var self = this,
-                buttons = $('.products_with_images_label a, .products_without_images_label a');
-            buttons.each(function() {
-                self._callWidgetMethod($(this), 'button', 'doButtonDisabled');
-            });
 
             this._doRequest(
                 'get_magento_data',
@@ -76,7 +71,6 @@ define([
             var total = Number(data.total),
                 withoutMedia = data.products.length,
                 withMedia = total - withoutMedia,
-                self = this,
                 buttons;
 
             this.tempData = data;
@@ -86,9 +80,7 @@ define([
             $(this.element).removeClass('disabled').attr('disabled', false);
 
             buttons = $('.products_with_images_label a, .products_without_images_label a');
-            buttons.each(function() {
-                self._callWidgetMethod($(this), 'button', 'doButtonEnabled');
-            });
+            buttons.button('doButtonEnabled');
         },
 
         /**
@@ -100,11 +92,8 @@ define([
                 this.isBusy = true;
                 $(this.element).attr('disabled', true).addClass('disabled');
 
-                var self = this,
-                    buttons = $('.products_with_images_label a, .products_without_images_label a');
-                buttons.each(function() {
-                    self._callWidgetMethod($(this), 'button', 'doButtonDisabled');
-                });
+                var buttons = $('.products_with_images_label a, .products_without_images_label a');
+                buttons.button('doButtonDisabled');
 
                 $('body').trigger('processStart');
 
@@ -238,22 +227,22 @@ define([
                 for (placeholder in replacers) {
                     template = template.replace(placeholder, replacers[placeholder]);
                 }
-                matches = template.matchAll(/{attribute:([a-zA-Z0-9_]+)}/g);
+                matches = template.matchAll(/{attribute:(admin:)?([a-zA-Z0-9_]+)}/g);
                 for (match of matches) {
-                    if (typeof(product[match[1]]) == 'undefined') {
-                        regexp = RegExp('/({attribute:' + match[1] + '}/)+', 'g');
+                    if (typeof(product[match[2]]) == 'undefined') {
+                        regexp = RegExp('/({attribute:(admin:)?' + match[2] + '}/)+', 'g');
                         template = template.replaceAll(regexp, '/');
                         regexp = RegExp(
-                            '^{attribute:' + match[1] + '}/|' +
-                            '/{attribute:' + match[1] + '}$',
+                            '^{attribute:(admin:)?' + match[2] + '}/|' +
+                            '/{attribute:(admin:)?' + match[2] + '}$',
                             'g'
                         );
                         template = template.replaceAll(regexp, '');
-                        regexp = RegExp('{attribute:' + match[1] + '}', 'g');
+                        regexp = RegExp('{attribute:(admin:)?' + match[2] + '}', 'g');
                         template = template.replaceAll(regexp, '');
                     } else {
-                        regexp = RegExp('/' + match[0] + '/', 'g');
-                        template = template.replaceAll(match[0], product[match[1]]);
+                        regexp = RegExp(match[0], 'g');
+                        template = template.replaceAll(match[0], product[match[2]]);
                     }
                 }
 
@@ -477,11 +466,8 @@ define([
             }
             if (!this.isFailed) {
                 $(this.element).removeClass('disabled').attr('disabled', false);
-                var self = this,
-                    buttons = $('.list-item-products-with-images a, .list-item-products-without-images a');
-                buttons.each(function() {
-                    self._callWidgetMethod($(this), 'button', 'doButtonEnabled');
-                });
+                var buttons = $('.list-item-products-with-images a, .list-item-products-without-images a');
+                buttons.button('doButtonEnabled');
             }
             this.isInProgress = false;
         },
@@ -500,11 +486,8 @@ define([
                 this.isBusy = false;
                 $(this.element).removeClass('disabled').attr('disabled', false);
 
-                var self = this,
-                    buttons = $('.products_with_images_label a, .products_without_images_label a');
-                buttons.each(function() {
-                    self._callWidgetMethod($(this), 'button', 'doButtonEnabled');
-                });
+                var buttons = $('.products_with_images_label a, .products_without_images_label a');
+                buttons.button('doButtonEnabled');
             }
         },
 
@@ -594,12 +577,6 @@ define([
             );
             */
             this.modalWindow.find('.progress-counters-list').trigger('contentUpdated');
-
-            var self = this,
-                buttons = $('.list-item-products-with-images a, .list-item-products-without-images a');
-            buttons.each(function() {
-                self._callWidgetMethod($(this), 'button', 'doButtonDisabled');
-            });
 
             this.modalWindow.modal('openModal');
         },

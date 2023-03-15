@@ -87,11 +87,18 @@ class Sirv
     protected $account = '';
 
     /**
-     * List of account aliases and JSON Web Tokens
+     * OTP token
+     *
+     * @var string
+     */
+    protected $otpToken = '';
+
+    /**
+     * List of account aliases with JSON Web Tokens and roles
      *
      * @var array|null
      */
-    protected $jwts = null;
+    protected $accounts = null;
 
     /**
      * S3 bucket
@@ -280,13 +287,13 @@ class Sirv
     }
 
     /**
-     * Get list of user accounts
+     * Get list of user accounts with JSON Web Tokens and roles
      *
      * @return array
      */
-    public function getUsersList()
+    public function getUsersAccounts()
     {
-        return $this->setupWebTokens() ? array_keys($this->jwts) : [];
+        return $this->setupWebTokens() ? $this->accounts : [];
     }
 
     /**
@@ -296,28 +303,38 @@ class Sirv
      */
     protected function setupWebTokens()
     {
-        if ($this->jwts === null) {
+        if ($this->accounts === null) {
             if (empty($this->email) || empty($this->password) || !$this->getToken()) {
                 return false;
             }
 
+            $data = [
+                'email' => $this->email,
+                'password' => $this->password
+            ];
+            if (!empty($this->otpToken)) {
+                $data['otpToken'] = $this->otpToken;
+            }
+
             //NOTE: this call requires user email/password to authenticate, not the JWT access token
-$result = $this->sendRequest(
-    'v2/user/accounts',
-    'POST',
-    [
-        'email' => $this->email,
-        'password' => $this->password,
-    ]
-);
+            $result = $this->sendRequest(
+                'v2/user/accounts',
+                'POST',
+                $data
+            );
 
             if ($this->responseCode != 200 || !is_array($result) || empty($result)) {
                 return false;
             }
 
-            $this->jwts = [];
+            $this->accounts = [];
             foreach ($result as $account) {
-                $this->jwts[$account->alias] = $account->token;
+                if ($account->active) {
+                    $this->accounts[$account->alias] = [
+                        'jwt' => isset($account->token) ? $account->token : '',
+                        'role' => $account->role
+                    ];
+                }
             }
         }
 
@@ -359,14 +376,14 @@ $result = $this->sendRequest(
      */
     protected function setupClientCredentials()
     {
-        if ($this->account && $this->setupWebTokens() && isset($this->jwts[$this->account])) {
+        if ($this->account && $this->setupWebTokens() && isset($this->accounts[$this->account])) {
             //NOTE: get REST client credentials
             //      this call requires special JWT access token sent in GET /user/accounts response
             $result = $this->sendRequest(
                 'v2/rest/credentials',
                 'GET',
                 [],
-                $this->jwts[$this->account]//JWT access token
+                $this->accounts[$this->account]['jwt']//JWT access token
             );
 
             if ($result && $this->responseCode == 200) {

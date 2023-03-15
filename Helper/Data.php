@@ -126,6 +126,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         'alias' => true,
         'connect' => true,
         'register' => true,
+        'otp_code' => true,
         'token' => true,
         'token_expire_time' => true,
         'account' => true,
@@ -435,10 +436,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
             $data = [];
 
-            $data['email'] = $this->getConfig('email');
-            $data['email'] = $data['email'] ? $data['email'] : '';
-            $data['password'] = $this->getConfig('password');
-            $data['password'] = $data['password'] ? $data['password'] : '';
             $data['account'] = $this->getConfig('account');
             $data['account'] = $data['account'] ? $data['account'] : '';
 
@@ -692,15 +689,22 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $productAssetsFolder
             );
             $matches = [];
-            if (preg_match_all('#{attribute:([a-zA-Z0-9_]++)}#', $assetsFolder, $matches, PREG_SET_ORDER)) {
+            if (preg_match_all('#{attribute:(admin:)?([a-zA-Z0-9_]++)}#', $assetsFolder, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $match) {
-                    $attrValue = $product->getData($match[1]);
+                    $attrValue = $product->getData($match[2]);
                     if (is_string($attrValue)) {
                         $attrValue = trim($attrValue);
                         if (empty($attrValue)) {
                             $attrValue = false;
                         } else {
-                            $attrTextValue = $product->getAttributeText($match[1]);
+                            if (empty($match[1])) {
+                                $attrTextValue = $product->getAttributeText($match[2]);
+                            } else {
+                                $pAttr = $product->getResource()->getAttribute($match[2]);
+                                $storeId = $pAttr->getStoreId();
+                                $attrTextValue = $pAttr->setStoreId(0)->getSource()->getOptionText($attrValue);
+                                $pAttr->setStoreId($storeId);
+                            }
                             if (is_string($attrTextValue)) {
                                 $attrTextValue = trim($attrTextValue);
                                 if (!empty($attrTextValue)) {
@@ -713,12 +717,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     }
 
                     if ($attrValue) {
-                        $assetsFolder = str_replace('{attribute:' . $match[1] . '}', $attrValue, $assetsFolder);
+                        $assetsFolder = str_replace('{attribute:' . $match[1] . $match[2] . '}', $attrValue, $assetsFolder);
                     } else {
+                        $pattern = '{attribute:' . $match[1] . $match[2] . '}';
                         $assetsFolder = preg_replace(
                             [
-                                '#/{attribute:' . $match[1] . '}/#',
-                                '#^{attribute:' . $match[1] . '}/|/{attribute:' . $match[1] . '}$|{attribute:' . $match[1] . '}#'
+                                '#/' . $pattern . '/#',
+                                '#^' . $pattern . '/|/' . $pattern . '$|' . $pattern . '#'
                             ],
                             [
                                 '/',

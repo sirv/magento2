@@ -26,8 +26,8 @@ class CopyPrimaryImages extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\For
             '<span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>' .
             '</div>';
 
-        $link1 = '<a href="#" data-mage-init=\'{"sirvButton": {"target": "[data-role=copy_primary_images_to_magento]", "event": "sirv-products", "eventData": {"action": "view-items-with-image"}}}\' title="View products with images">Products with images</a>';
-        $link2 = '<a href="#" data-mage-init=\'{"sirvButton": {"target": "[data-role=copy_primary_images_to_magento]", "event": "sirv-products", "eventData": {"action": "view-items-without-image"}}}\' title="View products without images">Products without images</a>';
+        $link1 = '<a href="#" data-mage-init=\'{"sirvButton": {"target": "[data-role=copy_primary_images_to_magento]", "event": "sirv-products", "eventData": {"action": "view-items-with-image"}, "isDisabled": true}}\' title="View products with images">Products with images</a>';
+        $link2 = '<a href="#" data-mage-init=\'{"sirvButton": {"target": "[data-role=copy_primary_images_to_magento]", "event": "sirv-products", "eventData": {"action": "view-items-without-image"}, "isDisabled": true}}\' title="View products without images">Products without images</a>';
 
         $html = '<div data-role="copy_primary_images_to_magento" class="note admin__field-note-top" id="' . $htmlId . '-note">Save time by uploading all your images to Sirv, following the folder structure chosen above.<br/><br/>Adobe Commerce needs an image per product, so this option will copy the first image (alphabetically) from Sirv to Adobe Commerce.<br/><br/><span class="products_with_images_label">' . $link1 . ':</span> <span class="products_with_images_counter">' . $spinnerHtml . '</span><br><span class="products_without_images_label">' . $link2 . ':</span> <span class="products_without_images_counter">' . $spinnerHtml . '</span></div>';
 

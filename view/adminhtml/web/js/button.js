@@ -21,7 +21,8 @@ define([
             showLoader: false,
             needConfirmation: false,
             confirmationMessage: 'Are you sure?',
-            confirmationButtonText: 'OK'
+            confirmationButtonText: 'OK',
+            isDisabled: false
         },
 
         isButtonDisabled: false,
@@ -29,7 +30,10 @@ define([
         /** @inheritdoc */
         _create: function () {
             this._super();
-            this._addClass('sirv-ui-button');
+            $(this.element).addClass('sirv-ui-button');
+            if (this.options.isDisabled) {
+                this.doButtonDisabled();
+            }
         },
 
         /**

@@ -195,34 +195,77 @@ class Backend extends \Sirv\Magento2\Helper\Data
     }
 
     /**
-     * Get list of user accounts
+     * Get Sirv client
+     *
+     * @return \Sirv\Magento2\Model\Api\Sirv
+     */
+    public function getSirvClient()
+    {
+        /** @var \Sirv\Magento2\Model\Api\Sirv $client */
+        static $client = null;
+
+        if ($client === null) {
+            $client = parent::getSirvClient();
+
+            $data = [];
+            $data['email'] = $this->getConfig('email');
+            $data['email'] = $data['email'] ? $data['email'] : '';
+            $data['password'] = $this->getConfig('password');
+            $data['password'] = $data['password'] ? $data['password'] : '';
+            $data['otpToken'] = $this->getConfig('otp_code');
+            $data['otpToken'] = $data['otpToken'] ? $data['otpToken'] : '';
+
+            $cache = $this->getAppCache();
+            $cacheId = 'sirv_accounts_data_' . hash('md5', $data['email']);
+            $accounts = $cache->load($cacheId);
+            if (false !== $accounts) {
+                $accounts = $this->getUnserializer()->unserialize($accounts);
+                if (is_array($accounts) && !empty($accounts)) {
+                    $data['accounts'] = $accounts;
+                }
+            }
+
+            $client->init($data);
+        }
+
+        return $client;
+    }
+
+    /**
+     * Get accounts with roles
      *
      * @param bool $force
      * @return array
      */
-    public function getSirvUsersList($force = false)
+    public function getSirvAccounts($force = false)
     {
-        static $users = null;
+        static $accounts = null;
 
-        if ($users === null || $force) {
+        if ($accounts === null || $force) {
             $email = $this->getConfig('email') ?: '';
-            $password = $this->getConfig('password') ?: '';
-            $cacheId = 'sirv_accounts_' . hash('md5', $email . $password);
+            $cacheId = 'sirv_accounts_data_' . hash('md5', $email);
             $cache = $this->getAppCache();
 
             $data = $force ? false : $cache->load($cacheId);
             if (false !== $data) {
-                $users = $this->getUnserializer()->unserialize($data);
+                $data = $this->getUnserializer()->unserialize($data);
             }
 
-            if (!is_array($users)) {
-                $users = $this->getSirvClient()->getUsersList();
-                natsort($users);
-                $cache->save($this->getSerializer()->serialize($users), $cacheId, [], 600);
+            if (!is_array($data)) {
+                $apiClient = $this->getSirvClient();
+                $data = $apiClient->getUsersAccounts();
+                $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 3600);
+            }
+
+            $accounts = [];
+            if (is_array($data)) {
+                foreach ($data as $alias => $aData) {
+                    $accounts[$alias] = $aData['role'];
+                }
             }
         }
 
-        return $users;
+        return $accounts;
     }
 
     /**

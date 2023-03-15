@@ -331,12 +331,20 @@ a.save-message {
   width: 200px;
 }
 
+.mt-config .hidden-element {
+  display: none !important;
+}
+
 .mt-config .field .admin__control-select.mt-option.select-with-placeholder:invalid {
   color: #757575;
 }
 .mt-config .field .admin__control-select.mt-option.select-with-placeholder option {
   color: #303030;
 }
+.mt-config .field .admin__control-select.mt-option.select-with-placeholder option[disabled]:not(:first-child) {
+  color: #757575;
+}
+
 .mt-config .fieldset .field.no-label .control {
   width: calc( (100%) - 30px );
 }
@@ -541,6 +549,15 @@ a.save-message {
 
 .admin__field-control .admin__field-note {
   font-size: 1.4rem;
+}
+
+.admin__field-control .mt-option.otp-code-digit-field {
+  width: 30px;
+  min-width: 30px;
+  text-align: center;
+  padding: 6px 3px 6px 3px;
+  margin: 0 10px 0 0;
+  border-radius: 4px;
 }
 
 /* NOTE: to combine auto_fetch option with url_prefix */
@@ -1086,6 +1103,14 @@ a.save-message {
   display: none;
 }
 .sirv-assets-modal .page-support-text {
+  padding: 0 5px;
+}
+.sirv-product-list-modal .action-previous-button.hidden-element,
+.sirv-product-list-modal .action-next-button.hidden-element,
+.sirv-product-list-modal .page-support-text.hidden-element {
+  display: none;
+}
+.sirv-product-list-modal .page-support-text {
   padding: 0 5px;
 }
 

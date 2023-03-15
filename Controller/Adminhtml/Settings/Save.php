@@ -83,6 +83,7 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
         $email = isset($config['email']) ? $config['email'] : null;
         $password = isset($config['password']) ? $config['password'] : null;
+        $otpCode = isset($config['otp_code']) ? $config['otp_code'] : null;
         $account = isset($config['account']) ? $config['account'] : null;
         $isNewAccount = isset($config['account_exists']) ? ($config['account_exists'] == 'no') : false;
 
@@ -176,26 +177,42 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
         }
 
         //NOTE: check email and password
-        if ($email && $password) {
-            $accounts = $dataHelper->getSirvUsersList(true);
+        if (($email && $password) || $otpCode) {
+            /*
+            $dataHelper->getAppCache()->remove(
+                'sirv_accounts_data_' . hash('md5', $email)
+            );
+            */
+            $accounts = $dataHelper->getSirvAccounts(true);
 
             if (empty($accounts)) {
                 $responseCode = $dataHelper->getSirvClient()->getResponseCode();
-                if ($responseCode == 200) {
+
+                if ($responseCode == 417) {
+                    $dataHelper->saveConfig('need_otp_code', 'true');
+                } else if ($responseCode == 200) {
                     $errorMsg = __(
                         'Sirv user %1 does not have permission to connect. Your role must be either Admin or Owner.',
                         $email
                     );
                     $this->messageManager->addWarning($errorMsg);
+                    $dataHelper->saveConfig('password', '');
                 } else {
-                    $dataHelper->saveConfig('display_credentials_rejected_message', 'true');
+                    if ($otpCode) {
+                        $dataHelper->saveConfig('display_otp_code_rejected_message', 'true');
+                        $dataHelper->deleteConfig('otp_code');
+                    } else {
+                        $dataHelper->saveConfig('display_credentials_rejected_message', 'true');
+                        $dataHelper->saveConfig('password', '');
+                    }
                 }
-
-                $dataHelper->saveConfig('password', '');
             } else {
+                $dataHelper->deleteConfig('need_otp_code');
+                $dataHelper->deleteConfig('otp_code');
                 if (count($accounts) == 1) {
-                    $account = reset($accounts);
+                    $account = array_key_first($accounts);
                     $dataHelper->saveConfig('account', $account);
+
                     /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
                     $apiClient = $dataHelper->getSirvClient();
                     $apiClient->init(['account' => $account]);
@@ -206,9 +223,9 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
         }
 
         if ($account) {
-            $accounts = $dataHelper->getSirvUsersList();
+            $accounts = $dataHelper->getSirvAccounts();
 
-            if (in_array($account, $accounts)) {
+            if (isset($accounts[$account])) {
                 $doGetCredentials = true;
                 $dataHelper->deleteConfig('account_exists');
                 $dataHelper->deleteConfig('first_name');
@@ -240,6 +257,11 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     $this->messageManager->addWarningMessage(__('Unable to receive S3 credentials.'));
                     $addSuccessMessage = false;
                 }
+
+                $email = $dataHelper->getConfig('email') ?: '';
+                $cache = $dataHelper->getAppCache()->remove(
+                    'sirv_accounts_data_' . hash('md5', $email)
+                );
             } else {
                 $this->messageManager->addWarningMessage(__('Unable to receive client credentials.'));
                 $addSuccessMessage = false;
@@ -254,6 +276,7 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
             if ($doGetCredentials && isset($s3Credentials)) {
                 if ($autoFetch == null) {
                     $autoFetch = 'custom';
+                    $dataHelper->saveConfig('auto_fetch', 'custom');
                 }
                 if ($urlPrefix == '') {
                     $domains = $dataHelper->getDomains();
