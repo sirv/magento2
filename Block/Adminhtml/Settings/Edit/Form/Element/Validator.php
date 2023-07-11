@@ -31,6 +31,11 @@ class Validator extends \Magento\Framework\Data\Form\Element\AbstractElement
         $this->setType('validator');
     }
 
+    /**
+     * Get element HTML
+     *
+     * @return string
+     */
     public function getElementHtml()
     {
         $html = '';

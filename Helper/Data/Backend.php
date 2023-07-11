@@ -718,6 +718,9 @@ class Backend extends \Sirv\Magento2\Helper\Data
             $currentTime = time();
             $data['limits'] = [];
             foreach ($limits as $type => $limitData) {
+                if ($type == 'images:realtime' || $type == 'zips2:create') {
+                    continue;
+                }
                 $remaining = (int)$limitData->remaining;
                 $reset = '-';
                 if ($remaining <= 0) {
@@ -787,8 +790,9 @@ class Backend extends \Sirv\Magento2\Helper\Data
             $data = [];
         }
 
-        if (isset($data[$url])) {
-            return 'File size: ' . $this->getFormatedSize($data[$url]);
+        if (isset($data[$url]) && is_array($data[$url])) {
+            return 'File size: ' . $this->getFormatedSize($data[$url]['download_size']) .
+                ' (unzipped ' . $this->getFormatedSize($data[$url]['resource_size']) . ')';
         }
 
         if (!isset(self::$curlHandle)) {
@@ -809,7 +813,7 @@ class Backend extends \Sirv\Magento2\Helper\Data
             ]
         );
 
-        /*$contents = */curl_exec(self::$curlHandle);
+        $contents = curl_exec(self::$curlHandle);
 
         if ($error = curl_errno(self::$curlHandle)) {
             return "cURL Error ($error): " . curl_error(self::$curlHandle);
@@ -820,11 +824,16 @@ class Backend extends \Sirv\Magento2\Helper\Data
             return "HTTP Error ($code).";
         }
 
-        $size = curl_getinfo(self::$curlHandle, CURLINFO_SIZE_DOWNLOAD);
+        $downloadSize = curl_getinfo(self::$curlHandle, CURLINFO_SIZE_DOWNLOAD);
+        $resourceSize = strlen($contents);
 
-        $data[$url] = (int)$size;
+        $data[$url] = [
+            'download_size' => (int)$downloadSize,
+            'resource_size' => (int)$resourceSize
+        ];
         $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 60 * 60 * 24);
 
-        return 'File size: ' . $this->getFormatedSize($data[$url]);
+        return 'File size: ' . $this->getFormatedSize($data[$url]['download_size']) .
+            ' (unzipped ' . $this->getFormatedSize($data[$url]['resource_size']) . ')';
     }
 }

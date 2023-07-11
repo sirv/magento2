@@ -78,7 +78,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
     /**
      * Sirv JS modules
      *
-     * @return string
+     * @var string
      */
     protected $sirvJsModules = '';
 
@@ -236,9 +236,11 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
             $src = 'https://scripts.sirv.com/sirvjs/v3/sirv.js';
 
             //NOTE: if SMV is off and Lazy is on, use this v2 script:
+            /*
             if (!$this->isSirvMediaViewerUsed) {
                 $src = 'https://scripts.sirv.com/sirv.nospin.js';
             }
+            */
 
             if (!empty($this->sirvJsModules) && strpos($this->sirvJsModules, 'all') === false) {
                 $src = 'https://scripts.sirv.com/sirvjs/v3/sirv.js?modules=' . $this->sirvJsModules;

@@ -35,4 +35,9 @@ $staticDomain = parse_url($baseStaticUrl, PHP_URL_HOST) ?: '';
             }
         }
     });
+
+    Sirv.on('viewer:ready', function viewerEventHandler(viewer) {
+        var pdpGalleryPlaceholder = document.querySelector('.pdp-gallery-placeholder');
+        pdpGalleryPlaceholder && (pdpGalleryPlaceholder.style.visibility = 'hidden');
+    });
 </script>

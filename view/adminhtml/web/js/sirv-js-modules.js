@@ -21,6 +21,15 @@ define([
         /** @inheritdoc */
         _create: function () {
             this.options.selector = '[name="' + this.element.attr('name') + '"]';
+            if (this.element.attr('value') == 'all') {
+                if (this.element.prop('checked')) {
+                    $(this.options.selector).each(function (i, el) {
+                        if ($(el).attr('value') != 'all') {
+                            $(el).prop('checked', true);
+                        }
+                    });
+                }
+            }
             this.element.on('change', $.proxy(this._changeEventHandler, this));
         },
 
@@ -38,12 +47,13 @@ define([
          * @param {Bool} checked
          */
         _switchJsModules: function (value, checked) {
-            var switchAll = (value == 'all'), checkedCounter = 0, v;
+            var switchAll = (value == 'all'), totalCounter = 0, checkedCounter = 0, v;
             $(this.options.selector).each(function (i, el) {
                 v = $(el).attr('value');
                 if (v == 'all') {
                     switchAll || $(el).prop('checked', false);
                 } else {
+                    totalCounter++;
                     if (switchAll) {
                         $(el).prop('checked', checked || (v == 'lazyimage'));
                     } else {
@@ -55,6 +65,9 @@ define([
             });
             if (!(switchAll || checkedCounter)) {
                 $(this.element).prop('checked', true);
+            }
+            if (!switchAll && (totalCounter == checkedCounter)) {
+                $(this.options.selector).filter('[value="all"]').prop('checked', true);
             }
         }
     });

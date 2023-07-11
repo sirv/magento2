@@ -824,6 +824,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             self::$curlHandle = curl_init();
         }
 
+        $url = str_replace(' ', '%20', $url);
+
         curl_setopt_array(
             self::$curlHandle,
             [

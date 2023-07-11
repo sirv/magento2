@@ -21,6 +21,9 @@ $viewerHelper->setGalleryBlock($block);
 $viewerSlides = $viewerHelper->getViewerSlides();
 $usePlaceholder = $viewerHelper->usePlaceholder();
 $placeholder = $viewerHelper->getPlaceholder();
+if (empty($placeholder['url'])) {
+    $placeholder['url'] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADa613fAAAAaElEQVR42u3PQREAAAwCoNm/9CL496ABuREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREWkezG8AZQ6nfncAAAAASUVORK5CYII=';
+}
 $jsonConfig = $block->escapeHtmlAttr($viewerHelper->getJsonConfig());
 $jsOptions = $viewerHelper->getViewerJsOptions();
 

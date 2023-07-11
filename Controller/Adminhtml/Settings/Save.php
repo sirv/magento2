@@ -90,6 +90,13 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
         if ($isNewAccount) {
             $valid = true;
 
+            if (preg_match('#\p{Lu}#u', $email)) {
+                $this->messageManager->addWarningMessage(
+                    __('Email address is invalid. Email address can\'t contain uppercase characters.')
+                );
+                $valid = false;
+            }
+
             if (strpos($email, 'mail.ru') !== false) {
                 $this->messageManager->addWarningMessage(
                     __('Please use a company email address (not mail.ru).')
@@ -190,7 +197,7 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
                 if ($responseCode == 417) {
                     $dataHelper->saveConfig('need_otp_code', 'true');
-                } else if ($responseCode == 200) {
+                } elseif ($responseCode == 200) {
                     $errorMsg = __(
                         'Sirv user %1 does not have permission to connect. Your role must be either Admin or Owner.',
                         $email

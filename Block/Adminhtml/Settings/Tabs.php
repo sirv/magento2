@@ -20,6 +20,8 @@ class Tabs extends \Magento\Backend\Block\Widget\Tabs
     protected $_template = 'Sirv_Magento2::widget/tabs.phtml';
 
     /**
+     * Internal constructor
+     *
      * @return void
      */
     protected function _construct()

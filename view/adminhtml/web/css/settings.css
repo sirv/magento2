@@ -541,7 +541,8 @@ a.save-message {
   width: 600px;
   background-color: #35302C;
   padding: 10px 14px;
-  max-width: 260px
+  max-width: 290px;
+  font-size: 14px;
 }
 .admin__field-control .tooltip .tooltip-content a {
   color: #0a8ff7;
@@ -570,6 +571,13 @@ a.save-message {
 
 .mt-config .field-mt-image_quality .mt-option option[value='80'] {
   font-weight: 600;
+}
+
+.admin__field.field-mt-viewer_contents > .admin__field-control > .admin__field-sub-option-note {
+  margin-top: 0;
+  padding-left: 2.6rem;
+  color: #adadad;
+  font-size: 1.2rem;
 }
 
 .admin__field.field-mt-pinned_items > .admin__field-control > .note.admin__field-note-top,

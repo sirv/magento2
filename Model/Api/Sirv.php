@@ -402,6 +402,7 @@ class Sirv
     /**
      * Get S3 credentials
      *
+     * @param string $email
      * @return array|bool
      */
     public function getS3Credentials($email = '')

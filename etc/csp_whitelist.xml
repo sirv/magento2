@@ -15,6 +15,9 @@
             <values>
                 <value id="sirv_connect_src" type="host">*.sirv.com</value>
                 <value id="vimeo_connect_src" type="host">vimeo.com</value>
+                <value id="youtube_connect_src" type="host">*.youtube.com</value>
+                <!-- NOTE: for model support -->
+                <value id="blob_connect_src" type="host">blob:</value>
             </values>
         </policy>
         <policy id="frame-src">

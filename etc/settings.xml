@@ -310,8 +310,16 @@
                         <label>Video streaming</label>
                         <value>video</value>
                     </option>
+                    <option>
+                        <label>Gallery</label>
+                        <value>gallery</value>
+                    </option>
+                    <option>
+                        <label>3D models</label>
+                        <value>model</value>
+                    </option>
                 </options>
-                <value>all,lazyimage,zoom,spin,hotspots,video</value>
+                <value>all,lazyimage,zoom,spin,hotspots,video,gallery,model</value>
                 <install/>
             </field>
             <field>
@@ -409,7 +417,7 @@
                 <name>viewer_contents</name>
                 <label>Order of content</label>
                 <type>radios</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios</type_class>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\OrderOfContent</type_class>
                 <options>
                     <option>
                         <label>Sirv assets, then Adobe Commerce images &amp; videos</label>
@@ -424,7 +432,7 @@
                         <value>1</value>
                     </option>
                     <option>
-                        <label>Sirv assets only</label>
+                        <label>Sirv assets</label>
                         <value>4</value>
                     </option>
                 </options>
@@ -495,6 +503,10 @@
                         <label>Image</label>
                         <value>image</value>
                     </option>
+                    <option>
+                        <label>Model</label>
+                        <value>model</value>
+                    </option>
                 </options>
                 <value></value>
             </field>
@@ -503,7 +515,7 @@
                 <label>Pin gallery items</label>
                 <type>pinned_items</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\PinnedItems</type_class>
-                <value>{"videos":"no","spins":"no","images":"no","mask":""}</value>
+                <value>{"videos":"no","spins":"no","models":"no","images":"no","mask":""}</value>
                 <install/>
             </field>
             <field>

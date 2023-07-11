@@ -145,7 +145,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     $responseCode = $this->dataHelper->getSirvClient()->getResponseCode();
                     if ($responseCode == 417) {
                         $this->dataHelper->saveConfig('need_otp_code', 'true');
-                    } else if ($responseCode != 200) {
+                    } elseif ($responseCode != 200) {
                         $passwordRequired = true;
                         $this->dataHelper->saveConfig('display_credentials_rejected_message', 'true');
                         $this->dataHelper->deleteConfig('password');
@@ -164,7 +164,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     );
                     $this->dataHelper->deleteConfig('display_credentials_rejected_message');
                 }
-            } else if ($this->dataHelper->getConfig('need_otp_code')) {
+            } elseif ($this->dataHelper->getConfig('need_otp_code')) {
                 $fieldNames = [
                     'email',
                     'password',

@@ -96,11 +96,32 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $activeSlideIndex;
 
     /**
+     * Active slide ids
+     *
+     * @var array
+     */
+    protected $activeSlideIds = [];
+
+    /**
      * Use placeholder
      *
      * @var bool
      */
     protected $usePlaceholder = false;
+
+    /**
+     * Default placeholder width
+     *
+     * @var integer
+     */
+    protected $defaultPlaceholderWidth = 100;
+
+    /**
+     * Default placeholder height
+     *
+     * @var integer
+     */
+    protected $defaultPlaceholderHeight = 100;
 
     /**
      * Placeholder data
@@ -143,6 +164,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $pinnedItems = [
         'videos' => '',
         'spins' => '',
+        'models' => '',
         'images' => '',
         'mask' => ''
     ];
@@ -178,7 +200,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $this->assetsCacheData['url'] = $this->_getUrl('sirv/ajax/assetsCache');
         $pinnedItems = $this->dataHelper->getConfig('pinned_items') ?: '{}';
         $pinnedItems = json_decode($pinnedItems, true);
-        foreach (['videos', 'spins', 'images'] as $key) {
+        foreach (['videos', 'spins', 'models', 'images'] as $key) {
             if (isset($pinnedItems[$key])) {
                 if ($pinnedItems[$key] == 'left') {
                     $this->pinnedItems[$key] = ' data-pinned="start"';
@@ -317,7 +339,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             $this->initAssetsData();
         }
 
-        if (empty($this->placeholder)) {
+        if (empty($this->placeholder) || empty($this->placeholder['url'])) {
             return [
                 'url' => '',
                 'width' => 0,
@@ -402,20 +424,27 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $this->configurableData['active-slides'] = [];
 
         foreach ($this->getAssociatedProducts($product) as $associatedProduct) {
-            $id = $associatedProduct->getId();
             $data = $this->getProductAssetsData($associatedProduct);
-            $this->configurableData['slides'][$id] = array_keys($data['slides']);
-            $this->configurableData['active-slides'][$id] = count($this->viewerSlides) + $data['active-slide'];
-            $this->viewerSlides = array_merge($this->viewerSlides, $data['slides']);
+            if (!empty($data)) {
+                $id = $associatedProduct->getId();
+                $this->configurableData['slides'][$id] = array_keys($data);
+                $activeSlideIndex = isset($this->activeSlideIds[$id]) ? $data[$this->activeSlideIds[$id]]['index'] : 0;
+                $this->configurableData['active-slides'][$id] = count($this->viewerSlides) + $activeSlideIndex;
+                foreach ($data as $slideId => $slideData) {
+                    $this->viewerSlides[] = $slideData['html'];
+                }
+            }
         }
 
         $data = $this->getProductAssetsData($product);
-        $this->configurableData['slides'][$this->productId] = array_keys($data['slides']);
-        $this->configurableData['active-slides'][$this->productId] = count($this->viewerSlides) + $data['active-slide'];
-        $this->viewerSlides = array_merge($this->viewerSlides, $data['slides']);
+        $this->configurableData['slides'][$this->productId] = array_keys($data);
+        $this->configurableData['active-slides'][$this->productId] = count($this->viewerSlides) + $data[$this->activeSlideIds[$this->productId]]['index'];
+        foreach ($data as $slideId => $slideData) {
+            $this->viewerSlides[] = $slideData['html'];
+        }
 
         $this->activeSlideIndex = $this->configurableData['active-slides'][$this->productId];
-        $this->placeholder = $data['placeholder'];
+        $this->placeholder = $data[$this->activeSlideIds[$this->productId]]['placeholder'];
     }
 
     /**
@@ -492,58 +521,82 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
             return self::$assetsData[$productId];
         }
 
-        $slides = [];
-        $activeSlideIndex = 0;
-        $placeholder = [];
-
-        if ($this->slideSources != self::SIRV_ASSETS) {
-            $data = $this->getMagentoAssetsData($product);
-            $slides = $data['slides'];
-            $activeSlideIndex = $data['active-slide'];
-            $placeholder = $data['placeholder'];
-        }
-
-        if ($this->slideSources != self::MAGENTO_ASSETS) {
-            $data = $this->getSirvAssetsData($product);
-        }
-
         switch ($this->slideSources) {
+            case self::MAGENTO_ASSETS:
+                $data = $this->getMagentoAssetsData($product);
+                break;
             case self::MAGENTO_AND_SIRV_ASSETS:
-                if (empty($slides)) {
-                    $slides = $data['slides'];
-                    $placeholder = $data['placeholder'];
+                $data = $this->getMagentoAssetsData($product);
+                if (empty($data)) {
+                    $data = $this->getSirvAssetsData($product);
                 } else {
-                    $slides = array_merge($slides, $data['slides']);
+                    $data = $data + $this->getSirvAssetsData($product);
+                    $fileNames = [];
+                    $index = 0;
+                    foreach ($data as $slideId => $slideData) {
+                        if (isset($fileNames[$data[$slideId]['basename']])) {
+                            unset($data[$slideId]);
+                        } else {
+                            $fileNames[$data[$slideId]['basename']] = true;
+                            $data[$slideId]['index'] = $index;
+                            $index++;
+                        }
+                    }
                 }
                 break;
             case self::SIRV_AND_MAGENTO_ASSETS:
-                if (!empty($data['slides'])) {
-                    $slides = array_merge($data['slides'], $slides);
-                    //$activeSlideIndex += count($data['slides']);
-                    $activeSlideIndex = 0;
-                    $placeholder = $data['placeholder'];
+                $data = $this->getSirvAssetsData($product);
+                if (empty($data)) {
+                    $data = $this->getMagentoAssetsData($product);
+                } else {
+                    $slideId = array_key_first($data);
+                    $this->activeSlideIds[$productId] = $slideId;
+                    $data = $data + $this->getMagentoAssetsData($product);
+                    $fileNames = [];
+                    $index = 0;
+                    foreach ($data as $slideId => $slideData) {
+                        if (isset($fileNames[$data[$slideId]['basename']])) {
+                            unset($data[$slideId]);
+                        } else {
+                            $fileNames[$data[$slideId]['basename']] = true;
+                            $data[$slideId]['index'] = $index;
+                            $index++;
+                        }
+                    }
                 }
                 break;
             case self::SIRV_ASSETS:
-                $slides = $data['slides'];
-                $placeholder = $data['placeholder'];
+                $data = $this->getSirvAssetsData($product);
+                //NOTE: display Megento assets if product has no Sirv assets
+                if (empty($data)) {
+                    $data = $this->getMagentoAssetsData($product);
+                }
                 break;
         }
 
-        if (empty($slides) && $this->productId == $productId) {
-            $slideId = 'item-' . $productId . '-0';
-            $url = $this->imageHelper->getDefaultPlaceholderUrl('image');
-            $placeholder['url'] = $url;
-            $placeholder['width'] = 100;
-            $placeholder['height'] = 100;
-            $slides[$slideId] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" />';
+        if (empty($data)) {
+            if ($this->productId == $productId) {
+                $slideId = 'item-' . $productId . '-0';
+                $url = $this->imageHelper->getDefaultPlaceholderUrl('image');
+                $data[$slideId] = [];
+                $data[$slideId]['index'] = 0;
+                $data[$slideId]['type'] = 'image';
+                $data[$slideId]['html'] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" />';
+                $data[$slideId]['placeholder'] = [];
+                $data[$slideId]['placeholder']['url'] = $url;
+                $data[$slideId]['placeholder']['width'] = $this->defaultPlaceholderWidth;
+                $data[$slideId]['placeholder']['height'] = $this->defaultPlaceholderHeight;
+            }
         }
 
-        self::$assetsData[$productId] = [
-            'active-slide' => $activeSlideIndex,
-            'placeholder' => $placeholder,
-            'slides' => $slides
-        ];
+        //NOTE: fix active slide id
+        if (!isset($this->activeSlideIds[$productId])) {
+            if (!empty($data)) {
+                $this->activeSlideIds[$productId] = array_key_first($data);
+            }
+        }
+
+        self::$assetsData[$productId] = $data;
 
         return self::$assetsData[$productId];
     }
@@ -556,110 +609,142 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected function getMagentoAssetsData($product)
     {
-        $slides = [];
-        $activeSlideIndex = 0;
-        $placeholder = [];
+        $items = $product->getMediaGalleryImages();
+        if (!($items instanceof \Magento\Framework\Data\Collection)) {
+            return [];
+        }
 
-        $images = $product->getMediaGalleryImages();
-        if ($images instanceof \Magento\Framework\Data\Collection) {
-            $productId = $product->getId();
-            $baseImage = $product->getImage();
-            $productName = $product->getName();
-            $idPrefix = 'item-' . $productId . '-';
-            $index = 0;
-            $disabled = ($this->productId == $productId ? '' : ' data-disabled');
-            $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
-            $dataType = $zoom == 'enabled' ? ' data-type="zoom"' : '';
+        //NOTE: to sort by position for associated products
+        $iterator = $items->getIterator();
+        $iterator->uasort(function ($a, $b) {
+            $aPos = (int)$a->getPosition();
+            $bPos = (int)$b->getPosition();
+            if ($aPos > $bPos) {
+                return 1;
+            } elseif ($aPos < $bPos) {
+                return -1;
+            }
+            return 0;
+        });
+        $iterator->rewind();
 
-            //NOTE: to sort by position for associated products
-            $iterator = $images->getIterator();
-            $iterator->uasort(function ($a, $b) {
-                $aPos = (int)$a->getPosition();
-                $bPos = (int)$b->getPosition();
-                if ($aPos > $bPos) {
-                    return 1;
-                } elseif ($aPos < $bPos) {
-                    return -1;
-                }
-                return 0;
-            });
-            $iterator->rewind();
+        $imageUrlBuilder = $this->getImageUrlBuilder();
 
-            $imageUrlBuilder = $this->getImageUrlBuilder();
+        $productId = $product->getId();
+        $baseImage = $product->getImage();
+        $productName = $product->getName();
+        $idPrefix = 'item-' . $productId . '-';
+        $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
+        $dataTypeAttr = $zoom == 'enabled' ? ' data-type="zoom"' : '';
+        $disabledAttr = ($this->productId == $productId ? '' : ' data-disabled');
+        $profile = $this->dataHelper->getConfig('profile');
+        if (!empty($profile) && !in_array($profile, ['-', 'Default'])) {
+            $profile = '?profile=' . $profile;
+        } else {
+            $profile = '';
+        }
+        $getPlaceholder = $this->usePlaceholder && ($this->productId == $productId);
 
-            while ($iterator->valid()) {
-                $image = $iterator->current();
+        $data = [];
+        $index = 0;
 
-                if ($baseImage == $image->getData('file')) {
-                    $activeSlideIndex = $index;
-                    if ($this->usePlaceholder) {
-                        $absPath = $image->getData('path');
+        while ($iterator->valid()) {
+            $item = $iterator->current();
+
+            $slideId = $idPrefix . $index;
+            $data[$slideId] = [];
+            $data[$slideId]['index'] = $index;
+            $data[$slideId]['basename'] = basename($item->getData('file'));
+
+            if ($baseImage == $item->getData('file')) {
+                $this->activeSlideIds[$productId] = $slideId;
+            }
+
+            switch ($item->getData('media_type')) {
+                case 'external-video':
+                    $data[$slideId]['type'] = 'video';
+                    $url = $item->getData('video_url');
+                    $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems['videos'] . '></div>';
+
+                    $data[$slideId]['placeholder'] = [];
+                    if ($getPlaceholder) {
+                        if ($imageUrlBuilder) {
+                            $data[$slideId]['placeholder']['url'] = $imageUrlBuilder->getUrl($item->getData('file'), 'product_page_image_large');
+                        } else {
+                            $data[$slideId]['placeholder']['url'] = $this->imageHelper->init($product, 'product_page_image_large')
+                                ->setImageFile($item->getData('file'))
+                                ->getUrl();
+                        }
+                        $absPath = $item->getData('path');
                         if (is_file($absPath)) {
                             list($fileWidth, $fileHeight,) = getimagesize($absPath);
-                            $placeholder['width'] = $fileWidth;
-                            $placeholder['height'] = $fileHeight;
-                        }
-                        if ($imageUrlBuilder) {
-                            $placeholder['url'] = $imageUrlBuilder->getUrl($image->getData('file'), 'product_page_image_large');
+                            $data[$slideId]['placeholder']['width'] = $fileWidth;
+                            $data[$slideId]['placeholder']['height'] = $fileHeight;
                         } else {
-                            $placeholder['url'] = $this->imageHelper->init($product, 'product_page_image_large')
-                                ->setImageFile($image->getData('file'))
+                            $data[$slideId]['placeholder']['width'] = $this->defaultPlaceholderWidth;
+                            $data[$slideId]['placeholder']['height'] = $this->defaultPlaceholderHeight;
+                        }
+                    }
+
+                    $index++;
+                    break;
+                case 'image':
+                    $data[$slideId]['type'] = 'image';
+                    $absPath = $item->getData('path');
+                    $relPath = $this->syncHelper->getRelativePath($absPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH);
+
+                    $url = $item->getData('large_image_url');
+                    if (empty($url)) {
+                        if ($imageUrlBuilder) {
+                            $url = $imageUrlBuilder->getUrl($item->getData('file'), 'product_page_image_large');
+                        } else {
+                            $url = $this->imageHelper->init($product, 'product_page_image_large')
+                                ->setImageFile($item->getData('file'))
                                 ->getUrl();
                         }
                     }
-                }
 
-                $slideId = $idPrefix . $index;
-                switch ($image->getData('media_type')) {
-                    case 'external-video':
-                        $url = $image->getData('video_url');
-                        $slides[$slideId] = '<div data-id="' . $slideId . '"' . $disabled . ' data-src="' . $url . '"' . $this->pinnedItems['videos'] . '></div>';
-                        $index++;
-                        break;
-                    case 'image':
-                        $absPath = $image->getData('path');
-                        $relPath = $this->syncHelper->getRelativePath($absPath, \Sirv\Magento2\Helper\Sync::MAGENTO_MEDIA_PATH);
-                        $url = $image->getData('large_image_url');
-                        if (empty($url)) {
-                            if ($imageUrlBuilder) {
-                                $url = $imageUrlBuilder->getUrl($image->getData('file'), 'product_page_image_large');
-                            } else {
-                                $url = $this->imageHelper->init($product, 'product_page_image_large')
-                                    ->setImageFile($image->getData('file'))
-                                    ->getUrl();
-                            }
+                    $alt = $item->getData('label') ?: $productName;
+                    $alt = $this->galleryBlock->escapeHtmlAttr($alt, false);
+
+                    $pinnedAttr = $this->pinnedItems['images'];
+                    if (!(empty($pinnedAttr) || empty($this->pinnedItems['mask']) || preg_match($this->pinnedItems['mask'], $url))) {
+                        $pinnedAttr = '';
+                    }
+
+                    if ($this->syncHelper->isNotExcluded($absPath) && $this->syncHelper->isSynced($relPath)) {
+                        $parts = explode('?', $url, 2);
+                        if (isset($parts[1])) {
+                            $parts[1] = str_replace('+', '%20', $parts[1]);
                         }
+                        $url = implode('?', $parts);
+                        $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $dataTypeAttr . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '"></div>';
+                    } else {
+                        $data[$slideId]['html'] = '<img data-id="' . $slideId . '" data-type="static"' . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '" />';
+                    }
 
-                        $alt = $image->getData('label') ?: $productName;
-                        $alt = $this->galleryBlock->escapeHtmlAttr($alt, false);
-
-                        $pinnedAttr = $this->pinnedItems['images'];
-                        if (!(empty($pinnedAttr) || empty($this->pinnedItems['mask']) || preg_match($this->pinnedItems['mask'], $url))) {
-                            $pinnedAttr = '';
-                        }
-
-                        if ($this->syncHelper->isNotExcluded($absPath) && $this->syncHelper->isSynced($relPath)) {
-                            $parts = explode('?', $url, 2);
-                            if (isset($parts[1])) {
-                                $parts[1] = str_replace('+', '%20', $parts[1]);
-                            }
-                            $url = implode('?', $parts);
-                            $slides[$slideId] = '<div data-id="' . $slideId . '"' . $dataType . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '"></div>';
+                    $data[$slideId]['placeholder'] = [];
+                    if ($getPlaceholder) {
+                        $data[$slideId]['placeholder']['url'] = $url;
+                        $absPath = $item->getData('path');
+                        if (is_file($absPath)) {
+                            list($fileWidth, $fileHeight,) = getimagesize($absPath);
+                            $data[$slideId]['placeholder']['width'] = $fileWidth;
+                            $data[$slideId]['placeholder']['height'] = $fileHeight;
                         } else {
-                            $slides[$slideId] = '<img data-id="' . $slideId . '" data-type="static"' . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '" />';
+                            $data[$slideId]['placeholder']['width'] = $this->defaultPlaceholderWidth;
+                            $data[$slideId]['placeholder']['height'] = $this->defaultPlaceholderHeight;
                         }
-                        $index++;
-                        break;
-                }
-                $iterator->next();
+                    }
+
+                    $index++;
+                    break;
             }
+
+            $iterator->next();
         }
 
-        return [
-            'active-slide' => $activeSlideIndex,
-            'placeholder' => $placeholder,
-            'slides' => $slides,
-        ];
+        return $data;
     }
 
     /**
@@ -668,79 +753,79 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Catalog\Model\Product $product
      * @return array
      */
-    public function getSirvAssetsData($product)
+    protected function getSirvAssetsData($product)
     {
         $assetsData = $this->dataHelper->getAssetsData($product);
         if (empty($assetsData)) {
-            return [
-                'active-slide' => 0,
-                'placeholder' => [],
-                'slides' => []
-            ];
+            return [];
         }
 
         $assets = $assetsData['assets'] ?? [];
         $productId = $product->getId();
         $this->assetsCacheData['timestamps'][$productId] = $assetsData['timestamp'];
-        $folderUrl = $this->syncHelper->getBaseUrl() . $assetsData['dirname'];
-
-        $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
-        $dataType = $zoom == 'enabled' ? ' data-type="zoom"' : '';
-
-        $slides = [];
         $idPrefix = 'sirv-item-' . $productId . '-';
-        $index = 0;
-        $disabled = ($this->productId == $productId ? '' : ' data-disabled');
-
+        $folderUrl = $this->syncHelper->getBaseUrl() . $assetsData['dirname'];
+        $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
+        $dataTypeAttr = $zoom == 'enabled' ? ' data-type="zoom"' : '';
+        $disabledAttr = ($this->productId == $productId ? '' : ' data-disabled');
         $profile = $this->dataHelper->getConfig('profile');
         if (!empty($profile) && !in_array($profile, ['-', 'Default'])) {
             $profile = '?profile=' . $profile;
         } else {
             $profile = '';
         }
+        $getPlaceholder = $this->usePlaceholder && ($this->productId == $productId);
 
-        $placeholder = [];
+        $data = [];
+        $index = 0;
+
         foreach ($assets as $asset) {
             $slideId = $idPrefix . $index;
+            $data[$slideId] = [];
+            $data[$slideId]['index'] = $index;
+            $data[$slideId]['type'] = $asset['type'];
             switch ($asset['type']) {
                 case 'image':
                     $url = $folderUrl . '/' . $asset['name'];
+                    $data[$slideId]['basename'] = basename($asset['name']);
                     $pinnedAttr = $this->pinnedItems['images'];
                     if (!(empty($pinnedAttr) || empty($this->pinnedItems['mask']) || preg_match($this->pinnedItems['mask'], $url))) {
                         $pinnedAttr = '';
                     }
                     $url .= $profile;
-                    if (empty($placeholder) && $this->usePlaceholder) {
-                        $placeholder['url'] = $url;
-                        $placeholder['width'] = $asset['width'];
-                        $placeholder['height'] = $asset['height'];
+                    $data[$slideId]['placeholder'] = [];
+                    if ($getPlaceholder) {
+                        $data[$slideId]['placeholder']['url'] = $url;
+                        $data[$slideId]['placeholder']['width'] = $asset['width'] ?? $this->defaultPlaceholderWidth;
+                        $data[$slideId]['placeholder']['height'] = $asset['height'] ?? $this->defaultPlaceholderHeight;
                     }
-                    $slides[$slideId] = '<div data-id="' . $slideId . '"' . $dataType . $disabled . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
+                    $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $dataTypeAttr . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
                     $index++;
                     break;
-                case 'spin':
                 case 'video':
+                case 'spin':
+                case 'model':
                     $url = $folderUrl . '/' . $asset['name'] . $profile;
-                    if (empty($placeholder) && $this->usePlaceholder) {
+                    $data[$slideId]['basename'] = basename($asset['name']);
+                    $data[$slideId]['placeholder'] = [];
+                    if ($getPlaceholder) {
                         if ($asset['type'] == 'video') {
-                            $placeholder['url'] = $url . (strpos($url, '?') === false ? '?' : '&') . 'thumbnail=' . $asset['width']/*height*/;
+                            $data[$slideId]['placeholder']['url'] = $url . (strpos($url, '?') === false ? '?' : '&') . 'thumbnail=' . ($asset['width'] ?? $this->defaultPlaceholderWidth);
+                        } elseif ($asset['type'] == 'spin') {
+                            $data[$slideId]['placeholder']['url'] = $url . (strpos($url, '?') === false ? '?' : '&') .'thumb=spin&image.frames=1';
                         } else {
-                            $placeholder['url'] = $url . (strpos($url, '?') === false ? '?' : '&') .'thumb=spin&image.frames=1';
+                            $data[$slideId]['placeholder']['url'] = '';
                         }
-                        $placeholder['width'] = $asset['width'];
-                        $placeholder['height'] = $asset['height'];
+                        $data[$slideId]['placeholder']['width'] = $asset['width'] ?? $this->defaultPlaceholderWidth;
+                        $data[$slideId]['placeholder']['height'] = $asset['height'] ?? $this->defaultPlaceholderHeight;
                     }
-                    $slides[$slideId] = '<div data-id="' . $slideId . '"' . $disabled . ' data-src="' . $url . '"' . $this->pinnedItems[$asset['type'] . 's'] . '></div>';
+                    $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems[$asset['type'] . 's'] . '></div>';
                     $index++;
                     break;
             }
         }
 
-        return [
-            'active-slide' => 0,
-            'placeholder' => $placeholder,
-            'slides' => $slides
-        ];
+        return $data;
     }
 
     /**

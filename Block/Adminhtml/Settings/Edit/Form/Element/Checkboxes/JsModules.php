@@ -25,7 +25,9 @@ class JsModules extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Elemen
             'zoom' => 'sirv-js-modules',
             'spin' => 'sirv-js-modules',
             'hotspots' => 'sirv-js-modules',
-            'video' => 'sirv-js-modules'
+            'video' => 'sirv-js-modules',
+            'gallery' => 'sirv-js-modules',
+            'model' => 'sirv-js-modules'
         ]);
 
         return parent::getElementHtml();

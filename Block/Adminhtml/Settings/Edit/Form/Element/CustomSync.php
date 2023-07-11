@@ -31,6 +31,11 @@ class CustomSync extends \Magento\Framework\Data\Form\Element\AbstractElement
         $this->setType('custom_sync');
     }
 
+    /**
+     * Get element HTML
+     *
+     * @return string
+     */
     public function getElementHtml()
     {
         $html = '';

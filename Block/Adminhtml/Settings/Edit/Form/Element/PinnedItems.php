@@ -56,6 +56,15 @@ class PinnedItems extends \Magento\Framework\Data\Form\Element\AbstractElement
                 ],
                 'default' => 'no',
             ],
+            'models' => [
+                'label' => 'Pin model(s)',
+                'options' => [
+                    ['label' => 'Unpinned', 'value' => 'no'],
+                    ['label' => 'Left', 'value' => 'left'],
+                    ['label' => 'Right', 'value' => 'right'],
+                ],
+                'default' => 'no',
+            ],
             'images' => [
                 'label' => 'Pin images by file mask',
                 'options' => [
@@ -64,7 +73,7 @@ class PinnedItems extends \Magento\Framework\Data\Form\Element\AbstractElement
                     ['label' => 'Right', 'value' => 'right'],
                 ],
                 'default' => 'no',
-            ],
+            ]
         ];
 
         $values = $this->getValue() ?: [];
