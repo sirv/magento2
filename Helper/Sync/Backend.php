@@ -311,7 +311,9 @@ class Backend extends \Sirv\Magento2\Helper\Sync
             $data = $getData();
         }
 
-        $data['completed'] = true;
+        if (!$data['queued'] && ($data['total'] == $cached)) {
+            $data['completed'] = true;
+        }
 
         $appCache->save($this->dataHelper->getSerializer()->serialize($data), $cacheId, [], 120);
 
@@ -986,8 +988,8 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                 $relPath = preg_replace('#^' . preg_quote($this->imageFolder, '#') . '#', '', $fileData->filename);
                 $absPath = $this->mediaDirAbsPath . $relPath;
 
-                $attempt = is_array($fileData->attempts) ? end($fileData->attempts) : false;
-                $errorMessage = 'Unknown error.';
+                $attempt = isset($fileData->attempts) && is_array($fileData->attempts) ? end($fileData->attempts) : false;
+                $errorMessage = isset($fileData->error) ? $fileData->error : 'Unknown error.';
                 if ($attempt) {
                     if (isset($attempt->error)) {
                         if (isset($attempt->error->httpCode)) {
@@ -1000,7 +1002,9 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                                 continue;
                             }
                         }
-                        $errorMessage = isset($attempt->error->message) ? $attempt->error->message : '';
+                        if (isset($attempt->error->message)) {
+                            $errorMessage = $attempt->error->message;
+                        }
                         $errorMessage = preg_replace('#(?:\s*+\.)?\s*+$#', '.', $errorMessage);
                         if (strpos($errorMessage, 'Timeout') !== false) {
                             $timeoutCounter++;
@@ -1029,6 +1033,30 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                         );
                     }
                 } else {
+                    if ($fileData->error) {
+                        if (preg_match('#\brate limit exceeded\b#', $fileData->error)) {
+                            if (!$rateLimit) {
+                                $currentTime = time();
+                                $limits = $this->sirvClient->getAPILimits();
+                                $limitData = $limits->{'fetch:file'};
+                                $remaining = (int)$limitData->remaining;
+                                if ($remaining <= 0) {
+                                    $expireTime = (int)$limitData->reset;
+                                    if ($expireTime >= $currentTime) {
+                                        $errorMessage = 'Rate limit exceeded. Too many requests. Retry after ' .
+                                            date('Y-m-d\TH:i:s.v\Z (e)', $expireTime) . '. ' .
+                                            'Please visit https://sirv.com/help/resources/api/#API_limits';
+                                        $rateLimit = [
+                                            'expireTime' => $expireTime,
+                                            'currentTime' => $currentTime,
+                                            'message' => $errorMessage,
+                                        ];
+                                    }
+                                }
+                            }
+                            continue;
+                        }
+                    }
                     $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_FAILED, 0);
                     $this->updateMessageData($relPath, $errorMessage);
                     $failed++;

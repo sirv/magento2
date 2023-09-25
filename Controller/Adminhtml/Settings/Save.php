@@ -292,9 +292,14 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
             }
 
             if ($autoFetch !== null) {
+                $auth = $config['http_auth'] == 'no' ? [] : [
+                    'user' => $config['http_auth_user'],
+                    'pass' => $config['http_auth_pass']
+                ];
                 $dataHelper->setAccountConfig(
                     $autoFetch == 'all' || $autoFetch == 'custom',
-                    $urlPrefix
+                    $urlPrefix,
+                    $auth
                 );
             }
 

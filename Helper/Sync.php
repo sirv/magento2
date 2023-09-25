@@ -378,6 +378,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                     } else {
                         $cacheModel->setStatus(self::IS_FAILED);
                         $cacheModel->save();
+                        $message = 'Queued files still not on Sirv after 10 checks. Clear failed image cache and try again. If error continues, please <a href="https://sirv.com/help/support/#support" target="_blank" class="sirv-open-in-new-window">inform the Sirv support team</a>.';
+                        $this->updateMessageData($path, $message);
                         $status = self::IS_FAILED;
                     }
                 }
@@ -693,8 +695,8 @@ class Sync extends \Magento\Framework\App\Helper\AbstractHelper
                     $modificationTime = ($status == self::IS_FAILED ? 0 : null);
                     $this->updateCacheData($relPath, $pathType, $status, $modificationTime);
                     if ($status == self::IS_FAILED) {
-                        $errorMessage = 'Unknown error.';
-                        $attempt = is_array($data->attempts) ? end($data->attempts) : false;
+                        $errorMessage = isset($data->error) ? $data->error : 'Unknown error.';
+                        $attempt = isset($data->attempts) && is_array($data->attempts) ? end($data->attempts) : false;
                         if ($attempt) {
                             if (isset($attempt->error)) {
                                 $errorMessage = isset($attempt->error->message) ? $attempt->error->message : '';

@@ -142,19 +142,45 @@ class MediaStorageInfo extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     break;
                 }
 
+                $s = $size = (int)$size;
+                //$sizeLabel = ceil($size / 1000000) . ' MB';
+                $units = [' Bytes', ' KB', ' MB', ' GB', ' TB'];
+                for ($i = 0; $s >= 1000 && $i < 4; $i++) {
+                    $s /= 1000;
+                }
+                $sizeLabel = round($s, 2) . $units[$i];
+
+                $c = $count = (int)$count;
+                $countLabel = '';
+                while ($c >= 1000) {
+                    $r = $c % 1000;
+                    $countLabel = ',' . ($r == 0 ? '000' : ($r < 10 ? '00' : ($r < 100 ? '0' : '')) . $r) . $countLabel;
+                    $c = floor($c / 1000);
+                }
+                $countLabel = $c . $countLabel;
+
+                $timestamp = time();
+
                 /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
                 $dataHelper = $this->getDataHelper();
                 $cache = $dataHelper->getAppCache();
                 $cacheId = 'sirv_media_storage_info';
-                $timestamp = time();
-
                 $cache->save($dataHelper->getSerializer()->serialize([
                     'size' => $size,
                     'count' => $count,
+                    'sizeLabel' => $sizeLabel,
+                    'countLabel' => $countLabel,
                     'timestamp' => $timestamp
                 ]), $cacheId, [], null);
 
-                $data = ['timestamp' => $timestamp, 'date' => date('F j, Y', $timestamp)];
+                $data = [
+                    'size' => $size,
+                    'count' => $count,
+                    'sizeLabel' => $sizeLabel,
+                    'countLabel' => $countLabel,
+                    'timestamp' => $timestamp,
+                    'date' => date('F j, Y', $timestamp)
+                ];
                 $result['success'] = true;
                 break;
             default:

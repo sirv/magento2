@@ -25,7 +25,8 @@ define([
             total: 0,
             synced: 0,
             queued: 0,
-            failed: 0
+            failed: 0,
+            maxSpeed: 0
         },
 
         selectors: {
@@ -122,8 +123,10 @@ define([
         confirmMessage: $.mage.__('Are you sure you want to stop synchronization?'),
         errorMessage: $.mage.__('Some errors occurred during the synchronization!'),
 
-        timerId: null,
-        timeIsLeft: 0,
+        rateLimit: {
+            timerId: null,
+            expireTime: 0
+        },
 
         doDeleteCachedImages: false,
         useHttpAuth: false,
@@ -495,7 +498,6 @@ define([
             }
 
             if (counters.total > counters.cached) {
-
                 //NOTE: protector
                 if (data.completed) {
                     this._syncCompleted();
@@ -718,7 +720,8 @@ define([
          */
         _rateLimitExceeded: function (data) {
             var selectors = this.selectors,
-                timeIsLeft = (data.expireTime - data.currentTime) * 1000;
+                expireTime = data.expireTime,
+                timeIsLeft = data.expireTime * 1000 - Date.now();
 
             $(selectors.bars.timer).attr('data-content', this._getTimerMessage(timeIsLeft));
             $(selectors.bars.holder).addClass('timer-on');
@@ -726,35 +729,41 @@ define([
             this._displayNotification({
                 id: 'rate_limit_exceeded_message',
                 type: 'notice',
-                message: this._improveRateLimitMessage(data.message, timeIsLeft)
+                message: this._getRateLimitMessage(data.message)
             });
 
-            if (this.timerId !== null) {
-                clearInterval(this.timerId);
-                this.timerId = null;
+            if (this.rateLimit.timerId !== null) {
+                clearInterval(this.rateLimit.timerId);
+                this.rateLimit.timerId = null;
             }
 
-            this.timeIsLeft = timeIsLeft;
-            this.timerId = setInterval(
+            this.rateLimit.expireTime = data.expireTime;
+            this.rateLimit.timerId = setInterval(
                 $.proxy(this._updateRateLimitTimer, this),
                 1000
             );
         },
 
         /**
-         * Improve rate limit message
+         * Get rate limit message
          * @param {String} message
          */
-        _improveRateLimitMessage: function (message) {
-            var matches, fph;
+        _getRateLimitMessage: function (message) {
+            var matches, fph, thousands, remainder;
 
             matches = message.match(/\((\d+)\)\.\s+Retry\s+after/);
             if (matches) {
-                fph = matches[1].replace(/(\d)(\d\d\d)$/, '$1,$2');
-
-                message = 'Rate limit exceeded (' + fph + ' files per hour). ' +
-                    'Sync will resume once the hourly limit refreshes.'
+                fph = Number(matches[1]);
+            } else {
+                fph = Number(this.options.maxSpeed);
             }
+            thousands = Math.floor(fph / 1000);
+            remainder = fph % 1000;
+            remainder = (remainder < 10 ? '00' : (remainder < 100 ? '0' : '')) + remainder.toString();
+            fph = thousands < 1 ? fph : (thousands + ',' + remainder);
+
+            message = 'Rate limit exceeded (' + fph + ' files per hour). ' +
+                'Sync will resume once the hourly limit refreshes.';
 
             return message;
         },
@@ -763,12 +772,12 @@ define([
          * Update timer
          */
         _updateRateLimitTimer: function () {
-            var selectors = this.selectors;
+            var selectors = this.selectors,
+                timeIsLeft = this.rateLimit.expireTime * 1000 - Date.now();
 
-            this.timeIsLeft -= 1000;
-            $(selectors.bars.timer).attr('data-content', this._getTimerMessage(this.timeIsLeft));
+            $(selectors.bars.timer).attr('data-content', this._getTimerMessage(timeIsLeft));
 
-            if (this.isSyncCanceled || this.timeIsLeft <= 0) {
+            if (this.isSyncCanceled || timeIsLeft <= 0) {
                 $(selectors.bars.holder).removeClass('timer-on');
 
                 //NOTE: clear previous notices
@@ -781,8 +790,8 @@ define([
                     this._doSync();
                 }
 
-                clearInterval(this.timerId);
-                this.timerId = null;
+                clearInterval(this.rateLimit.timerId);
+                this.rateLimit.timerId = null;
             }
         },
 

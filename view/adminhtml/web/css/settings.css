@@ -709,6 +709,7 @@ a.save-message {
 
 .sirv-sync-content .sync-status-header {
   text-align: center;
+  margin: 0 0 2rem;
 }
 .sirv-sync-content .sync-status-header .sync-progress-label {
 }

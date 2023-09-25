@@ -79,7 +79,7 @@ class Flush extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     $message = 'No data found for cleaning.';
                 } else {
                     $assetsModel->getResource()->deleteByIds($ids);
-                    $message = count($ids) . ' item(s) was cleaned. ' . $message;
+                    $message = count($ids) . ' item(s) cleaned. ' . $message;
                 }
                 break;
             case 'all':

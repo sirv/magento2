@@ -99,6 +99,10 @@ class Assets extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
             $baseUrl = 'https://' . $dataHelper->getSirvDomain();
 
+            $assetRepository = \Magento\Framework\App\ObjectManager::getInstance()->get(
+                \Magento\Framework\View\Asset\Repository::class
+            );
+
             foreach ($assetsData as $id => $contents) {
                 $data[$id] = [];
                 $data[$id]['sku'] = isset($skus[$id]) ? $skus[$id] : false;
@@ -120,6 +124,9 @@ class Assets extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     $thumbUrl = $url = $baseUrl . $dirname . '/' . $asset->name;
                     if ($asset->type == 'spin' || $asset->type == 'video') {
                         $thumbUrl .= '?thumb';
+                    } elseif ($asset->type == 'model') {
+                        $url .= '?embed';
+                        $thumbUrl = $assetRepository->createAsset('Sirv_Magento2::images/icon.3d.3.svg')->getUrl();
                     }
                     $data[$id]['items'][] = [
                         'name' => $asset->name,

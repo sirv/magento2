@@ -126,9 +126,9 @@ define([
                 function (data) {
                     $('.media-storage-info').html(
                         '<span class="media-storage-info-size">' +
-                        Math.ceil(this.storageInfo.size / 1000000) + ' MB</span>' +
+                        data.sizeLabel + '</span>' +
                         ' (<span class="media-storage-info-count">' +
-                        this.storageInfo.count + ' image' +
+                        data.countLabel + ' image' +
                         (this.storageInfo.count == 1 ? '' : 's') +
                         '</span>)' +
                         ' on <span class="media-storage-info-timestamp">' +

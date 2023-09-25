@@ -125,6 +125,13 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
     protected static $outdatedMagentoVersion;
 
     /**
+     * Media URL format
+     *
+     * @var string
+     */
+    protected static $mediaUrlFormat = 'hash';
+
+    /**
      * Constructor
      *
      * @param \Magento\Catalog\Model\Product\Media\ConfigInterface $mediaConfig
@@ -186,6 +193,12 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
         $productMetadata = $objectManager->get(\Magento\Framework\App\ProductMetadataInterface::class);
         $version = $productMetadata->getVersion();
         static::$outdatedMagentoVersion = version_compare($version, '2.3.4', '<') && version_compare($version, '2.3.0', '>=');
+
+        //NOTE: this class exists since version 2.4.2
+        if (class_exists('\Magento\Catalog\Model\Config\CatalogMediaConfig')) {
+            $catalogMediaConfig =  $objectManager->get(\Magento\Catalog\Model\Config\CatalogMediaConfig::class);
+            static::$mediaUrlFormat = $catalogMediaConfig->getMediaUrlFormat();
+        }
     }
 
     /**
@@ -196,7 +209,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
     public function getUrl()
     {
         if (!static::$isSirvEnabled) {
-            return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
+            return $this->getMagentoUrl();
         }
 
         //NOTE: path relative to the media folder
@@ -206,7 +219,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
         $absPath = static::$mediaDirectory->getAbsolutePath($srcPath);
 
         if (!static::$syncHelper->isNotExcluded($absPath)) {
-            return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
+            return $this->getMagentoUrl();
         }
 
         $isFileCached = true;
@@ -243,13 +256,13 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
         }
 
         if (!$isFileSynced) {
-            return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
+            return $this->getMagentoUrl();
         }
 
         //NOTE: this is commented out to display images that don't exist locally but have been synced
         /*
         if (!is_file($absPath)) {
-            return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
+            return $this->getMagentoUrl();
         }
         */
 
@@ -257,6 +270,37 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
         $url .= $this->getUrlQuery($absPath);
 
         return $url;
+    }
+
+    /**
+     * Get resource URL
+     *
+     * @return string
+     */
+    public function getMagentoUrl()
+    {
+        if (static::$mediaUrlFormat == 'hash') {
+            return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR . $this->getRelativePath();
+        } else {
+            return $this->context->getBaseUrl() . DIRECTORY_SEPARATOR .
+                ltrim($this->getFilePath(), DIRECTORY_SEPARATOR) .
+                '?' . http_build_query($this->getImageTransformationParameters());
+        }
+    }
+
+    /**
+     * Get list of transformations parameters
+     *
+     * @return string[]
+     */
+    public function getImageTransformationParameters()
+    {
+        return [
+            'width' => $this->miscParams['image_width'],
+            'height' => $this->miscParams['image_height'],
+            'store' => static::$storeManager->getStore()->getCode(),
+            'image-type' => $this->sourceContentType
+        ];
     }
 
     /**

@@ -661,7 +661,7 @@
                 <type>button</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Button\MediaStorageInfo</type_class>
                 <value>Calculate</value>
-                <notice><![CDATA[Estimate how much storage your need on Sirv.]]></notice>
+                <notice><![CDATA[Estimate how much storage space you require on Sirv.]]></notice>
             </field>
             <field>
                 <name>delete_cached_images</name>

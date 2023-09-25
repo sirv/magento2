@@ -442,9 +442,10 @@ class Backend extends \Sirv\Magento2\Helper\Data
      *
      * @param bool $fetching
      * @param string $url
+     * @param array $auth
      * @return void
      */
-    public function setAccountConfig($fetching, $url)
+    public function setAccountConfig($fetching, $url, $auth = [])
     {
         if (!$fetching) {
             //NOTE: this code in order to be able to use two instances of M2 with different option values
@@ -452,6 +453,7 @@ class Backend extends \Sirv\Magento2\Helper\Data
         }
 
         $config = $this->getAccountConfig();
+
         $data = [];
 
         if ($fetching != $config['fetching_enabled'] || $url != $config['fetching_url']) {
@@ -464,6 +466,18 @@ class Backend extends \Sirv\Magento2\Helper\Data
                 $data['fetching']['http'] = [
                     'url' => $url
                 ];
+
+                if (empty($auth)) {
+                    $data['fetching']['http']['auth'] = [
+                        'enabled' => false
+                    ];
+                } else {
+                    $data['fetching']['http']['auth'] = [
+                        'enabled' => true,
+                        'username' => $auth['user'],
+                        'password' => $auth['pass']
+                    ];
+                }
             }
         }
 

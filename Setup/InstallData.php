@@ -43,18 +43,28 @@ class InstallData implements InstallDataInterface
     protected $moduleResource;
 
     /**
+     * Eav setup factory
+     *
+     * @var \Magento\Eav\Setup\EavSetupFactory
+     */
+    protected $eavSetupFactory;
+
+    /**
      * Constructor
      *
      * @param \Magento\Framework\Module\Dir\Reader $modulesReader
      * @param \Magento\Framework\Module\ModuleResource $moduleResource
+     * @param \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory
      * @return void
      */
     public function __construct(
         \Magento\Framework\Module\Dir\Reader $modulesReader,
-        \Magento\Framework\Module\ModuleResource $moduleResource
+        \Magento\Framework\Module\ModuleResource $moduleResource,
+        \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory
     ) {
         $this->moduleDirReader = $modulesReader;
         $this->moduleResource = $moduleResource;
+        $this->eavSetupFactory = $eavSetupFactory;
     }
 
     /**
@@ -147,6 +157,41 @@ class InstallData implements InstallDataInterface
                     $connection->update($tableName, $bind, $where);
                 }
             }
+        }
+
+        //NOTE: install 'Extra Sirv Assets' attribute
+        /** @var \Magento\Eav\Setup\EavSetup $eavSetup */
+        $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+        $id = $eavSetup->getAttributeId(
+            \Magento\Catalog\Model\Product::ENTITY,
+            'extra_sirv_assets'
+        );
+        if (!$id) {
+            $eavSetup->addAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'extra_sirv_assets',
+                [
+                     'type' => 'text',
+                     'backend' => '',
+                     'frontend' => '',
+                     'label' => 'Extra Sirv Assets',
+                     'input' => 'textarea',
+                     'class' => '',
+                     'source' => '',
+                     'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                     'visible' => true,
+                     'required' => false,
+                     'user_defined' => false,
+                     'default' => '',
+                     'searchable' => false,
+                     'filterable' => false,
+                     'comparable' => false,
+                     'visible_on_front' => false,
+                     'used_in_product_listing' => false,
+                     'unique' => false,
+                     'apply_to' => ''
+                 ]
+            );
         }
 
         $setup->endSetup();
