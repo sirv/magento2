@@ -615,7 +615,7 @@ class Backend extends \Sirv\Magento2\Helper\Data
 
             if (!is_array($data)) {
                 $data = $this->collectAccountUsageData();
-                //NOTE: 900 - cache lifetime (in seconds)
+                //NOTE: 900 - cache lifetime in seconds (15 minutes)
                 $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 900);
             }
         }
@@ -715,6 +715,7 @@ class Backend extends \Sirv\Magento2\Helper\Data
         $data['limits'] = empty($limitsData) ? [] : $limitsData['limits'];
         $data['current_time'] = empty($limitsData) ? date('H:i:s e', time()) : $limitsData['current_time'];
         $data['fetch_file_limit'] = isset($limitsData['fetch_file_limit']) ? $limitsData['fetch_file_limit'] : 0;
+        $data['upload_file_limit'] = isset($limitsData['upload_file_limit']) ? $limitsData['upload_file_limit'] : 0;
 
         return $data;
     }
@@ -759,9 +760,34 @@ class Backend extends \Sirv\Magento2\Helper\Data
             }
             $data['current_time'] = date('H:i:s e', $currentTime);
             $data['fetch_file_limit'] = $limits->{'fetch:file'}->limit;
+            $data['upload_file_limit'] = $limits->{'rest:post:files:upload'}->limit;
         }
 
         return $data;
+    }
+
+    /**
+     * Update API limits cached data
+     *
+     * @param array $limitsData
+     * @return void
+     */
+    public function updateApiLimitsCachedData($limitsData)
+    {
+        $cacheId = 'sirv_account_usage_' . $this->getAccountId();
+        $cache = $this->getAppCache();
+        $data = $cache->load($cacheId);
+        if (false !== $data) {
+            $data = $this->getUnserializer()->unserialize($data);
+            if (is_array($data)) {
+                $data['limits'] = empty($limitsData) ? [] : $limitsData['limits'];
+                $data['current_time'] = empty($limitsData) ? date('H:i:s e', time()) : $limitsData['current_time'];
+                $data['fetch_file_limit'] = isset($limitsData['fetch_file_limit']) ? $limitsData['fetch_file_limit'] : 0;
+                $data['upload_file_limit'] = isset($limitsData['upload_file_limit']) ? $limitsData['upload_file_limit'] : 0;
+                //NOTE: 900 - cache lifetime in seconds (15 minutes)
+                $cache->save($this->getSerializer()->serialize($data), $cacheId, [], 900);
+            }
+        }
     }
 
     /**

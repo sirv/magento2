@@ -1033,8 +1033,13 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                         );
                     }
                 } else {
-                    if ($fileData->error) {
+                    if (isset($fileData->error)) {
                         if (preg_match('#\brate limit exceeded\b#', $fileData->error)) {
+                            $this->logger->info(sprintf(
+                                '"%s" was not fetched. %s',
+                                $fileData->filename,
+                                $fileData->error
+                            ));
                             if (!$rateLimit) {
                                 $currentTime = time();
                                 $limits = $this->sirvClient->getAPILimits();
@@ -1060,13 +1065,11 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     $this->updateCacheData($relPath, self::MAGENTO_MEDIA_PATH, self::IS_FAILED, 0);
                     $this->updateMessageData($relPath, $errorMessage);
                     $failed++;
-                    if ($attempt) {
-                        $this->logger->info(sprintf(
-                            '"%s" was not fetched. %s',
-                            $attempt->url,
-                            $errorMessage
-                        ));
-                    }
+                    $this->logger->info(sprintf(
+                        '"%s" was not fetched. %s',
+                        $attempt ? $attempt->url : $fileData->filename,
+                        $errorMessage
+                    ));
                 }
             }
 
@@ -1168,13 +1171,22 @@ class Backend extends \Sirv\Magento2\Helper\Sync
     }
 
     /**
-     * Get fetch file limit
+     * Get max file transfer speed
      *
      * @return integer
      */
-    public function getFetchFileLimit()
+    public function getMaxSpeed()
     {
         $data = $this->dataHelper->getAccountUsageData();
-        return (int)$data['fetch_file_limit'];
+        if ($this->isLocalHost) {
+            if (!isset($data['upload_file_limit'])) {
+                $data = $this->dataHelper->getAccountUsageData(true);
+            }
+            $maxSpeed = (int)$data['upload_file_limit'];
+        } else {
+            $maxSpeed = (int)$data['fetch_file_limit'];
+        }
+
+        return $maxSpeed;
     }
 }

@@ -120,7 +120,7 @@ $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidde
                 "synced": <?= /* @escapeNotVerified */ $data['synced'] ?>,
                 "queued": <?= /* @escapeNotVerified */ $data['queued'] ?>,
                 "failed": <?= /* @escapeNotVerified */ $data['failed'] ?>,
-                "maxSpeed": <?= /* @escapeNotVerified */ $data['fetch-file-limit'] ?>
+                "maxSpeed": <?= /* @escapeNotVerified */ $data['max-speed'] ?>
             },
             "sirvCache": {
                 "ajaxUrl": "<?= $block->escapeUrl($block->getCacheAjaxUrl()) ?>"

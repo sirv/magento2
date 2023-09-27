@@ -22,11 +22,12 @@ class Usage extends \Sirv\Magento2\Controller\Adminhtml\Settings
         /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
         $dataHelper = $this->getDataHelper();
 
-        $result = $dataHelper->getApiLimitsData();
+        $data = $dataHelper->getApiLimitsData();
+        $dataHelper->updateApiLimitsCachedData($data);
 
         /** @var \Magento\Framework\Controller\Result\Json $resultJson */
         $resultJson = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_JSON);
-        $resultJson->setData($result);
+        $resultJson->setData($data);
 
         return $resultJson;
     }

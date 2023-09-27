@@ -113,7 +113,7 @@ class Synchronizer extends \Magento\Backend\Block\Template
                     'failed-percent' => $failedPercent,
                 ];
             }
-            $this->syncData['fetch-file-limit'] = $syncHelper->getFetchFileLimit();
+            $this->syncData['max-speed'] = $syncHelper->getMaxSpeed();
         }
 
         return $this->syncData;
@@ -127,7 +127,7 @@ class Synchronizer extends \Magento\Backend\Block\Template
     public function getEstimatedDurationMessage()
     {
         $data = $this->getSyncData();
-        $speed = $data['fetch-file-limit'];//images per hour
+        $speed = $data['max-speed'];//images per hour
         $imagesToSync = $data['total'] - $data['synced'] - $data['failed'];
         if ($imagesToSync < 1) {
             return '';
