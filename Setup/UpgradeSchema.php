@@ -10,7 +10,7 @@ use Magento\Framework\Setup\ModuleContextInterface;
  * DB schema upgrades
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  *
@@ -40,6 +40,7 @@ class UpgradeSchema extends AbstractSchema implements UpgradeSchemaInterface
         $this->upgradeCacheTable($setup) || $this->createCacheTable($setup);
         $this->upgradeAssetsTable($setup) || $this->createAssetsTable($setup);
         $this->createMessagesTable($setup);
+        $this->createAltTextCacheTable($setup);
 
         $setup->endSetup();
     }

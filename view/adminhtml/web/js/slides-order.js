@@ -2,7 +2,7 @@
  * Slides order widget
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -153,6 +153,8 @@ define([
                 item.insertAfter(this.element.find(this.options.itemSelector + ':last'));
             }
 
+            this.element.find('.other_assets_item').removeClass('hidden_item');
+
             this._updateValue();
         },
 
@@ -163,7 +165,15 @@ define([
          * @private
          */
         _removeItem: function (event, item) {
+            var count;
+
             $(item).addClass('removed').hide();
+
+            count = this.element.find(this.options.itemSelector).not('.removed').length;
+            if (count === 0) {
+                this.element.find('.other_assets_item').addClass('hidden_item');
+            }
+
             this._updateValue();
         },
 

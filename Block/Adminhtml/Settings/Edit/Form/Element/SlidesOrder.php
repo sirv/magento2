@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element;
  * Slides order
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -66,6 +66,11 @@ class SlidesOrder extends \Magento\Framework\Data\Form\Element\AbstractElement
                 $p++;
             }
         }
+
+        $html .= '<div class="slides_order_item other_assets_item' . ($p ? '' : ' hidden_item') . '">' .
+            '<div class="slides_order_item_wrapper">' .
+            '<span class="slides_order_item_label">All other assets</span>' .
+            '</div></div>';
 
         $html .= '<div class="slides_order_item">' .
             '<div class="slides_order_item_wrapper item_add_wrapper">' .

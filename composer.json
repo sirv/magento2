@@ -1,8 +1,8 @@
 {
     "name": "sirv/magento2",
-    "description": "Sirv module for Adobe Commerce",
+    "description": "Sirv module for Magento 2",
     "type": "magento2-module",
-    "version": "6.1.5",
+    "version": "6.2.0",
     "license": [
         "OSL-3.0",
         "AFL-3.0"

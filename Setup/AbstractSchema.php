@@ -10,7 +10,7 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
  * DB schema installs/upgrades
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  *
@@ -37,6 +37,11 @@ abstract class AbstractSchema
      * Messages table name
      */
     const SIRV_MESSAGES_TABLE = 'sirv_messages';
+
+    /**
+     * Alt text cache table name
+     */
+    const SIRV_ALT_TEXT_CACHE_TABLE = 'sirv_alt_text_cache';
 
     /**
      * Create config table
@@ -275,6 +280,56 @@ abstract class AbstractSchema
             null,
             ['nullable' => false],
             'Message'
+        )->addIndex(
+            $setup->getIdxName(
+                $tableName,
+                ['path'],
+                AdapterInterface::INDEX_TYPE_UNIQUE
+            ),
+            ['path'],
+            ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
+        )->setComment(
+            'Sirv messages'
+        );
+
+        $connection->createTable($table);
+    }
+
+    /**
+     * Create alt text cache table
+     *
+     * @param SchemaSetupInterface $setup
+     * @param bool $skipIfExists
+     * @return void
+     */
+    protected function createAltTextCacheTable(SchemaSetupInterface $setup, $skipIfExists = true)
+    {
+        /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+        $connection = $setup->getConnection();
+
+        $tableName = $setup->getTable(self::SIRV_ALT_TEXT_CACHE_TABLE);
+
+        if ($setup->tableExists(self::SIRV_ALT_TEXT_CACHE_TABLE)) {
+            if ($skipIfExists) {
+                return;
+            }
+            $connection->dropTable($tableName);
+        }
+
+        $table = $connection->newTable(
+            $tableName
+        )->addColumn(
+            'path',
+            Table::TYPE_TEXT,
+            255,
+            ['nullable' => false, 'default' => ''],
+            'Synced image path'
+        )->addColumn(
+            'value',
+            Table::TYPE_TEXT,
+            null,
+            ['nullable' => false],
+            'Image alt text'
         )->addIndex(
             $setup->getIdxName(
                 $tableName,

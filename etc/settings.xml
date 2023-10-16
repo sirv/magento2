@@ -4,7 +4,7 @@
  * Module settings
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -149,7 +149,7 @@
             </field>
             <field>
                 <name>auto_fetch</name>
-                <label>Serve other files from Sirv CDN</label>
+                <label>Files served by Sirv CDN</label>
                 <!-- <notice><![CDATA[Sirv will fetch files from this domain:]]></notice> -->
                 <tooltip><![CDATA[Sirv CDN can serve your JS, CSS and static theme files too. It minifies JS & CSS and uses multiplexing to accelerate file loading. <a class="sirv-open-in-new-window" target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#how-to-set-up-a-cdn-in-magento-2">Learn more</a>.]]></tooltip>
                 <type>radios</type>
@@ -157,19 +157,20 @@
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\AutoFetch</type_class>
                 <options>
                     <option>
-                        <label>JS, CSS &amp; associated files (recommended)</label>
+                        <label>Images</label>
+                        <value>none</value>
+                    </option>
+                    <option>
+                        <label>Images, JS, CSS &amp; associated files</label>
                         <value>custom</value>
                     </option>
                     <option>
-                        <label>JS, CSS &amp; all static files</label>
+                        <label>Images, JS, CSS &amp; all static files</label>
                         <value>all</value>
                     </option>
-                    <option>
-                        <label>No other files</label>
-                        <value>none</value>
-                    </option>
                 </options>
-                <value>custom</value>
+                <value>none</value>
+                <notice><![CDATA[Non-image files will be fetched with <a class="sirv-open-in-new-window" target="_blank" href="https://my.sirv.com/#/account/settings/content-delivery">Auto Fetch</a>. JS & CSS files will be minified. <a class="sirv-open-in-new-window" target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#how-to-set-up-a-cdn-in-magento-2">Learn more</a>.]]></notice>
             </field>
             <!--
             <field>
@@ -340,12 +341,12 @@
             <field>
                 <name>image_quality</name>
                 <label>Image quality</label>
-                <tooltip><![CDATA[JPEG image quality. The default JPEG image quality is set on your <a class="sirv-open-in-new-window" target="_blank" href="{{URL}}">Adobe Commerce Stores Configuration page</a>.]]></tooltip>
+                <tooltip><![CDATA[JPEG image quality. The default JPEG image quality is set on your <a class="sirv-open-in-new-window" target="_blank" href="{{URL}}">Magento Stores Configuration page</a>.]]></tooltip>
                 <type>select</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Select</type_class>
                 <options>
                     <option>
-                        <label>Default (Adobe Commerce default)</label>
+                        <label>Default (Magento default)</label>
                         <value>0</value>
                     </option>
                 </options>
@@ -353,8 +354,8 @@
             </field>
             <field>
                 <name>magento_watermark</name>
-                <label>Use Adobe Commerce watermark</label>
-                <tooltip><![CDATA[Use the standard Adobe Commerce <a class="sirv-open-in-new-window" target="_blank" href="{{URL}}">watermark settings</a> or apply advanced watermarks with a <a class="sirv-open-in-new-window" target="_blank" href="https://my.sirv.com/#/profiles/">Sirv profile</a>.]]></tooltip>
+                <label>Use Magento watermark</label>
+                <tooltip><![CDATA[Use the standard Magento <a class="sirv-open-in-new-window" target="_blank" href="{{URL}}">watermark settings</a> or apply advanced watermarks with a <a class="sirv-open-in-new-window" target="_blank" href="https://my.sirv.com/#/profiles/">Sirv profile</a>.]]></tooltip>
                 <type>radios</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
                 <options>
@@ -420,15 +421,15 @@
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\OrderOfContent</type_class>
                 <options>
                     <option>
-                        <label>Sirv assets, then Adobe Commerce images &amp; videos</label>
+                        <label>Sirv assets, then Magento images &amp; videos</label>
                         <value>3</value>
                     </option>
                     <option>
-                        <label>Adobe Commerce images &amp; videos, then Sirv assets</label>
+                        <label>Magento images &amp; videos, then Sirv assets</label>
                         <value>2</value>
                     </option>
                     <option>
-                        <label>Adobe Commerce images &amp; videos</label>
+                        <label>Magento images &amp; videos</label>
                         <value>1</value>
                     </option>
                     <option>
@@ -454,7 +455,7 @@
                 <label>Get primary images from Sirv</label>
                 <type>button</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Button\CopyPrimaryImages</type_class>
-                <value>Copy primary images to Adobe Commerce</value>
+                <value>Copy primary images to Magento</value>
             </field>
             <field>
                 <name>smv_js_options</name>
@@ -488,6 +489,13 @@
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\SlidesOrder</type_class>
                 <options>
                     <option>
+                        <!--
+                        <label>Zoom</label>
+                        -->
+                        <label>Image</label>
+                        <value>zoom</value>
+                    </option>
+                    <option>
                         <label>Spin</label>
                         <value>spin</value>
                     </option>
@@ -496,17 +504,15 @@
                         <value>video</value>
                     </option>
                     <option>
-                        <label>Zoom</label>
-                        <value>zoom</value>
+                        <label>Model</label>
+                        <value>model</value>
                     </option>
+                    <!--
                     <option>
                         <label>Image</label>
                         <value>image</value>
                     </option>
-                    <option>
-                        <label>Model</label>
-                        <value>model</value>
-                    </option>
+                    -->
                 </options>
                 <value></value>
             </field>
@@ -679,12 +685,12 @@
                     </option>
                 </options>
                 <tooltip><![CDATA[
-                    Save disk space by deleting the many resized images generated by the Adobe Commerce product image cache. Sirv does not require them.
+                    Save disk space by deleting the many resized images generated by the Magento product image cache. Sirv does not require them.
                     <br/><br/>
-                    If required, you can regenerate the Adobe Commerce image cache with the Adobe Commerce CLI command: <b>php bin/magento catalog:images:resize</b>
+                    If required, you can regenerate the Magento image cache with the Magento CLI command: <b>php bin/magento catalog:images:resize</b>
                 ]]></tooltip>
                 <notice><![CDATA[
-                    Your Adobe Commerce cache contains {{COUNT}} resized image{{SUFFIX}}.
+                    Your Magento cache contains {{COUNT}} resized image{{SUFFIX}}.
                     <a href="#"
                         onclick="return false"
                         data-mage-init='{
@@ -692,7 +698,7 @@
                                 "showLoader": true,
                                 "needConfirmation": true,
                                 "confirmationMessage": "
-                                    <b>Delete {{COUNT}} resized Adobe Commerce image{{SUFFIX}}?</b><br/>
+                                    <b>Delete {{COUNT}} resized Magento image{{SUFFIX}}?</b><br/>
                                     This might take a long time.<br/>
                                     Keep this page open until deletion is complete.",
                                 "confirmationButtonText": "Empty image cache",
@@ -714,6 +720,39 @@
                 <label>Sync status</label>
                 <type>synchronizer</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Synchronizer</type_class>
+            </field>
+            <field>
+                <name>alt_text</name>
+                <label>Copy alt text to Sirv</label>
+                <tooltip><![CDATA[]]></tooltip>
+                <type>radios</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\AltText</type_class>
+                <options>
+                    <option>
+                        <label>Yes</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>No</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>false</value>
+                <install/>
+            </field>
+            <field>
+                <name>alt_text_rule</name>
+                <label></label>
+                <notice><![CDATA[Rules can include the following placeholders: {alt-text}, {product-sku}, {product-id}, {attribute:attribute_code}.]]></notice>
+                <type>text</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Text</type_class>
+                <placeholder>Example: {alt-text}, {attribute:color}</placeholder>
+                <value>{alt-text}</value>
+                <after_element_html>
+                <![CDATA[
+<button title="Copy alt text to Sirv" class="action-default" data-mage-init="{&quot;sirvCopyAltText&quot;: {&quot;ajaxUrl&quot;:&quot;{{URL}}&quot;}}" type="button"><span class="ui-button-text"><span>Copy</span></span></button>
+                ]]>
+                </after_element_html>
             </field>
             <!--
             <field>

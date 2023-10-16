@@ -2,7 +2,7 @@
  * Config for RequireJS
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -27,7 +27,8 @@ var config = {
             sirvCache: 'Sirv_Magento2/js/cache',
             sirvProductsList: 'Sirv_Magento2/js/products-list',
             sirvUsage: 'Sirv_Magento2/js/usage',
-            sirvMediaStorageInfo: 'Sirv_Magento2/js/media-storage-info'
+            sirvMediaStorageInfo: 'Sirv_Magento2/js/media-storage-info',
+            sirvCopyAltText: 'Sirv_Magento2/js/copy-alt-text'
         }
     }
 };

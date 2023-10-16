@@ -2,7 +2,7 @@
  * Primary images synchronizer
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -640,7 +640,7 @@ define([
                 wrapperClass: 'modals-wrapper sirv-modals-wrapper sirv-modals-wrapper-cpi',
                 overlayClass: 'modals-overlay sirv-modals-overlay',
                 modalClass:  'sirv-cmi-modal',
-                title: $.mage.__('Copy primary images from Sirv to Adobe Commerce'),
+                title: $.mage.__('Copy primary images from Sirv to Magento'),
                 autoOpen: false,
                 clickableOverlay: false,
                 type: 'popup',

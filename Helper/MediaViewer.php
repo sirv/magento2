@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Helper;
  * Sirv Media Viewer helper
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -40,11 +40,11 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $syncHelper = null;
 
     /**
-     * Assets model factory
+     * Alt text cache model factory
      *
-     * @var \Sirv\Magento2\Model\AssetsFactory
+     * @var \Sirv\Magento2\Model\AltTextCacheFactory
      */
-    protected $assetsModelFactory = null;
+    protected $altTextCacheModelFactory = null;
 
     /**
      * Image helper
@@ -182,7 +182,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Framework\App\Helper\Context $context
      * @param \Sirv\Magento2\Helper\Data $dataHelper
      * @param \Sirv\Magento2\Helper\Sync $syncHelper
-     * @param \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory
+     * @param \Sirv\Magento2\Model\AltTextCacheFactory $altTextCacheModelFactory
      * @param \Magento\Catalog\Helper\Image $imageHelper
      * @param \Magento\Framework\Json\EncoderInterface $jsonEncoder
      * @return void
@@ -191,14 +191,14 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\App\Helper\Context $context,
         \Sirv\Magento2\Helper\Data $dataHelper,
         \Sirv\Magento2\Helper\Sync $syncHelper,
-        \Sirv\Magento2\Model\AssetsFactory $assetsModelFactory,
+        \Sirv\Magento2\Model\AltTextCacheFactory $altTextCacheModelFactory,
         \Magento\Catalog\Helper\Image $imageHelper,
         \Magento\Framework\Json\EncoderInterface $jsonEncoder
     ) {
         parent::__construct($context);
         $this->dataHelper = $dataHelper;
         $this->syncHelper = $syncHelper;
-        $this->assetsModelFactory = $assetsModelFactory;
+        $this->altTextCacheModelFactory = $altTextCacheModelFactory;
         $this->imageHelper = $imageHelper;
         $this->jsonEncoder = $jsonEncoder;
         $this->slideSources = (int)($this->dataHelper->getConfig('viewer_contents') ?: self::MAGENTO_ASSETS);
@@ -696,6 +696,9 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $data = [];
         $index = 0;
 
+        /** @var \Sirv\Magento2\Model\AltTextCache $altTextCacheModel */
+        $altTextCacheModel = $this->altTextCacheModelFactory->create();
+
         while ($iterator->valid()) {
             $item = $iterator->current();
 
@@ -752,7 +755,11 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                         }
                     }
 
-                    $alt = $item->getData('label') ?: $productName;
+                    $altTextCacheModel->clearInstance()->load($relPath, 'path');
+                    $alt = $altTextCacheModel->getValue();
+                    if (empty($alt)) {
+                        $alt = $item->getData('label') ?: $productName;
+                    }
                     $alt = $this->galleryBlock->escapeHtmlAttr($alt, false);
 
                     $pinnedAttr = $this->pinnedItems['images'];
@@ -891,11 +898,11 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                 $assetBasename = basename($url);
                 if (preg_match('#\.(jpg|jpeg|png|gif|webp|tif|tiff|svg|bmp)#', $assetBasename)) {
                     $assetType = 'zoom';
-                } else if (preg_match('#\.(mpg|mpeg|m4v|mp4|avi|mov|ogv)#', $assetBasename)) {
+                } elseif (preg_match('#\.(mpg|mpeg|m4v|mp4|avi|mov|ogv)#', $assetBasename)) {
                     $assetType = 'video';
-                } else if (preg_match('#\.(usdz|glb|dwg)#', $assetBasename)) {
+                } elseif (preg_match('#\.(usdz|glb|dwg)#', $assetBasename)) {
                     $assetType = 'model';
-                } else if (preg_match('#\.spin#', $assetBasename)) {
+                } elseif (preg_match('#\.spin#', $assetBasename)) {
                     $assetType = 'spin';
                 } else {
                     continue;

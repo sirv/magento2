@@ -6,7 +6,7 @@ namespace Sirv\Magento2\Block\Adminhtml\Settings\Edit;
  * Adminhtml settings form
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -287,6 +287,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     $fieldConfig['before_element_html'] = (string)$field->before_element_html;
                 }
 
+                if (isset($field->after_element_html)) {
+                    $fieldConfig['after_element_html'] = (string)$field->after_element_html;
+                }
+
                 if (isset($field->can_hide_select)) {
                     $fieldConfig['can_hide_select'] = true;
                 }
@@ -533,6 +537,13 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             "#\n++ *+#",
                             ' ',
                             $fieldConfig['note']
+                        );
+                        break;
+                    case 'alt_text_rule':
+                        $fieldConfig['after_element_html'] = str_replace(
+                            '{{URL}}',
+                            $this->getUrl('sirv/ajax/copyalttext', []),
+                            $fieldConfig['after_element_html']
                         );
                         break;
                 }

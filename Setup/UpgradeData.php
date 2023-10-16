@@ -10,7 +10,7 @@ use Magento\Framework\Setup\ModuleContextInterface;
  * Data upgrades
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  *
@@ -136,6 +136,17 @@ class UpgradeData implements UpgradeDataInterface
                 }
                 $value[] = '/captcha*';
                 $value = implode("\n", $value);
+                $connection->update($tableName, ['value' => $value], ['id = ?' => $param['id']]);
+            }
+
+            //NOTE: update value for 'slides_order' param
+            $params = $connection->fetchAll(
+                $connection->select()
+                    ->from($tableName, ['id', 'value'])
+                    ->where('name = ?', 'slides_order')
+            );
+            foreach ($params as $param) {
+                $value = str_replace('image', 'zoom', $param['value']);
                 $connection->update($tableName, ['value' => $value], ['id = ?' => $param['id']]);
             }
         }

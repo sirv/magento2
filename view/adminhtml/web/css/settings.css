@@ -2,7 +2,7 @@
  * Settings page styles
  *
  * @author    Sirv Limited <support@sirv.com>
- * @copyright Copyright (c) 2018-2022 Sirv Limited <support@sirv.com>. All rights reserved
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
  * @license   https://sirv.com/
  * @link      https://sirv.com/integration/magento/
  */
@@ -562,11 +562,18 @@ a.save-message {
 }
 
 /* NOTE: to combine auto_fetch option with url_prefix */
+/*
 .admin__field.field-mt-auto_fetch {
   margin-bottom: 0;
 }
 .admin__field.field-mt-url_prefix {
   margin-top: 0.5rem;
+}
+*/
+
+/* NOTE: to combine alt_text option with alt_text_rule */
+.admin__field.field-mt-alt_text {
+  margin-bottom: 0;
 }
 
 .mt-config .field-mt-image_quality .mt-option option[value='80'] {
@@ -1306,6 +1313,10 @@ a.save-message {
   vertical-align: top;
   width: 100px;
 }
+.slides_order_items .slides_order_item.other_assets_item.hidden_item {
+  display: none;
+}
+
 .slides_order_items .slides_order_item.ui-sortable-placeholder {
   background: #e0f6fe;
   border: 1px solid #008bdb;
@@ -1376,7 +1387,9 @@ a.save-message {
   text-align: center;
 }
 .slides_order_items .slides_order_action_draggable_handle:before {
-  content: '\e617';
+  /* content: '\e617'; */
+  font-family: 'sirv';
+  content: '\e906';
 }
 .slides_order_items .slides_order_action_remove {
   cursor: pointer;
