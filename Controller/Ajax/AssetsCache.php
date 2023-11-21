@@ -196,7 +196,7 @@ class AssetsCache extends \Magento\Framework\App\Action\Action
         $code = curl_getinfo(self::$curlHandle, CURLINFO_HTTP_CODE);
         $error = curl_errno(self::$curlHandle);
 
-        if (($code == 200) && preg_match('#Last-Modified: ([^\n]++)\n#', $contents, $match)) {
+        if (($code == 200) && preg_match('#Last-Modified: ([^\n]++)\n#i', $contents, $match)) {
             return $match[1];
         }
 

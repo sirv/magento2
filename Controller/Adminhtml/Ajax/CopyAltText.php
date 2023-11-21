@@ -240,6 +240,7 @@ class CopyAltText extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     /** @var \Magento\Catalog\Model\Product $product */
                     $product = $this->productModelFactory->create()->load($productId);
                     $productSku = $product->getSku();
+                    $productName = $product->getName();
                     $altText = str_replace(
                         ['{product-id}', '{product-sku}'],
                         [$productId, $productSku],
@@ -285,9 +286,9 @@ class CopyAltText extends \Sirv\Magento2\Controller\Adminhtml\Settings
                     $images = $product->getMediaGallery('images');
                     foreach ($images as $image) {
                         if ($image['media_type'] == 'image') {
-                            $title = $image['label'];
+                            $title = $image['label'] ?? $productName;
                         } elseif ($image['media_type'] == 'external-video') {
-                            $title = $image['video_title'];
+                            $title = $image['video_title'] ?? $productName;
                         } else {
                             continue;
                         }

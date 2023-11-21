@@ -107,12 +107,20 @@ define([
             var i, l, pId, dataIds;
 
             smViewerNode = smvContainer.find('.Sirv').get(0);
+            /*
             smViewer = Sirv.getInstance(smViewerNode);
+            */
+            Sirv.stop(smViewerNode);
+
             dataIds = sirvConfig.slides[productId];
 
             if (dataIds.length) {
                 for (i = 0, l = dataIds.length; i < l; i++) {
+                    /*
                     smViewer.enableItem(dataIds[i]);
+                    */
+                    var item = smViewerNode.querySelector('[data-id="' + dataIds[i] + '"]');
+                    item && item.removeAttribute('data-disabled');
                 }
                 for (pId in sirvConfig.slides) {
                     if (pId == productId || !doReplace && pId == spConfig.productId) {
@@ -120,15 +128,32 @@ define([
                     }
                     dataIds = sirvConfig.slides[pId];
                     for (i = 0, l = dataIds.length; i < l; i++) {
+                        /*
                         smViewer.disableItem(dataIds[i]);
+                        */
+                        var item = smViewerNode.querySelector('[data-id="' + dataIds[i] + '"]');
+                        item && item.setAttribute('data-disabled', '');
                     }
                 }
+
+                /*
                 smViewer.jump(sirvConfig.activeSlides[productId]);
+                */
+                var dataOptions = smViewerNode.getAttribute('data-options');
+                dataOptions = dataOptions.replace(
+                    /slide\.first: \d+;/,
+                    'slide.first: ' + sirvConfig.activeSlides[productId] + ';'
+                );
+                smViewerNode.setAttribute('data-options', dataOptions);
             } else {
                 if (doReplace) {
                     dataIds = sirvConfig.slides[spConfig.productId];
                     for (i = 0, l = dataIds.length; i < l; i++) {
+                        /*
                         smViewer.enableItem(dataIds[i]);
+                        */
+                        var item = smViewerNode.querySelector('[data-id="' + dataIds[i] + '"]');
+                        item && item.removeAttribute('data-disabled');
                     }
                 }
                 for (pId in sirvConfig.slides) {
@@ -137,11 +162,26 @@ define([
                     }
                     dataIds = sirvConfig.slides[pId];
                     for (i = 0, l = dataIds.length; i < l; i++) {
+                        /*
                         smViewer.disableItem(dataIds[i]);
+                        */
+                        var item = smViewerNode.querySelector('[data-id="' + dataIds[i] + '"]');
+                        item && item.setAttribute('data-disabled', '');
                     }
                 }
+
+                /*
                 smViewer.jump(sirvConfig.activeSlides[spConfig.productId]);
+                */
+                var dataOptions = smViewerNode.getAttribute('data-options');
+                dataOptions = dataOptions.replace(
+                    /slide\.first: \d+;/,
+                    'slide.first: ' + sirvConfig.activeSlides[spConfig.productId] + ';'
+                );
+                smViewerNode.setAttribute('data-options', dataOptions);
             }
+
+            Sirv.start(smViewerNode);
 
             sirvConfig.currentProductId = productId;
 

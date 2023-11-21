@@ -433,58 +433,86 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $this->configurableData['slides'] = [];
         $this->configurableData['active-slides'] = [];
 
+        $orderedSlides = [];
         foreach ($this->getAssociatedProducts($product) as $associatedProduct) {
             $data = $this->getProductAssetsData($associatedProduct);
             $id = $associatedProduct->getId();
+            $orderedSlides[$id] = [];
             if (empty($data)) {
                 $this->configurableData['slides'][$id] = [];
             } else {
                 $this->configurableData['slides'][$id] = array_keys($data);
                 $activeSlideIndex = isset($this->activeSlideIds[$id]) ? $data[$this->activeSlideIds[$id]]['index'] : 0;
-                $this->configurableData['active-slides'][$id] = count($this->viewerSlides) + $activeSlideIndex;
+                $viewerSlidesCount = count($this->viewerSlides);
+                $this->configurableData['active-slides'][$id] = $viewerSlidesCount + $activeSlideIndex;
                 foreach ($data as $slideId => $slideData) {
                     $this->viewerSlides[] = $slideData['html'];
+                }
+                foreach ($this->itemsOrder as $i => $itemType) {
+                    foreach ($data as $slideId => $slideData) {
+                        if (isset($data[$slideId]['ordered'])) {
+                            continue;
+                        }
+                        if ($slideData['type'] == $itemType) {
+                            $orderedSlides[$id][$i] = [
+                                'index' => $viewerSlidesCount + $slideData['index'],
+                                'id' => $slideId
+                            ];
+                            $data[$slideId]['ordered'] = true;
+                            break;
+                        }
+                    }
                 }
             }
         }
 
         $data = $this->getProductAssetsData($product);
         $this->configurableData['slides'][$this->productId] = array_keys($data);
-        $this->configurableData['active-slides'][$this->productId] = count($this->viewerSlides) + $data[$this->activeSlideIds[$this->productId]]['index'];
+        $viewerSlidesCount = count($this->viewerSlides);
+        $this->configurableData['active-slides'][$this->productId] = $viewerSlidesCount + $data[$this->activeSlideIds[$this->productId]]['index'];
         foreach ($data as $slideId => $slideData) {
             $this->viewerSlides[] = $slideData['html'];
         }
-
-        if (!empty($this->itemsOrder)) {
-            $orderedSlides = [];
-            foreach ($this->itemsOrder as $i => $itemType) {
-                foreach ($data as $slideId => $slideData) {
-                    if (isset($data[$slideId]['ordered'])) {
-                        continue;
-                    }
-                    if ($slideData['type'] == $itemType) {
-                        $orderedSlides[$i] = [
-                            //'type' => $slideData['type'],
-                            'index' => $slideData['index'],
-                            'id' => $slideId
-                        ];
-                        $data[$slideId]['ordered'] = true;
-                        break;
-                    }
+        $orderedSlides[$this->productId] = [];
+        $mainProductOrderedSlides = [];
+        foreach ($this->itemsOrder as $i => $itemType) {
+            foreach ($data as $slideId => $slideData) {
+                if (isset($data[$slideId]['ordered'])) {
+                    continue;
+                }
+                if ($slideData['type'] == $itemType) {
+                    $mainProductOrderedSlides[$i] = [
+                        'index' => $viewerSlidesCount + $slideData['index'],
+                        'id' => $slideId
+                    ];
+                    $data[$slideId]['ordered'] = true;
+                    break;
                 }
             }
-            $orderedSlidesCount = count($orderedSlides);
-            if ($orderedSlidesCount) {
-                foreach ($this->configurableData['active-slides'] as $id => $activeSlideIndex) {
-                    $this->configurableData['active-slides'][$id] += $orderedSlidesCount;
+        }
+
+        foreach ($orderedSlides as $productId => $slideData) {
+            if (!isset($this->configurableData['active-slides'][$productId])) {
+                continue;
+            }
+            $mergedData = [];
+            foreach ($this->itemsOrder as $i => $itemType) {
+                if (isset($slideData[$i])) {
+                    $mergedData[$i] = $slideData[$i];
+                } elseif (isset($mainProductOrderedSlides[$i])) {
+                    $mergedData[$i] = $mainProductOrderedSlides[$i];
                 }
+            }
+            $orderedSlidesCount = count($mergedData);
+            if ($orderedSlidesCount) {
                 $pos = 0;
-                foreach ($orderedSlides as $i => $slideData) {
-                    if ($slideData['id'] == $this->activeSlideIds[$this->productId]) {
-                        $this->configurableData['active-slides'][$this->productId] = $pos;
+                $activeSlideId = $this->activeSlideIds[$productId];
+                foreach ($mergedData as $i => $slideData) {
+                    if ($slideData['id'] == $activeSlideId) {
+                        $this->configurableData['active-slides'][$productId] = $pos;
                         break;
-                    } elseif ($slideData['index'] > $data[$this->activeSlideIds[$this->productId]]['index']) {
-                        $this->configurableData['active-slides'][$this->productId]++;
+                    } elseif ($slideData['index'] > $this->configurableData['active-slides'][$productId]) {
+                        $this->configurableData['active-slides'][$productId]++;
                     }
                     $pos++;
                 }
@@ -629,7 +657,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                 $data[$slideId] = [];
                 $data[$slideId]['index'] = 0;
                 $data[$slideId]['type'] = 'image';
-                $data[$slideId]['html'] = '<img data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" />';
+                $data[$slideId]['html'] = '<img data-group="group-' . $productId . '" data-id="' . $slideId . '" data-src="' . $url . '" data-type="static" />';
                 $data[$slideId]['placeholder'] = [];
                 $data[$slideId]['placeholder']['url'] = $url;
                 $data[$slideId]['placeholder']['width'] = $this->defaultPlaceholderWidth;
@@ -681,6 +709,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $productId = $product->getId();
         $baseImage = $product->getImage();
         $productName = $product->getName();
+        $group = 'group-' . $productId;
         $idPrefix = 'item-' . $productId . '-';
         $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
         $dataTypeAttr = $zoom == 'enabled' ? ' data-type="zoom"' : '';
@@ -715,7 +744,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                 case 'external-video':
                     $data[$slideId]['type'] = 'video';
                     $url = $item->getData('video_url');
-                    $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems['videos'] . '></div>';
+                    $data[$slideId]['html'] = '<div data-group="' . $group . '" data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems['videos'] . '></div>';
 
                     $data[$slideId]['placeholder'] = [];
                     if ($getPlaceholder) {
@@ -773,10 +802,10 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                             $parts[1] = str_replace('+', '%20', $parts[1]);
                         }
                         $url = implode('?', $parts);
-                        $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $dataTypeAttr . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '"></div>';
+                        $data[$slideId]['html'] = '<div data-group="' . $group . '" data-id="' . $slideId . '"' . $dataTypeAttr . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '"></div>';
                     } else {
                         $data[$slideId]['type'] = 'image';
-                        $data[$slideId]['html'] = '<img data-id="' . $slideId . '" data-type="static"' . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '" />';
+                        $data[$slideId]['html'] = '<img data-group="' . $group . '" data-id="' . $slideId . '" data-type="static"' . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . ' data-alt="' . $alt . '" />';
                     }
 
                     $data[$slideId]['placeholder'] = [];
@@ -820,6 +849,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
         $productId = $product->getId();
         $this->assetsCacheData['timestamps'][$productId] = $assetsData['timestamp'];
         $idPrefix = 'sirv-item-' . $productId . '-';
+        $group = 'group-' . $productId;
         $folderUrl = $this->syncHelper->getBaseUrl() . $assetsData['dirname'];
         $zoom = $this->dataHelper->getConfig('image_zoom') ?: 'enabled';
         $dataTypeAttr = $zoom == 'enabled' ? ' data-type="zoom"' : '';
@@ -855,7 +885,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                         $data[$slideId]['placeholder']['width'] = $asset['width'] ?? $this->defaultPlaceholderWidth;
                         $data[$slideId]['placeholder']['height'] = $asset['height'] ?? $this->defaultPlaceholderHeight;
                     }
-                    $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $dataTypeAttr . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
+                    $data[$slideId]['html'] = '<div data-group="' . $group . '" data-id="' . $slideId . '"' . $dataTypeAttr . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
                     $index++;
                     break;
                 case 'video':
@@ -876,7 +906,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                         $data[$slideId]['placeholder']['width'] = $asset['width'] ?? $this->defaultPlaceholderWidth;
                         $data[$slideId]['placeholder']['height'] = $asset['height'] ?? $this->defaultPlaceholderHeight;
                     }
-                    $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems[$asset['type'] . 's'] . '></div>';
+                    $data[$slideId]['html'] = '<div data-group="' . $group . '" data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems[$asset['type'] . 's'] . '></div>';
                     $index++;
                     break;
             }
@@ -926,7 +956,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                             $data[$slideId]['placeholder']['width'] = $this->defaultPlaceholderWidth;
                             $data[$slideId]['placeholder']['height'] = $this->defaultPlaceholderHeight;
                         }
-                        $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $dataTypeAttr . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
+                        $data[$slideId]['html'] = '<div data-group="' . $group . '" data-id="' . $slideId . '"' . $dataTypeAttr . $disabledAttr . ' data-src="' . $url . '"' . $pinnedAttr . '></div>';
                         $index++;
                         break;
                     case 'video':
@@ -944,7 +974,7 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                             $data[$slideId]['placeholder']['width'] = $this->defaultPlaceholderWidth;
                             $data[$slideId]['placeholder']['height'] = $this->defaultPlaceholderHeight;
                         }
-                        $data[$slideId]['html'] = '<div data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems[$assetType . 's'] . '></div>';
+                        $data[$slideId]['html'] = '<div data-group="' . $group . '" data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems[$assetType . 's'] . '></div>';
                         $index++;
                         break;
                 }
