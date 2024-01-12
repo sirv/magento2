@@ -29,12 +29,13 @@ define([
         modalWindow: null,
         modalClass: 'sirv-product-list-modal',
         isModalClosed: true,
-        errorMessage: $.mage.__('Some errors occurred during the ...!'),
         titles: {
             'with_image': 'Products with images',
             'without_image': 'Products without images',
             'no_assets': 'Product has no assets on Sirv'
         },
+        errorMessage: 'An error occurred while retrieving the list of products. Please try again. If you see this message again, please ' +
+            '<a target="_blank" href="https://sirv.com/help/support/#support">inform the Sirv support team</a>.',
 
         /** @inheritdoc */
         _create: function () {

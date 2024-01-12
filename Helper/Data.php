@@ -637,6 +637,99 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Get the path to the product assets folder
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @return string
+     */
+    public function getProductAssetsFolderPath($product = null)
+    {
+        static $folderPattern = null, $paths = [];
+
+        if ($folderPattern === null) {
+            $folderPattern = $this->getConfig('product_assets_folder') ?: '';
+            $folderPattern = trim(trim($folderPattern), '/');
+
+            //NOTE: product assets folder must contain a unique pattern
+            if (!preg_match('#{product-(?:sku|id)}#', $folderPattern)) {
+                $folderPattern = $folderPattern . '/{product-sku}';
+            }
+        }
+
+        if ($product === null) {
+            return $folderPattern;
+        }
+
+        $productId = $product->getId();
+
+        if (isset($paths[$productId])) {
+            return $paths[$productId];
+        }
+
+        $productSku = $product->getSku();
+        $folderPath = str_replace(
+            ['{product-id}', '{product-sku}', '{product-sku-2-char}', '{product-sku-3-char}'],
+            [$productId, $productSku, substr($productSku, 0, 2), substr($productSku, 0, 3)],
+            $folderPattern
+        );
+
+        $matches = [];
+        if (preg_match_all('#{attribute:(admin:)?([a-zA-Z0-9_]++)}#', $folderPath, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $attrValue = $product->getData($match[2]);
+                if (is_string($attrValue)) {
+                    $attrValue = trim($attrValue);
+                    if (empty($attrValue)) {
+                        $attrValue = false;
+                    } else {
+                        if (empty($match[1])) {
+                            $attrTextValue = $product->getAttributeText($match[2]);
+                        } else {
+                            $pAttr = $product->getResource()->getAttribute($match[2]);
+                            $storeId = $pAttr->getStoreId();
+                            $attrTextValue = $pAttr->setStoreId(0)->getSource()->getOptionText($attrValue);
+                            $pAttr->setStoreId($storeId);
+                        }
+                        if (is_string($attrTextValue)) {
+                            $attrTextValue = trim($attrTextValue);
+                            if (!empty($attrTextValue)) {
+                                $attrValue = $attrTextValue;
+                            }
+                        }
+                    }
+                } else {
+                    $attrValue = false;
+                }
+
+                if ($attrValue) {
+                    $folderPath = str_replace(
+                        '{attribute:' . $match[1] . $match[2] . '}',
+                        $attrValue,
+                        $folderPath
+                    );
+                } else {
+                    $pattern = '{attribute:' . $match[1] . $match[2] . '}';
+                    $folderPath = preg_replace(
+                        [
+                            '#/' . $pattern . '/#',
+                            '#^' . $pattern . '/|/' . $pattern . '$|' . $pattern . '#'
+                        ],
+                        [
+                            '/',
+                            ''
+                        ],
+                        $folderPath
+                    );
+                }
+            }
+        }
+
+        $paths[$productId] = $folderPath;
+
+        return $paths[$productId];
+    }
+
+    /**
      * Get assets data
      *
      * @param \Magento\Catalog\Model\Product $product
@@ -791,12 +884,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                                 $slideUrl = preg_replace('#/[^/]++$#', '/', $folderUrl . '/' . $asset['name']) . $slide;
                                 $slideInfo = $this->downloadAssetsInfo($slideUrl . '?info');
                                 $slideInfo = json_decode($slideInfo);
-                                if (isset($slideInfo->curl) && isset($slideInfo->curl->code) && (404 == (int)$slideInfo->curl->code)) {
+                                $responseCode = (isset($slideInfo->curl) && isset($slideInfo->curl->code)) ? (int)$slideInfo->curl->code : 0;
+                                if (in_array($responseCode, [404, 403])) {
                                     unset($f['spin']);
                                     break;
                                 }
-                                isset($asset['width']) || $asset['width'] = $slideInfo->width;
-                                isset($asset['height']) || $asset['height'] = $slideInfo->height;
+                                isset($asset['width']) || $asset['width'] = $slideInfo->width ?? 0;
+                                isset($asset['height']) || $asset['height'] = $slideInfo->height ?? 0;
                             }
                             break;
                         }

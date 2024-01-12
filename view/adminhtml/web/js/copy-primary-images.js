@@ -46,7 +46,8 @@ define([
         failedData: {},
         modalWindow: null,
         confirmMessage: $.mage.__('Are you sure you want to stop copying?'),
-        errorMessage: $.mage.__('Some errors occurred during the copying!'),
+        errorMessage: 'An error occurred while the widget for copying primary images was working. Please try again. If you see this message again, please ' +
+            '<a target="_blank" href="https://sirv.com/help/support/#support">inform the Sirv support team</a>.',
         tempData: null,
 
         /** @inheritdoc */
@@ -443,7 +444,7 @@ define([
          * @param {String} message
          * @protected
          */
-        _widgetFailed: function (mesaage) {
+        _widgetFailed: function (message) {
             this.isFailed = true;
             $('body').trigger('processStop');
             this._calculatePercents();
@@ -451,7 +452,7 @@ define([
             this._copyingCompleted();
             uiAlert({
                 title: $.mage.__('Error'),
-                content: $.mage.__(mesaage),
+                content: $.mage.__(message),
                 actions: {always: function(){}}
             });
         },

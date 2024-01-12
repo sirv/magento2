@@ -346,6 +346,26 @@ class Backend extends \Sirv\Magento2\Helper\Data
     }
 
     /**
+     * Create folder
+     *
+     * @param string $folderPath
+     * @return void
+     */
+    public function createFolder($folderPath)
+    {
+        if (empty($folderPath)) {
+            return;
+        }
+
+        $folderPath = '/' . ltrim($folderPath, '/');
+
+        /** @var \Sirv\Magento2\Model\Api\Sirv $apiClient */
+        $apiClient = $this->getSirvClient();
+        $apiClient->uploadFile($folderPath . '/sirv_tmp.txt', '', "\n");
+        $apiClient->deleteFile($folderPath . '/sirv_tmp.txt');
+    }
+
+    /**
      * Get account identifier (hash)
      *
      * @return string

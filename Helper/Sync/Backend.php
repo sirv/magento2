@@ -116,6 +116,28 @@ class Backend extends \Sirv\Magento2\Helper\Sync
     }
 
     /**
+     * Remove asset from Sirv
+     *
+     * @param string $path
+     * @return bool
+     */
+    public function removeAsset($path)
+    {
+        if (!$this->isAuth) {
+            return false;
+        }
+
+        try {
+            $result = $this->sirvClient->deleteFile($path);
+        } catch (\Exception $e) {
+            $this->logger->critical($e);
+            $result = false;
+        }
+
+        return $result;
+    }
+
+    /**
      * Get sync data
      *
      * @param bool $force

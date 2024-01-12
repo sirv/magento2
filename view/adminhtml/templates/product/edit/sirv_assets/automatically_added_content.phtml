@@ -1,0 +1,112 @@
+<?php
+/**
+ * Sirv automatically added assets block template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+// @codingStandardsIgnoreFile
+
+/** @var $block \Sirv\Magento2\Block\Adminhtml\Product\Edit\SirvAssets\AutomaticallyAdded\Content */
+
+$elementName = $block->getElement()->getName();
+$formName = $block->getFormName();
+$productId = $block->getElement()->getProductId();
+
+?>
+<div id="<?= $block->getHtmlId() ?>"
+     class="gallery sirv-automatically-added-assets"
+     data-mage-init='{"sirvAutomaticallyAddedAssets":{"template":"#<?= $block->getHtmlId() ?>-template"}}'
+     data-parent-component="<?= $block->escapeHtml($block->getData('config/parentComponent')) ?>"
+     data-refresh-cache-url="<?= $block->escapeHtml($block->getRefreshCacheUrl()) ?>"
+     data-assets-gallery-url="<?= $block->escapeHtml($block->getAssetsGalleryControllerUrl()) ?>"
+     data-product-id="<?= $block->escapeHtml($productId) ?>"
+     data-images="<?= $block->escapeHtml($block->getAssetsJson()) ?>"
+    >
+
+    <div class="image image-placeholder sirv-no-folder hidden-element">
+        <div class="product-image-wrapper">
+            <p class="image-placeholder-text">
+                <?= /* @escapeNotVerified */ __('No folder'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="image image-placeholder sirv-no-files hidden-element">
+        <div class="product-image-wrapper">
+            <p class="image-placeholder-text">
+                <?= /* @escapeNotVerified */ __('No files'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="image image-placeholder action-refresh">
+        <div class="product-image-wrapper">
+            <p class="image-placeholder-text">
+                <?= /* @escapeNotVerified */ __('Refresh'); ?>
+            </p>
+        </div>
+    </div>
+
+    <script id="<?= $block->getHtmlId() ?>-template" type="text/x-magento-template">
+        <div class="image item" data-role="sirv-asset">
+            <input type="hidden"
+                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][position]"
+                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   value="<%- data.position %>"
+                   class="position"/>
+            <input type="hidden"
+                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][file]"
+                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   value="<%- data.file %>"/>
+            <input type="hidden"
+                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][id]"
+                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   value="<%- data.id %>"/>
+            <input type="hidden"
+                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][removed]"
+                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   value=""
+                   class="is-removed"/>
+            <input type="hidden"
+                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][name]"
+                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   value="<%- data.name %>"/>
+
+            <div class="product-image-wrapper">
+                <img class="product-image"
+                     data-role="image-element"
+                     src="<%- data.url %>"
+                     alt="<%- data.file %>"
+                     title="<%- data.file %>"/>
+
+                <div class="actions">
+                    <div class="tooltip">
+                        <span class="delete-tooltiptext">
+                            <?= $block->escapeHtml(__('Remove')) ?>
+                        </span>
+                        <button type="button"
+                                class="action-remove"
+                                data-role="delete-button">
+                            <span>
+                                <?= $block->escapeHtml(__('Remove')) ?>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="item-description">
+                <div class="item-size">
+                  <span data-role="image-dimens-wrapper"><span data-role="image-dimens"></span>, </span><span data-role="image-size"><%- data.sizeLabel %></span>
+                </div>
+            </div>
+        </div>
+    </script>
+</div>
+<script>
+    jQuery('body').trigger('contentUpdated');
+</script>

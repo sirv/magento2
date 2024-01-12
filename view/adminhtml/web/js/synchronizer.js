@@ -121,7 +121,10 @@ define([
         modalWindow: null,
 
         confirmMessage: $.mage.__('Are you sure you want to stop synchronization?'),
-        errorMessage: $.mage.__('Some errors occurred during the synchronization!'),
+        errorMessage: $.mage.__(
+            'An error occurred during synchronization. Please try again. If you see this message again, please ' +
+            '<a target="_blank" href="https://sirv.com/help/support/#support">inform the Sirv support team</a>.'
+        ),
 
         rateLimit: {
             timerId: null,

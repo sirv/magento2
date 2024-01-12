@@ -89,7 +89,12 @@ class Changelog extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 error_reporting($level);
                 if ($handle) {
                     $response = '';
-                    $headers  = "GET /{$path} HTTP/1.1\r\n";
+                    //$headers  = "GET /{$path} HTTP/1.1\r\n";
+                    //NOTE: changed to HTTP/1.0
+                    //      because with HTTP/1.1 the server uses
+                    //      chunked transfer encoding (Transfer-Encoding: chunked)
+                    //      and the response body contains chunk data
+                    $headers  = "GET /{$path} HTTP/1.0\r\n";
                     $headers .= "Host: {$hostname}\r\n";
                     $headers .= "Connection: Close\r\n\r\n";
                     fwrite($handle, $headers);

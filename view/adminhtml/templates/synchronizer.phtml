@@ -92,7 +92,7 @@ $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidde
             <span class="list-item-title"><?= __('Failed images') ?></span>
             <span class="list-item-value"><?= $data['failed'] ?></span>
             <?php $hideClass = $data['failed'] ? '' : ' hidden-element'; ?>
-            <span class="list-item-link view-failed-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-failed-items"}}}' title="View failed images">View images</a></span>
+            <span class="list-item-link view-failed-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-failed-items"}}}' title="View failed images">Cause of errors</a></span>
             <span class="list-item-link clear-failed-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-failed-items"}}}' title="Clear synced images">Clear cache</a></span>
             <span class="hidden-element">
             <span class="list-item-link<?= $hideClass ?>">

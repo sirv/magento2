@@ -860,6 +860,10 @@ a.save-message {
 .progress-counters-list .list-item-link + .list-item-link {
   padding-left: 20px;
 }
+.progress-counters-list .list-item-synced .list-item-link + .list-item-link,
+.progress-counters-list .list-item-queued .list-item-link + .list-item-link {
+  padding-left: 40px;
+}
 /*
 .progress-counters-list .list-item-failed .list-item-link a {
   color: #f37152;

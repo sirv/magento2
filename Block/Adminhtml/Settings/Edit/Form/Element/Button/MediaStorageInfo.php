@@ -25,7 +25,9 @@ class MediaStorageInfo extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form
 
         $progressHtml = '<span class="media-storage-info-progress hidden"> Analysing... <span class="media-storage-info-progress-counter" data-count="0">0</span>%</span>';
 
-        if (isset($mediaStorageInfo['timestamp'])) {
+        $timestamp = $mediaStorageInfo['timestamp'] ?? 0;
+
+        if ($timestamp) {
             if (isset($mediaStorageInfo['sizeLabel'])) {
                 $sizeLabel = $mediaStorageInfo['sizeLabel'];
             } else {
@@ -54,7 +56,7 @@ class MediaStorageInfo extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form
             $this->setValue('Recalculate');
             $infoHtml = '<span class="media-storage-info-size">' . $sizeLabel . '</span>';
             $infoHtml .= ' (<span class="media-storage-info-count">' . $countLabel . ' image' . ($mediaStorageInfo['count'] == 1 ? '' : 's') . '</span>)';
-            $infoHtml .= ' on <span class="media-storage-info-timestamp">' .  date('F j, Y', $mediaStorageInfo['timestamp']) . '</span>';
+            $infoHtml .= ' on <span class="media-storage-info-timestamp">' .  date('F j, Y', $timestamp) . '</span>';
         } else {
             $infoHtml = 'No information yet';
         }

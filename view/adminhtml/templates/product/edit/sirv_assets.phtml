@@ -1,0 +1,58 @@
+<?php
+/**
+ * Sirv assets block template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+// @codingStandardsIgnoreFile
+
+/** @var $block \Sirv\Magento2\Block\Adminhtml\Product\Edit\SirvAssets */
+
+?>
+<div class="sirv-assets-block">
+<div class="fieldset-wrapper admin__fieldset-section">
+    <div class="fieldset-wrapper-title" tabindex="-1">
+        <strong class="title">
+            <span><?= __('Automatically added'); ?></span>
+            <div class="admin__field-tooltip">
+                <a class="admin__field-tooltip-action action-help" target="_blank" tabindex="1" href="#"></a>
+                <div class="admin__field-tooltip-content">Files in this Sirv folder will be added to the product gallery. It can include images, videos, GLB models or 360 spins.</div>
+            </div>
+        </strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <fieldset class="admin__fieldset">
+            <div class="fieldset-wrapper-subtitle">
+                Folder on Sirv: <a href="<?= $block->getProductAssetsFolderUrl(); ?>" target="_blank" class="sirv-assets-folder-link sirv-open-in-new-window">/<?= $block->getProductAssetsFolder(); ?>/</a>
+                <span class="sirv-no-folder hidden-element">Does not exist. <a class="create-folder-link" href="#">Create folder</a></span>
+            </div>
+            <div>
+            <?= $block->getChildHtml('sirv_automatically_added_assets'); ?>
+            </div>
+        </fieldset>
+    </div>
+</div>
+<div class="fieldset-wrapper admin__fieldset-section">
+    <div class="fieldset-wrapper-title" tabindex="-1">
+        <strong class="title">
+            <span><?= __('Manually added'); ?></span>
+        </strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <fieldset class="admin__fieldset">
+            <div class="fieldset-wrapper-subtitle">
+                Choose any image, video, 360 spin or 3D model to add to this product:
+            </div>
+            <div>
+                <?= $block->getChildHtml('sirv_manually_added_assets'); ?>
+            </div>
+        </fieldset>
+    </div>
+</div>
+</div>

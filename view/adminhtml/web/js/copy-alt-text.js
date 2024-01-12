@@ -44,7 +44,8 @@ define([
         modalWindow: null,
         confirmToClearCacheMessage: $.mage.__('Some data was already cached during the previous copy process. Do you want to continue copying without affecting the data already copied, or clear the cache and start copying from the beginning to overwrite previous data?'),
         confirmCloseMessage: $.mage.__('Are you sure you want to stop copying?'),
-        errorMessage: $.mage.__('Some errors occurred during the copying!'),
+        errorMessage: 'An error occurred during copying. Please try again. If you see this message again, please ' +
+            '<a target="_blank" href="https://sirv.com/help/support/#support">inform the Sirv support team</a>.',
 
         /** @inheritdoc */
         _create: function () {
@@ -249,7 +250,7 @@ define([
          * @param {String} message
          * @protected
          */
-        _widgetFailed: function (mesaage) {
+        _widgetFailed: function (message) {
             this.isFailed = true;
             $('body').trigger('processStop');
             this._calculatePercents();
@@ -257,7 +258,7 @@ define([
             this._copyingCompleted();
             uiAlert({
                 title: $.mage.__('Error'),
-                content: $.mage.__(mesaage),
+                content: $.mage.__(message),
                 actions: {always: function(){}}
             });
         },

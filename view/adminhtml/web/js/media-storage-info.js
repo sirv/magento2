@@ -19,7 +19,6 @@ define([
         options: {
             ajaxUrl: null
         },
-        errorMessage: $.mage.__('Some errors occurred during the calculation!'),
         isCanceled: false,
         cancelMode: false,
         buttonLabel: '',
@@ -27,6 +26,8 @@ define([
         storageInfo: {'size': 0, 'count': 0},
         timerId: null,
         progressCounter: 0,
+        errorMessage: 'An error occurred while retrieving information about the multimedia storage. Please try again. If you see this message again, please ' +
+            '<a target="_blank" href="https://sirv.com/help/support/#support">inform the Sirv support team</a>.',
 
         /** @inheritdoc */
         _create: function () {

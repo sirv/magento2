@@ -2,7 +2,7 @@
     "name": "sirv/magento2",
     "description": "Sirv module for Magento 2",
     "type": "magento2-module",
-    "version": "6.2.1",
+    "version": "7.0.0",
     "license": [
         "OSL-3.0",
         "AFL-3.0"

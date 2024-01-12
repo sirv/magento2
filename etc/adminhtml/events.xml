@@ -19,4 +19,7 @@
     <event name="catalog_product_delete_after">
         <observer name="sirv_catalog_product_delete_after" instance="Sirv\Magento2\Observer\SyncProductGallery" />
     </event>
+    <event name="controller_action_catalog_product_save_entity_after">
+        <observer name="sirv_controller_action_catalog_product_save_entity_after" instance="Sirv\Magento2\Observer\SaveGalleryObserver" />
+    </event>
 </config>

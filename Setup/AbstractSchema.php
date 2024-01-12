@@ -44,6 +44,11 @@ abstract class AbstractSchema
     const SIRV_ALT_TEXT_CACHE_TABLE = 'sirv_alt_text_cache';
 
     /**
+     * Manually added assets table name
+     */
+    const SIRV_MANUALLY_ADDED_ASSETS_TABLE = 'sirv_manually_added_assets';
+
+    /**
      * Create config table
      *
      * @param SchemaSetupInterface $setup
@@ -340,6 +345,92 @@ abstract class AbstractSchema
             ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
         )->setComment(
             'Sirv messages'
+        );
+
+        $connection->createTable($table);
+    }
+
+    /**
+     * Create table for manually added assets
+     *
+     * @param SchemaSetupInterface $setup
+     * @param bool $skipIfExists
+     * @return void
+     */
+    protected function createManuallyAddedAssetsTable(SchemaSetupInterface $setup, $skipIfExists = true)
+    {
+        /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+        $connection = $setup->getConnection();
+
+        $tableName = $setup->getTable(self::SIRV_MANUALLY_ADDED_ASSETS_TABLE);
+
+        if ($setup->tableExists(self::SIRV_MANUALLY_ADDED_ASSETS_TABLE)) {
+            if ($skipIfExists) {
+                return;
+            }
+            $connection->dropTable($tableName);
+        }
+
+        $table = $connection->newTable(
+            $tableName
+        )->addColumn(
+            'id',
+            Table::TYPE_INTEGER,
+            null,
+            ['identity' => true, 'unsigned' => true, 'nullable' => false, 'primary' => true],
+            'Primary key'
+        )->addColumn(
+            'product_id',
+            Table::TYPE_INTEGER,
+            null,
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
+            'Product ID'
+        )->addColumn(
+            'path',
+            Table::TYPE_TEXT,
+            255,
+            ['nullable' => false, 'default' => ''],
+            'Asset path'
+        )->addColumn(
+            'position',
+            Table::TYPE_INTEGER,
+            null,
+            ['unsigned' => true, 'nullable' => true, 'default' => null],
+            'Asset position'
+        )->addColumn(
+            'type',
+            Table::TYPE_SMALLINT,
+            null,
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
+            'Asset type'
+        )->addColumn(
+            'width',
+            Table::TYPE_SMALLINT,
+            null,
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
+            'Asset width'
+        )->addColumn(
+            'height',
+            Table::TYPE_SMALLINT,
+            null,
+            ['unsigned' => true, 'nullable' => false, 'default' => 0],
+            'Asset height'
+        )->addColumn(
+            'size',
+            Table::TYPE_INTEGER,
+            null,
+            ['unsigned' => true, 'nullable' => true, 'default' => 0],
+            'Asset size'
+        )->addIndex(
+            $setup->getIdxName(
+                $tableName,
+                ['product_id', 'path'],
+                AdapterInterface::INDEX_TYPE_UNIQUE
+            ),
+            ['product_id', 'path'],
+            ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
+        )->setComment(
+            'Sirv manually added assets'
         );
 
         $connection->createTable($table);

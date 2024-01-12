@@ -29,12 +29,13 @@ define([
         pageSize: 100,
         modalWindow: null,
         isModalClosed: true,
-        errorMessage: $.mage.__('Some errors occurred during the ...!'),
         titles: {
             'synced': 'Images synced to Sirv',
             'queued': 'Queued images',
             'failed': 'Failed images'
         },
+        errorMessage: 'An error occurred while retrieving the list of images. Please try again. If you see this message again, please ' +
+            '<a target="_blank" href="https://sirv.com/help/support/#support">inform the Sirv support team</a>.',
 
         /** @inheritdoc */
         _create: function () {
@@ -197,9 +198,7 @@ define([
          */
         _displayFailedItems: function (data) {
             if (data && data.failed && data.failed.count) {
-                data.message = data.failed.count + ' image' +
-                    (data.failed.count == 1 ? '' : 's') +
-                    ' could not be synced to Sirv.';
+                data.itemsCountMessage = data.failed.count + ' image' + (data.failed.count == 1 ? '' : 's');
 
                 this._createModalWindow();
                 this.modalWindow.html('');

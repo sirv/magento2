@@ -1,0 +1,74 @@
+<!--
+/**
+ * Assets picker modal contents template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+-->
+<style>
+  .sirv-asset-picker-modal.modal-popup .modal-inner-wrap {
+    width: 90%;
+    height: 90%;
+  }
+  .modal-content {
+    height: 85%;
+  }
+  .modal-content > div {
+    height: 95%;
+  }
+  .sirv-asset-picker-container {
+    height: 100%;
+  }
+  .sirv-asset-picker-content {
+    height: 100%;
+  }
+  #<%- assetPickerData.id %> {
+    border: 1px solid black;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+<div class="sirv-asset-picker-container">
+  <div class="sirv-asset-picker-content">
+    <iframe id="<%- assetPickerData.id %>" src="<%- assetPickerData.templateUrl %>"></iframe>
+  </div>
+</div>
+<script>
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.id) {
+      if (event.data.id == 'ready') {
+        const iframe = document.querySelector('#<%- assetPickerData.id %>'),
+              config = {};
+        config.sirvBaseUrl = '<%- assetPickerData.sirvBaseUrl %>';
+        config.folderContentUrl = '<%- assetPickerData.folderContentUrl %>';
+        iframe.contentWindow.postMessage({'id': 'config', 'config': config}, "*");
+      }
+      if (event.data.id == 'picked') {
+        var gallery = document.querySelector('.sirv-manually-added-assets'),
+            itemInfo = event.data.itemInfo;
+
+        itemInfo.file = itemInfo.path;
+        itemInfo.type = itemInfo.assetType;
+
+        if (itemInfo.type == 'video') {
+            itemInfo.url = itemInfo.url + '?thumbnail=' + (itemInfo.width || 150);
+        }
+        if (itemInfo.type == 'spin') {
+            itemInfo.url = itemInfo.url + '?thumb=spin&image.frames=1';
+        }
+
+        gallery = jQuery(gallery);
+        gallery.trigger('closeModalWindow');
+        gallery.trigger('addItem', itemInfo);
+      }
+      if (event.data.id == 'error') {
+        location.reload();
+      }
+    }
+  });
+</script>

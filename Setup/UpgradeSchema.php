@@ -41,6 +41,7 @@ class UpgradeSchema extends AbstractSchema implements UpgradeSchemaInterface
         $this->upgradeAssetsTable($setup) || $this->createAssetsTable($setup);
         $this->createMessagesTable($setup);
         $this->createAltTextCacheTable($setup);
+        $this->createManuallyAddedAssetsTable($setup);
 
         $setup->endSetup();
     }

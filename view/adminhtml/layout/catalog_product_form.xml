@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Backend config
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ */
+-->
+<layout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/layout_generic.xsd">
+    <head>
+        <css src="Sirv_Magento2::css/sirv-assets-section.css"/>
+    </head>
+    <referenceContainer name="product_form">
+        <block name="sirv_assets" class="Sirv\Magento2\Block\Adminhtml\Product\Edit\SirvAssets">
+            <arguments>
+                <argument name="config" xsi:type="array">
+                    <item name="label" xsi:type="string" translate="true">Sirv images, videos, spins &amp; models</item>
+                    <item name="collapsible" xsi:type="boolean">true</item>
+                    <item name="opened" xsi:type="boolean">false</item>
+                    <item name="canShow" xsi:type="boolean">true</item>
+                    <item name="componentType" xsi:type="string">fieldset</item>
+                    <item name="sortOrder" xsi:type="string">24</item>
+                </argument>
+            </arguments>
+            <block name="sirv_automatically_added_assets" class="Sirv\Magento2\Block\Adminhtml\Product\Edit\SirvAssets\AutomaticallyAdded">
+                <block class="Sirv\Magento2\Block\Adminhtml\Product\Edit\SirvAssets\AutomaticallyAdded\Content" as="sirv_automatically_added_content">
+                    <arguments>
+                        <argument name="config" xsi:type="array">
+                            <item name="parentComponent" xsi:type="string">product_form.product_form.block_sirv_assets.block_sirv_assets</item>
+                        </argument>
+                    </arguments>
+                </block>
+            </block>
+            <block name="sirv_manually_added_assets" class="Sirv\Magento2\Block\Adminhtml\Product\Edit\SirvAssets\ManuallyAdded">
+                <block class="Sirv\Magento2\Block\Adminhtml\Product\Edit\SirvAssets\ManuallyAdded\Content" as="sirv_manually_added_content">
+                    <arguments>
+                        <argument name="config" xsi:type="array">
+                            <item name="parentComponent" xsi:type="string">product_form.product_form.block_sirv_assets.block_sirv_assets</item>
+                        </argument>
+                    </arguments>
+                </block>
+            </block>
+        </block>
+    </referenceContainer>
+</layout>
