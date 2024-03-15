@@ -324,6 +324,16 @@ a.save-message {
 .mt-config .fieldset .field-mt-config-error-notice .mt-config-error-notice {
   font-size: 1.8rem;
 }
+
+.admin-field-group-separator {
+  border: none;
+  border-top: 1px solid #adadad;
+  margin-bottom: 12px;
+}
+.admin-field-group-comment {
+  padding-bottom: 8px;
+}
+
 .mt-config .field .mt-option {
   width: 400px;
 }
@@ -605,6 +615,9 @@ a.save-message {
 }
 .admin__field.field-mt-pinned_items #mt-pinned_items-mask + .admin__field-note {
   margin-left: 196px;
+}
+.admin__field.field-mt-pinned_items .admin__field-option.admin__field-option-inline:not(:first-of-type):before {
+  visibility: hidden;
 }
 .admin__field.field-mt-copy_primary_images_to_magento .products_with_images_label,
 .admin__field.field-mt-copy_primary_images_to_magento .products_without_images_label {

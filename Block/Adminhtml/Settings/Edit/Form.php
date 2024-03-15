@@ -259,6 +259,16 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     'required' => $required,
                 ];
 
+                if (isset($field->field_group_legend)) {
+                    $fieldConfig['field_group_legend'] = (string)$field->field_group_legend;
+                }
+                if (isset($field->field_group_comment)) {
+                    $fieldConfig['field_group_comment'] = (string)$field->field_group_comment;
+                }
+                if (isset($field->field_group_separator)) {
+                    $fieldConfig['field_group_separator'] = true;
+                }
+
                 if ($value !== null) {
                     if ($type == 'checkboxes') {
                         $fieldConfig['checked'] = explode(',', $value);
@@ -500,6 +510,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     case 'excluded_files':
                     case 'excluded_from_lazy_load':
                     case 'smv_js_options':
+                    case 'custom_css':
                     case 'smv_custom_css':
                         $fieldConfig['rows'] = 7;
                         break;

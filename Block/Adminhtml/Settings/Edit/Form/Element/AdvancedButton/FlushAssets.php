@@ -67,7 +67,7 @@ class FlushAssets extends \Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Elem
 
         $formWidget = $this->getForm()->getParent();
         $config = [
-            'label' => 'Flush product galleries',
+            'label' => 'Clear cache',
             'title' => 'Flush product galleries',
             'options' => [
                 'empty' => [

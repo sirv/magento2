@@ -68,6 +68,7 @@ class Disconnect extends \Sirv\Magento2\Controller\Adminhtml\Settings
             'image_zoom' => null,
             'slides_order' => null,
             'pinned_items' => '{"videos":"no","spins":"no","models":"no","images":"no","mask":""}',
+            'custom_css' => null,
             'smv_custom_css' => null,
             'assets_cache_ttl' => '1440',
             'excluded_pages' => null,

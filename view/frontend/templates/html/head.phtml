@@ -18,6 +18,11 @@ if (!$block->isVisibile()) {
     return;
 }
 
+$styles = $block->getCustomCss();
+if (!empty($styles)) {
+    echo '<style>' . $styles . '</style>';
+}
+
 $sirvUrl = $block->getSirvUrl();
 $baseStaticUrl = $block->getBaseStaticUrl();
 $sirvDomain = parse_url($sirvUrl, PHP_URL_HOST) ?: '';

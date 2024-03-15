@@ -390,12 +390,24 @@
                 <value>false</value>
                 <install/>
             </field>
+            <field>
+                <name>custom_css</name>
+                <label>Custom CSS</label>
+                <notice><![CDATA[Add styles to fix any rendering conflicts caused by other CSS.]]></notice>
+                <type>textarea</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
+                <value></value>
+                <placeholder><![CDATA[Example:&#xa;.here-is-a-style img {&#xa;    width: auto !important;&#xa;}]]></placeholder>
+            </field>
         </fields>
     </group>
     <group id="sirv_media_viewer">
         <label>Product page media gallery</label>
         <fields>
             <field>
+                <field_group_legend>Activation</field_group_legend>
+                <field_group_comment>Sirv Media Viewer can show any type of media - image zoom, 360 spin, videos or 3D models. It replaces the existing media gallery on your product pages.</field_group_comment>
+                <field_group_separator/>
                 <name>product_gallery_view</name>
                 <label>Use Sirv Media Viewer as product gallery</label>
                 <tooltip><![CDATA[Replace your product media gallery viewer with <a class="sirv-open-in-new-window" target="_blank" href="https://sirv.com/help/articles/sirv-media-viewer/">Sirv Media Viewer</a>.]]></tooltip>
@@ -415,35 +427,12 @@
                 <install/>
             </field>
             <field>
-                <name>viewer_contents</name>
-                <label>Order of content</label>
-                <type>radios</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\OrderOfContent</type_class>
-                <options>
-                    <option>
-                        <label>Sirv assets, then Magento images &amp; videos</label>
-                        <value>3</value>
-                    </option>
-                    <option>
-                        <label>Magento images &amp; videos, then Sirv assets</label>
-                        <value>2</value>
-                    </option>
-                    <option>
-                        <label>Magento images &amp; videos</label>
-                        <value>1</value>
-                    </option>
-                    <option>
-                        <label>Sirv assets</label>
-                        <value>4</value>
-                    </option>
-                </options>
-                <value>3</value>
-                <install/>
-            </field>
-            <field>
+                <field_group_legend>Content from Sirv</field_group_legend>
+                <field_group_comment><![CDATA[Your gallery can contain media from <a target="_blank" class="sirv-open-in-new-window" href="https://my.sirv.com/">your Sirv account</a>. The files should be stored in a folder named after the SKU.]]></field_group_comment>
+                <field_group_separator/>
                 <name>product_assets_folder</name>
                 <label>Product folder names on Sirv</label>
-                <tooltip><![CDATA[Folder location of product assets for <b>Sirv Media Viewer</b>. The following placeholders can be used:<br/><b>{product-sku}</b><br/><b>{product-id}</b><br/><b>{product-sku-2-char}</b><br/><b>{product-sku-3-char}</b><br/><b>{attribute:attribute_code}</b><br/><b>{attribute:admin:attribute_code}</b><br/>e.g. products/{product-sku} <a target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#gallery">Learn more</a>.]]></tooltip>
+                <tooltip><![CDATA[Folder location of product assets for Sirv Media Viewer. The following placeholders can be used:<br/><b>{product-sku}</b><br/><b>{product-id}</b><br/><b>{product-sku-2-char}</b><br/><b>{product-sku-3-char}</b><br/><b>{attribute:attribute_code}</b><br/><b>{attribute:admin:attribute_code}</b><br/>e.g. products/{product-sku} <a target="_blank" href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#gallery">Learn more</a>.]]></tooltip>
                 <notice><![CDATA[Folder structure on Sirv e.g. products/{product-sku}]]></notice>
                 <type>text</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Folder</type_class>
@@ -451,40 +440,10 @@
                 <install/>
             </field>
             <field>
-                <name>copy_primary_images_to_magento</name>
-                <label>Get primary images from Sirv</label>
-                <type>button</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Button\CopyPrimaryImages</type_class>
-                <value>Copy primary images to Magento</value>
-            </field>
-            <field>
-                <name>smv_js_options</name>
-                <label>Sirv Media Viewer options</label>
-                <notice><![CDATA[<a target="_blank" class="sirv-open-in-new-window" href="https://sirv.com/help/viewer/">Choose your options here</a>, then paste the code from the Script tab.]]></notice>
-                <type>textarea</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
-                <value>SirvOptions = {&#xa;  viewer: {&#xa;    zoom: {&#xa;      mode: 'inner',&#xa;    }&#xa;  }&#xa;}</value>
-            </field>
-            <field>
-                <name>image_zoom</name>
-                <label>Image zoom</label>
-                <type>radios</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
-                <options>
-                    <option>
-                        <label>Enabled</label>
-                        <value>enabled</value>
-                    </option>
-                    <option>
-                        <label>Disabled</label>
-                        <value>disabled</value>
-                    </option>
-                </options>
-                <value>enabled</value>
-            </field>
-            <field>
+                <field_group_legend>Order of content</field_group_legend>
+                <field_group_comment><![CDATA[Your gallery can include product images from Magento and/or media that you uploaded directly to <a target="_blank" class="sirv-open-in-new-window" href="https://my.sirv.com/">your Sirv account</a>.]]></field_group_comment>
                 <name>slides_order</name>
-                <label>Gallery items order</label>
+                <label>Order of content</label>
                 <type>slides_order</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\SlidesOrder</type_class>
                 <options>
@@ -517,6 +476,33 @@
                 <value></value>
             </field>
             <field>
+                <name>viewer_contents</name>
+                <label>Order of remaining content</label>
+                <type>radios</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\OrderOfContent</type_class>
+                <options>
+                    <option>
+                        <label>Sirv assets, then Magento images &amp; videos</label>
+                        <value>3</value>
+                    </option>
+                    <option>
+                        <label>Magento images &amp; videos, then Sirv assets</label>
+                        <value>2</value>
+                    </option>
+                    <option>
+                        <label>Magento images &amp; videos</label>
+                        <value>1</value>
+                    </option>
+                    <option>
+                        <label>Sirv assets</label>
+                        <value>4</value>
+                    </option>
+                </options>
+                <value>3</value>
+                <install/>
+            </field>
+            <field>
+                <field_group_separator/>
                 <name>pinned_items</name>
                 <label>Pin gallery items</label>
                 <type>pinned_items</type>
@@ -525,6 +511,7 @@
                 <install/>
             </field>
             <field>
+                <field_group_legend>Gallery experience</field_group_legend>
                 <name>smv_max_height</name>
                 <label>Max height</label>
                 <type>text</type>
@@ -534,7 +521,7 @@
             </field>
             <field>
                 <name>use_placeholder_with_smv</name>
-                <label>Use placeholder</label>
+                <label>Gallery placeholder</label>
                 <tooltip><![CDATA[Use image placeholder for product page media gallery.]]></tooltip>
                 <type>radios</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
@@ -549,24 +536,45 @@
                     </option>
                 </options>
                 <value>false</value>
+                <notice>Show gallery skeleton while images are loading.</notice>
                 <install/>
             </field>
             <field>
+                <name>image_zoom</name>
+                <label>Image zoom</label>
+                <type>radios</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
+                <options>
+                    <option>
+                        <label>Enabled</label>
+                        <value>enabled</value>
+                    </option>
+                    <option>
+                        <label>Disabled</label>
+                        <value>disabled</value>
+                    </option>
+                </options>
+                <value>enabled</value>
+            </field>
+            <field>
+                <name>smv_js_options</name>
+                <label>Sirv Media Viewer options</label>
+                <before_element_html><![CDATA[Go to the <a target="_blank" class="sirv-open-in-new-window" href="https://sirv.com/help/viewer/">Sirv Media Viewer designer</a> to create the perfect experience for your store. Paste code from the "Script" tab:]]></before_element_html>
+                <type>textarea</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
+                <value>SirvOptions = {&#xa;  viewer: {&#xa;    zoom: {&#xa;      mode: 'inner',&#xa;    }&#xa;  }&#xa;}</value>
+            </field>
+            <field>
                 <name>smv_custom_css</name>
-                <label>Custom CSS</label>
+                <label>Custom CSS for gallery</label>
                 <notice><![CDATA[Add styles to fix any rendering conflicts caused by other CSS.]]></notice>
                 <type>textarea</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
                 <value></value>
+                <field_group_separator/>
             </field>
             <field>
-                <name>assets_cache</name>
-                <label>Product gallery cache</label>
-                <type>button</type>
-                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushAssets</type_class>
-                <notice><![CDATA[<a href="#" data-mage-init='{"sirvAssets": {"assetsUrl":"{{URL}}"}}'>View assets</a>]]></notice>
-            </field>
-            <field>
+                <field_group_legend>Cache</field_group_legend>
                 <name>assets_cache_ttl</name>
                 <label>Sirv content cache TTL</label>
                 <notice><![CDATA[Time when cached content expires. Choose a shorter duration if your images change frequently.]]></notice>
@@ -608,6 +616,22 @@
                 </options>
                 <value>1440</value>
                 <install/>
+            </field>
+            <field>
+                <name>assets_cache</name>
+                <label>Product gallery cache</label>
+                <type>button</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushAssets</type_class>
+                <notice><![CDATA[<a href="#" data-mage-init='{"sirvAssets": {"assetsUrl":"{{URL}}"}}'>View assets</a>]]></notice>
+                <field_group_separator/>
+            </field>
+            <field>
+                <field_group_legend>Reverse sync</field_group_legend>
+                <name>copy_primary_images_to_magento</name>
+                <label>Get primary images from Sirv</label>
+                <type>button</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Button\CopyPrimaryImages</type_class>
+                <value>Copy primary images to Magento</value>
             </field>
         </fields>
     </group>

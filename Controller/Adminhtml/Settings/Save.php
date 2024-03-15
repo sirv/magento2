@@ -332,6 +332,11 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
             $smvJsOptions = preg_replace('#</?script[^>]*+>#', '', $smvJsOptions);
             $dataHelper->saveConfig('smv_js_options', $smvJsOptions);
         }
+        $css = isset($config['custom_css']) ? $config['custom_css'] : '';
+        if (preg_match('#</?style[^>]*+>#', $css)) {
+            $css = preg_replace('#</?style[^>]*+>#', '', $css);
+            $dataHelper->saveConfig('custom_css', $css);
+        }
         $smvCss = isset($config['smv_custom_css']) ? $config['smv_custom_css'] : '';
         if (preg_match('#</?style[^>]*+>#', $smvCss)) {
             $smvCss = preg_replace('#</?style[^>]*+>#', '', $smvCss);

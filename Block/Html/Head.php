@@ -100,6 +100,16 @@ class Head extends \Magento\Framework\View\Element\Template
     }
 
     /**
+     * Get configured CSS
+     *
+     * @return string
+     */
+    public function getCustomCss()
+    {
+        return $this->dataHelper->getConfig('custom_css') ?: '';
+    }
+
+    /**
      * Check block visibility
      *
      * @return bool

@@ -27,6 +27,12 @@ $fieldAttributes = $fieldId . ' class="' . $fieldClass . '" '
     . $block->getUiId('form-field', $element->getId())
     . ($element->getFieldExtraAttributes() ? ' ' . $element->getFieldExtraAttributes() : '');
 ?>
+<?php if ($element->getData('field_group_legend')) : ?>
+<h2 class="admin-field-group-legend"><?= $element->getData('field_group_legend') ?></h2>
+<?php endif; ?>
+<?php if ($element->getData('field_group_comment')) : ?>
+<p class="admin-field-group-comment"><?= $element->getData('field_group_comment') ?></p>
+<?php endif; ?>
 <?php if (!$element->getNoDisplay()) : ?>
     <?php if ($element->getType() == 'hidden') : ?>
         <?= $element->getElementHtml() ?>
@@ -78,4 +84,7 @@ $fieldAttributes = $fieldId . ' class="' . $fieldClass . '" '
         <?php endif; ?>
     </div>
     <?php endif; ?>
+<?php endif; ?>
+<?php if ($element->getData('field_group_separator')) : ?>
+<hr class="admin-field-group-separator"/>
 <?php endif; ?>

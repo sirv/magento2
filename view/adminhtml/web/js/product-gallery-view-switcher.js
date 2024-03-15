@@ -40,16 +40,18 @@ define([
          */
         _switchDisabled: function (disabled) {
             var options = [
-                'viewer_contents',
                 'product_assets_folder',
-                'smv_js_options',
-                'image_zoom',
                 'slides_order',
-                'smv_max_height',
+                'viewer_contents',
                 'pinned_items',
+                'smv_max_height',
+                'use_placeholder_with_smv',
+                'image_zoom',
+                'smv_js_options',
                 'smv_custom_css',
+                'assets_cache_ttl',
                 'assets_cache',
-                'assets_cache_ttl'
+                'copy_primary_images_to_magento'
             ];
             var i, l, selector, display;
             l = options.length;
@@ -58,6 +60,9 @@ define([
                 selector = 'div[data-ui-id$="-' + options[i].replace(/_/g, '-') + '"]';
                 $(selector).css('display', display);
             }
+            $('.admin-field-group-legend').slice(1).css('display', display);
+            $('.admin-field-group-comment').slice(1).css('display', display);
+            $('.admin-field-group-separator').css('display', display);
         }
     });
 
