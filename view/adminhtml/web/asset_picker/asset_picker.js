@@ -12,6 +12,7 @@ class SirvViewer {
     constructor($baseURL, $folderContentURL) {
 
         this.$contents = {};
+        this.$searchedContents = {};
         this.$baseURL = $baseURL;
         this.$folderContentURL = $folderContentURL;
 
@@ -76,11 +77,12 @@ class SirvViewer {
 
         this.initViewScroll();
 
+        this.initSearch();
+
         this.$treeContainer.find('a').trigger('click');
     }
 
     initViewArea() {
-        this.$listContainer.append('<ol class="breadcrumbs"></ol>').append('<ul></ul>');
         this.$listContainer.append(
             '<div class="sv-messages hidden-element"><div class="empty-folder-message"><h3>No files</h3></div></div>'
         );
@@ -89,18 +91,34 @@ class SirvViewer {
     initViewScroll() {
         var self = this;
         this.$listContainer.scroll(function() {
-            var $scrollPos = self.$listContainer.scrollTop();
-            var $breadcrumbs = self.$listContainer.find('.breadcrumbs'), $height = $breadcrumbs.height();
+            var $scrollPos = self.$listContainer.scrollTop(),
+                $bar = self.$listContainer.find('.sv-content-bar'),
+                $height = $bar.height();
 
             if ($scrollPos > $height) {
-                $breadcrumbs.css('top', $scrollPos + 'px');
+                $bar.css('top', $scrollPos + 'px');
                 self.$listContainer.css('padding-top', $height + 'px');
-                self.$listContainer.addClass('fixed-breadcrumbs')
+                self.$listContainer.addClass('fixed-bar');
             } else {
-                $breadcrumbs.css('top', '0');
+                $bar.css('top', '0');
                 self.$listContainer.css('padding-top', '0');
-                self.$listContainer.removeClass('fixed-breadcrumbs')
+                self.$listContainer.removeClass('fixed-bar');
             }
+        });
+    }
+
+    initSearch() {
+        var self = this,
+            $input = $('.search-input'),
+            $button = $('.search-button');
+        $input.on('keydown', function(e) {
+            if (e.which == 13 ) {
+                self.updateSearchView($input.val());
+                e.preventDefault();
+            }
+        });
+        $button.on('click', function(e) {
+            self.updateSearchView($input.val());
         });
     }
 
@@ -109,7 +127,7 @@ class SirvViewer {
         $elm.unbind('click');
         $elm.on('click', function(e) {
             self.treeLinkClick(e);
-        })
+        });
     }
 
     treeLinkClick(e) {
@@ -152,6 +170,25 @@ class SirvViewer {
         }
     }
 
+    updateSearchView($search) {
+        if (typeof this.$searchedContents[$search] == 'undefined') {
+            this.lockPage();
+            this.$searchedContents[$search] = this.getSearchedContents($search);
+        } else {
+            this.updateLocationHistory('');
+            this.updateTree('');
+
+            var $ol = this.$listContainer.find('.breadcrumbs');
+            $ol.html('<li><a data-path="" href="#"></a></li>');
+            $ol.append('<li>&nbsp;&nbsp;Result for \'' + $search + '\'</li>');
+            this.initTreeLinks($ol.find('a[data-path]'));
+
+            this.updateFilesList('', $search);
+
+            this.unlockPage();
+        }
+    }
+
     lockPage() {
         this.$pageContainer.addClass('loading');
     }
@@ -161,8 +198,11 @@ class SirvViewer {
     }
 
     updateLocationHistory($path) {
-        if ($path == '' || $path == this.$currentPath) return;
-        var $url = window.location.href.split('#')[0] + '#' + $path;
+        if ($path == this.$currentPath) return;
+        var $url = window.location.href.split('#')[0];
+        if ($path != '') {
+            $url += '#' + $path;
+        }
         window.history.pushState(null, null, $url);
         this.$currentPath = $path;
     }
@@ -228,20 +268,16 @@ class SirvViewer {
         }
 
         this.initTreeLinks($ol.find('a[data-path]'));
-
-        if ($ol.find('li').length == 1) {
-            $ol.hide();
-        } else {
-            $ol.show();
-        }
     }
 
-    updateFilesList($path) {
+    updateFilesList($path, $search) {
         var self = this,
-            $list = this.$contents[$path],
             count = 0,
             itemHTML,
+            $list,
             $ul;
+
+        $list = $search ? this.$searchedContents[$search] : this.$contents[$path];
 
         this.$listContainer.find('ul').replaceWith('<ul></ul>');
         $ul = this.$listContainer.find('ul');
@@ -365,6 +401,37 @@ class SirvViewer {
                     }
                     self.$contents[$path] = $list;
                     self.updateView($path);
+                    window.parent.postMessage({'id': 'update-path', 'value': $path}, '*');
+                }
+            });
+        }
+    }
+
+    getSearchedContents($search) {
+        if (typeof this.$searchedContents[$search] != 'undefined') {
+            return this.$searchedContents[$search];
+        } else {
+            var self = this;
+            jQuery.ajax({
+                url: this.$folderContentURL + '?',
+                data: {
+                    'search': $search
+                },
+                dataType: 'json',
+                'cache': 'false',
+                timeout: 4000,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (console && console.error && errorThrown) console.error(errorThrown);
+                },
+                success: function($data) {
+                    var $list = [];
+                    for (var $i in $data) {
+                        $data[$i].url = self.$baseURL + $data[$i].path.replace(/^\//gm,'');
+                        $list.push($data[$i])
+                    }
+                    self.$searchedContents[$search] = $list;
+                    self.updateSearchView($search);
+                    window.parent.postMessage({'id': 'update-path', 'value': ''}, '*');
                 }
             });
         }

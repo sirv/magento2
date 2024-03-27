@@ -25,6 +25,19 @@
         <a href="#" data-path="">/</a>
     </div>
     <div class="sv-content">
+        <div class="sv-content-bar">
+            <div class="breadcrumbs-block">
+                <ol class="breadcrumbs"></ol>
+            </div>
+            <button class="search-button" type="button" data-role="action"><span>Search</span></button>
+            <div class="search-block">
+                <button class="search-btn" type="button" disabled="disabled">
+                    <i class="search-icon"></i>
+                </button>
+                <input class="search-input" type="search" placeholder="Search">
+            </div>
+        </div>
+        <ul></ul>
     </div>
 </div>
 <script type="text/javascript">
@@ -34,6 +47,9 @@
         if (event.data.id == 'config') {
             const config = event.data.config;
             new SirvViewer(config.sirvBaseUrl, config.folderContentUrl);
+        }
+        if (event.data.id == 'update-view') {
+            location.reload();
         }
       }
     });

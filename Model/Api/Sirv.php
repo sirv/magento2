@@ -920,6 +920,31 @@ class Sirv
     }
 
     /**
+     * Search contents
+     *
+     * @param string $basename
+     * @return array
+     */
+    public function searchContents($basename)
+    {
+        $contents = [];
+
+        if ($this->getToken()) {
+            $data = $this->sendRequest(
+                'v2/files/search',
+                'POST',
+                ['query' => 'basename:' . $basename]
+            );
+
+            if ($this->responseCode == 200 && is_object($data) && is_array($data->hits)) {
+                $contents = $data->hits;
+            }
+        }
+
+        return $contents;
+    }
+
+    /**
      * Get folder options
      *
      * @param string $filename

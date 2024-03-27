@@ -107,7 +107,7 @@ define([
                 var imageData, $imageContainer;
                 imageData = $(event.currentTarget).data('imageData');
 
-                window.open(imageData.viewUrl, '_blank');
+                window.open(imageData.viewUrl || imageData.url, '_blank');
 
                 return false;
             };
@@ -241,7 +241,8 @@ define([
 
             var self = this,
                 dialogProperties,
-                content;
+                modalParent,
+                uploadButtonHtml;
 
             dialogProperties = {
                 /* NOTE: unique wrapper classes to avoid overlay issue */
@@ -287,6 +288,15 @@ define([
             };
 
             this.modalWindow = $('<div></div>').modal(dialogProperties);
+
+            modalParent = this.modalWindow.parents('.sirv-asset-picker-modal');
+            uploadButtonHtml = '' +
+                '<button class="file-upload-button" type="button" data-role="action">' +
+                '<span>Upload</span>' +
+                '<label for="sirv-file-upload-input" class="file-upload-label">' +
+                '</label></button>';
+
+            modalParent.find('.modal-footer .close-button').before(uploadButtonHtml);
 
             return this.modalWindow;
         },

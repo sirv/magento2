@@ -34,15 +34,34 @@ class AssetsFolderContents extends \Sirv\Magento2\Controller\Adminhtml\Settings
     {
         $queryData = $this->getRequest()->getQueryValue();
         $path = $queryData['path'] ?? '';
+        $search = $queryData['search'] ?? '';
+
+        $contents = empty($search) ? $this->getFolderContents($path) : $this->searchContents($search);
+
+        /** @var \Magento\Framework\Controller\Result\Json $resultJson */
+        $resultJson = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_JSON);
+        $resultJson->setData($contents);
+
+        return $resultJson;
+    }
+
+    /**
+     * Get folder contents
+     *
+     * @param string $path
+     * @return array
+     */
+    public function getFolderContents($path)
+    {
         $path = '/' . trim(trim($path), '/');
 
         $dataHelper = $this->getDataHelper();
         $sirvClient = $dataHelper->getSirvClient();
         $contents = $sirvClient->getFolderContents($path);
 
-        $list['folder'] = $list['file'] = [];
-
+        $list = ['folder' => [], 'file' => []];
         $path == '/' || ($path .= '/');
+
         foreach ($contents as $item) {
             if ($item->isDirectory) {
                 if (in_array($item->filename, $this->excludedPaths)) {
@@ -68,11 +87,52 @@ class AssetsFolderContents extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
         $list = array_merge($list['folder'], $list['file']);
 
-        /** @var \Magento\Framework\Controller\Result\Json $resultJson */
-        $resultJson = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_JSON);
-        $resultJson->setData(array_values($list));
+        return array_values($list);
+    }
 
-        return $resultJson;
+    /**
+     * Search contents
+     *
+     * @param string $search
+     * @return array
+     */
+    public function searchContents($search)
+    {
+        $dataHelper = $this->getDataHelper();
+        $sirvClient = $dataHelper->getSirvClient();
+        $contents = $sirvClient->searchContents($search);
+
+        $list = ['folder' => [], 'file' => []];
+
+        foreach ($contents as $item) {
+            if (!isset($item->_source)) {
+                continue;
+            }
+            if (isset($item->_source->isDirectory)) {
+                if (in_array($item->_source->basename, $this->excludedPaths)) {
+                    continue;
+                }
+                $type = 'folder';
+            } else {
+                $type = 'file';
+            }
+
+            $list[$type][] = [
+                'name' => $item->_source->basename,
+                'type' => $type,
+                'path' => $item->_source->filename,
+                'size' => $item->_source->size ?? 0,
+                'width' => $item->_source->meta->width ?? 0,
+                'height' => $item->_source->meta->height ?? 0,
+            ];
+        }
+
+        uasort($list['folder'], [$this, 'sortItems']);
+        uasort($list['file'], [$this, 'sortItems']);
+
+        $list = array_merge($list['folder'], $list['file']);
+
+        return array_values($list);
     }
 
     /**

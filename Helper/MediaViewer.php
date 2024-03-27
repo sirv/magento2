@@ -735,29 +735,31 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
 
         while ($iterator->valid()) {
             $item = $iterator->current();
+            $imageFile = $item->getData('file');
 
             $slideId = $idPrefix . $index;
             $data[$slideId] = [];
             $data[$slideId]['index'] = $index;
-            $data[$slideId]['basename'] = basename($item->getData('file'));
-
-            if ($baseImage == $item->getData('file')) {
-                $this->activeSlideIds[$productId] = $slideId;
-            }
+            $data[$slideId]['basename'] = basename($imageFile);
 
             switch ($item->getData('media_type')) {
                 case 'external-video':
-                    $data[$slideId]['type'] = 'video';
                     $url = $item->getData('video_url');
+                    if (empty($url)) {
+                        unset($data[$slideId]);
+                        break;
+                    }
+
+                    $data[$slideId]['type'] = 'video';
                     $data[$slideId]['html'] = '<div data-group="' . $group . '" data-id="' . $slideId . '"' . $disabledAttr . ' data-src="' . $url . '"' . $this->pinnedItems['videos'] . '></div>';
 
                     $data[$slideId]['placeholder'] = [];
                     if ($getPlaceholder) {
                         if ($imageUrlBuilder) {
-                            $data[$slideId]['placeholder']['url'] = $imageUrlBuilder->getUrl($item->getData('file'), 'product_page_image_large');
+                            $data[$slideId]['placeholder']['url'] = $imageUrlBuilder->getUrl($imageFile, 'product_page_image_large');
                         } else {
                             $data[$slideId]['placeholder']['url'] = $this->imageHelper->init($product, 'product_page_image_large')
-                                ->setImageFile($item->getData('file'))
+                                ->setImageFile($imageFile)
                                 ->getUrl();
                         }
                         $absPath = $item->getData('path');
@@ -771,6 +773,10 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                         }
                     }
 
+                    if ($baseImage == $imageFile) {
+                        $this->activeSlideIds[$productId] = $slideId;
+                    }
+
                     $index++;
                     break;
                 case 'image':
@@ -781,10 +787,10 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                     $url = $item->getData('large_image_url');
                     if (empty($url)) {
                         if ($imageUrlBuilder) {
-                            $url = $imageUrlBuilder->getUrl($item->getData('file'), 'product_page_image_large');
+                            $url = $imageUrlBuilder->getUrl($imageFile, 'product_page_image_large');
                         } else {
                             $url = $this->imageHelper->init($product, 'product_page_image_large')
-                                ->setImageFile($item->getData('file'))
+                                ->setImageFile($imageFile)
                                 ->getUrl();
                         }
                     }
@@ -825,6 +831,10 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                             $data[$slideId]['placeholder']['width'] = $this->defaultPlaceholderWidth;
                             $data[$slideId]['placeholder']['height'] = $this->defaultPlaceholderHeight;
                         }
+                    }
+
+                    if ($baseImage == $imageFile) {
+                        $this->activeSlideIds[$productId] = $slideId;
                     }
 
                     $index++;

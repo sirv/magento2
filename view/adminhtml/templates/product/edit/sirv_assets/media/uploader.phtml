@@ -1,0 +1,32 @@
+<?php
+/**
+ * Sirv media uploader template
+ *
+ * @author    Sirv Limited <support@sirv.com>
+ * @copyright Copyright (c) 2018-2023 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ *
+ * @codingStandardsIgnoreFile
+ */
+
+/** @var $block \Magento\Backend\Block\Media\Uploader */
+
+$config = $block->getConfig();
+$fileField = $config->getFileField();
+?>
+<div id="<?= $block->getHtmlId() ?>" class="sirv_assets_uploader"
+    data-mage-init='{
+        "Sirv_Magento2/js/sirv-media-uploader" : {
+            "maxFileSize": <?= /* @noEscape */ $block->getFileSizeService()->getMaxFileSize() ?>,
+            "acceptedFileTypes": []
+        }
+    }'
+>
+    <input type="file"
+        id="<?= $block->escapeHtmlAttr($fileField) ?>"
+        name="<?= $block->escapeHtmlAttr($fileField) ?>"
+        class="<?= $block->escapeHtmlAttr($fileField) ?>"
+        accept=".jpg,.jpeg,.png,.gif,.webp,.tif,.tiff,.svg,.mpg,.mpeg,.m4v,.mp4,.avi,.mov,.ogv,.usdz,.glb,.dwg"
+        data-url="<?= $block->escapeHtmlAttr($config->getUrl()) ?>" />
+</div>

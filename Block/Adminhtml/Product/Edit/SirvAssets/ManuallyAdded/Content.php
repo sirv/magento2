@@ -6,7 +6,6 @@ use Magento\Backend\Block\Media\Uploader;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Exception\FileSystemException;
 
-
 /**
  * Sirv manually added content
  *
@@ -86,5 +85,64 @@ class Content extends \Magento\Backend\Block\Widget
         $config['folderContentUrl'] = $this->_urlBuilder->getUrl('sirv/ajax/assetsFolderContents');
 
         return $this->_jsonEncoder->encode($config);
+    }
+
+    /**
+     * Prepare layout
+     *
+     * @return $this
+     */
+    protected function _prepareLayout()
+    {
+        $this->addChild(
+            'uploader',
+            \Magento\Backend\Block\Media\Uploader::class
+        );
+
+        $uploader = $this->getUploader();
+        $uploader->setTemplate('Sirv_Magento2::product/edit/sirv_assets/media/uploader.phtml');
+        $uploader->getConfig()->setUrl(
+            $this->_urlBuilder->getUrl('sirv/assets/upload')
+        )->setFileField(
+            'sirv-file-upload-input'
+        )->setFilters(
+            [
+                'images' => [
+                    'label' => __('Images (.jpg, .jpeg, .png, .gif, .webp, .tif, .tiff, .svg)'),
+                    'files' => ['*.jpg', '*.jpeg', '*.png', '*.gif', '*.webp', '*.tif', '*.tiff', '*.svg'],
+                ],
+                'media' => [
+                    'label' => __('Media (.mpg, .mpeg, .m4v, .mp4, .avi, .mov, .ogv)'),
+                    'files' => ['*.mpg', '*.mpeg', '*.m4v', '*.mp4', '*.avi', '*.mov', '*.ogv'],
+                ],
+                'models' => [
+                    'label' => __('Media (.usdz, .glb, .dwg)'),
+                    'files' => ['*.usdz', '*.glb', '*.dwg'],
+                ],
+                'all' => ['label' => __('All Files'), 'files' => ['*.*']],
+            ]
+        );
+
+        return parent::_prepareLayout();
+    }
+
+    /**
+     * Retrieve uploader block
+     *
+     * @return \Magento\Backend\Block\Media\Uploader
+     */
+    public function getUploader()
+    {
+        return $this->getChildBlock('uploader');
+    }
+
+    /**
+     * Retrieve uploader block html
+     *
+     * @return string
+     */
+    public function getUploaderHtml()
+    {
+        return $this->getChildHtml('uploader');
     }
 }

@@ -18,6 +18,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const SCOPE_STORE = 'store';
     const SCOPE_WEBSITE = 'website';
     const SCOPE_DEFAULT = 'default';
+    const SCOPE_BACKEND = 'backend';
     /**#@-*/
 
     /**
@@ -260,14 +261,20 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $scopeFilter = '(`scope` = \'' . self::SCOPE_DEFAULT . '\' AND `scope_id` = 0)';
         }
 
-        $collection->addFilter('scope_filter', $scopeFilter, 'string');
-        $collection->load();
-
         $config = [
             self::SCOPE_DEFAULT => [],
             self::SCOPE_WEBSITE => [],
             self::SCOPE_STORE => []
         ];
+
+        if (static::$isBackend) {
+            $scopeFilter .= ' OR (`scope` = \'' . self::SCOPE_BACKEND . '\' AND `scope_id` = 0)';
+            $config[self::SCOPE_BACKEND] = [];
+        }
+
+        $collection->addFilter('scope_filter', $scopeFilter, 'string');
+        $collection->load();
+
         foreach ($collection->getData() as $data) {
             $config[$data['scope']][$data['name']] = $data['value'];
         }

@@ -161,26 +161,22 @@ class MediaStorageInfo extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
                 $timestamp = time();
 
-                /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
-                $dataHelper = $this->getDataHelper();
-                $cache = $dataHelper->getAppCache();
-                $cacheId = 'sirv_media_storage_info';
-                $cache->save($dataHelper->getSerializer()->serialize([
-                    'size' => $size,
-                    'count' => $count,
-                    'sizeLabel' => $sizeLabel,
-                    'countLabel' => $countLabel,
-                    'timestamp' => $timestamp
-                ]), $cacheId, [], null);
-
                 $data = [
                     'size' => $size,
                     'count' => $count,
                     'sizeLabel' => $sizeLabel,
                     'countLabel' => $countLabel,
-                    'timestamp' => $timestamp,
-                    'date' => date('F j, Y', $timestamp)
+                    'timestamp' => $timestamp
                 ];
+
+                /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
+                $dataHelper = $this->getDataHelper();
+                $dataHelper->saveBackendConfig(
+                    'sirv_media_storage_info',
+                    $dataHelper->getSerializer()->serialize($data)
+                );
+
+                $data['date'] = date('F j, Y', $timestamp);
                 $result['success'] = true;
                 break;
             default:

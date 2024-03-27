@@ -146,3 +146,19 @@
 .sirv-assets-block .image.action-refresh .product-image-wrapper {
   border: 1px solid transparent;
 }
+
+.sirv_assets_uploader {
+  display: none;
+}
+.file-upload-button {
+  position: relative;
+  margin-right: 5px;
+}
+.file-upload-label {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  cursor: pointer;
+}

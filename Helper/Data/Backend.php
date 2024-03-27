@@ -116,6 +116,36 @@ class Backend extends \Sirv\Magento2\Helper\Data
     }
 
     /**
+     * Save backend config
+     *
+     * @param string $name
+     * @param mixed $value
+     * @return void
+     */
+    public function saveBackendConfig($name, $value)
+    {
+        $scope = self::SCOPE_BACKEND;
+        $scopeId = 0;
+        $collection = $this->getConfigModel()->getCollection();
+        $collection->addFieldToFilter('scope', $scope);
+        $collection->addFieldToFilter('scope_id', $scopeId);
+        $collection->addFieldToFilter('name', $name);
+
+        $model = $collection->getFirstItem();
+        $data = $model->getData();
+
+        if (empty($data)) {
+            $model->setData('scope', $scope);
+            $model->setData('scope_id', $scopeId);
+            $model->setData('name', $name);
+        }
+        $model->setData('value', $value);
+        $model->save();
+        static::$sirvConfig[$name] = $value;
+        static::$fullConfig[$scope][$name] = $value;
+    }
+
+    /**
      * Get Magento Catalog Images Cache data
      *
      * @return array
@@ -182,10 +212,8 @@ class Backend extends \Sirv\Magento2\Helper\Data
             return $data;
         }
 
-        $cache = $this->getAppCache();
-        $cacheId = 'sirv_media_storage_info';
-        $cachedData = $cache->load($cacheId);
-        if (false !== $cachedData) {
+        $cachedData = $this->getConfig('sirv_media_storage_info', self::SCOPE_BACKEND);
+        if ($cachedData) {
             $cachedData = $this->getUnserializer()->unserialize($cachedData);
         }
 

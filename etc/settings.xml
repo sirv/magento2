@@ -249,7 +249,7 @@
             <field>
                 <name>excluded_from_lazy_load</name>
                 <label>Exclude images</label>
-                <before_element_html>Disable lazy loading on specific images, such as your website logo:</before_element_html>
+                <before_element_html>Disable scaling and lazy loading on specific images, such as your website logo:</before_element_html>
                 <placeholder><![CDATA[e.g.&#xa;/wysiwyg/home/home-main.jpg&#xa;/frontend/Magento/luma/en_US/images/logo.svg&#xa;]]></placeholder>
                 <notice><![CDATA[Enter full URLs or use * to specify files with a certain path.<br/>You can also specify the value of any attribute of &lt;img&gt; tag.]]></notice>
                 <type>textarea</type>
