@@ -31,7 +31,9 @@ define([
          * @private
          */
         _create: function () {
-            var self = this;
+            var self = this,
+                count = 0,
+                processed = 0;
 
             this.element.find('input[type=file]').fileupload({
                 dataType: 'json',
@@ -43,6 +45,11 @@ define([
                 sequentialUploads: true,
                 acceptFileTypes: /(\.|\/)(jpg|jpeg|png|gif|webp|tif|tiff|svg|mpg|mpeg|m4v|mp4|avi|mov|ogv|usdz|glb|dwg)$/i,
                 maxFileSize: this.options.maxFileSize,
+
+                change : function (e, data) {
+                    count = data.files.length;
+                    processed = 0;
+                },
 
                 /**
                  * @param {Object} e
@@ -72,11 +79,14 @@ define([
                  * @param {Object} data
                  */
                 done: function (e, data) {
+                    processed++;
                     if (data.result && !data.result.error) {
-                        const iframe = document.querySelector('#sirv-asset-picker-frame');
-                        iframe.contentWindow.postMessage({'id': 'update-view'}, "*");
                     } else {
                         fileUploader.aggregateError(data.files[0].name, data.result.error);
+                    }
+
+                    if (processed == count) {
+                        $('.sirv-asset-picker-container').sirvAssetPicker('updateViewForce');
                     }
 
                     $('body').trigger('processStop');

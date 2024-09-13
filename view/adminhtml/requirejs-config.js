@@ -30,7 +30,8 @@ var config = {
             sirvMediaStorageInfo: 'Sirv_Magento2/js/media-storage-info',
             sirvCopyAltText: 'Sirv_Magento2/js/copy-alt-text',
             sirvAutomaticallyAddedAssets: 'Sirv_Magento2/js/automatically-added-assets',
-            sirvManuallyAddedAssets: 'Sirv_Magento2/js/manually-added-assets'
+            sirvManuallyAddedAssets: 'Sirv_Magento2/js/manually-added-assets',
+            sirvAssetPicker: 'Sirv_Magento2/js/sirv-asset-picker'
         }
     }
 };

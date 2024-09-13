@@ -10,70 +10,30 @@
  * @codingStandardsIgnoreFile
  */
 -->
-<style>
-  .sirv-asset-picker-modal.modal-popup .modal-inner-wrap {
-    width: 90%;
-    height: 90%;
-  }
-  .modal-content {
-    height: 85%;
-  }
-  .modal-content > div {
-    height: 95%;
-  }
-  .sirv-asset-picker-container {
-    height: 100%;
-  }
-  .sirv-asset-picker-content {
-    height: 100%;
-  }
-  #<%- assetPickerData.id %> {
-    border: 1px solid black;
-    width: 100%;
-    height: 100%;
-    pading: 1px;
-  }
-</style>
 <div class="sirv-asset-picker-container">
   <div class="sirv-asset-picker-content">
-    <iframe id="<%- assetPickerData.id %>" src="<%- assetPickerData.templateUrl %>"></iframe>
+    <div class="sv-page">
+        <div class="sv-tree">
+            <a href="#" data-path="">/</a>
+        </div>
+        <div class="sv-content">
+            <div class="sv-content-bar">
+                <div class="sv-breadcrumbs-block">
+                    <ol class="sv-breadcrumbs"></ol>
+                </div>
+                <button class="sv-search-button" type="button" data-role="action"><span>Search</span></button>
+                <div class="sv-search-block">
+                    <button class="sv-search-btn" type="button" disabled="disabled">
+                        <i class="sv-search-icon"></i>
+                    </button>
+                    <input class="sv-search-input" type="search" placeholder="Search">
+                </div>
+                <button class="sv-file-upload-button" type="button" data-role="action" title="Upload media to Sirv"><span>Upload</span><label for="sirv-file-upload-input" class="sv-file-upload-label"></label></button>
+                <button class="sv-add-button disabled" type="button" disabled="disabled" data-role="action" title="Add media to gallery"><span>Add to gallery</span></button>
+            </div>
+            <ul></ul>
+            <div class="sv-messages hidden-element"><div class="empty-folder-message"><h3>No files</h3></div></div>
+        </div>
+    </div>
   </div>
 </div>
-<script>
-  var sirvAssetPickerPath = '';
-  window.addEventListener('message', function(event) {
-    if (event.data && event.data.id) {
-      if (event.data.id == 'ready') {
-        const iframe = document.querySelector('#<%- assetPickerData.id %>'),
-              config = {};
-        config.sirvBaseUrl = '<%- assetPickerData.sirvBaseUrl %>';
-        config.folderContentUrl = '<%- assetPickerData.folderContentUrl %>';
-        iframe.contentWindow.postMessage({'id': 'config', 'config': config}, "*");
-      }
-      if (event.data.id == 'picked') {
-        var gallery = document.querySelector('.sirv-manually-added-assets'),
-            itemInfo = event.data.itemInfo;
-
-        itemInfo.file = itemInfo.path;
-        itemInfo.type = itemInfo.assetType;
-
-        if (itemInfo.type == 'video') {
-            itemInfo.url = itemInfo.url + '?thumbnail=' + (itemInfo.width || 150);
-        }
-        if (itemInfo.type == 'spin') {
-            itemInfo.url = itemInfo.url + '?thumb=spin&image.frames=1';
-        }
-
-        gallery = jQuery(gallery);
-        gallery.trigger('closeModalWindow');
-        gallery.trigger('addItem', itemInfo);
-      }
-      if (event.data.id == 'update-path') {
-        sirvAssetPickerPath = event.data.value;
-      }
-      if (event.data.id == 'error') {
-        location.reload();
-      }
-    }
-  });
-</script>

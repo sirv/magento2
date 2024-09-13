@@ -75,7 +75,7 @@ class Content extends \Magento\Backend\Block\Widget
         $assetRepository = \Magento\Framework\App\ObjectManager::getInstance()->get(
             \Magento\Framework\View\Asset\Repository::class
         );
-        $config['templateUrl'] = $assetRepository->createAsset('Sirv_Magento2::asset_picker/asset_picker.html')->getUrl();
+        $config['modelIconUrl'] = $assetRepository->createAsset('Sirv_Magento2::images/icon.3d.3.svg')->getUrl();
 
         $helper = \Magento\Framework\App\ObjectManager::getInstance()->get(
             \Sirv\Magento2\Helper\Data::class

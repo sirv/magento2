@@ -28,5 +28,6 @@ $fileField = $config->getFileField();
         name="<?= $block->escapeHtmlAttr($fileField) ?>"
         class="<?= $block->escapeHtmlAttr($fileField) ?>"
         accept=".jpg,.jpeg,.png,.gif,.webp,.tif,.tiff,.svg,.mpg,.mpeg,.m4v,.mp4,.avi,.mov,.ogv,.usdz,.glb,.dwg"
-        data-url="<?= $block->escapeHtmlAttr($config->getUrl()) ?>" />
+        data-url="<?= $block->escapeHtmlAttr($config->getUrl()) ?>"
+        multiple="multiple" />
 </div>

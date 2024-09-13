@@ -13,7 +13,8 @@ define([
     'text!sirv/template/asset_picker_modal.html',
     'Magento_Ui/js/modal/confirm',
     'productGallery',
-    'Magento_Ui/js/modal/modal'
+    'Magento_Ui/js/modal/modal',
+    'Sirv_Magento2/js/sirv-asset-picker'
 ], function ($, mageTemplate, assetPickerModalTpl, uiConfirm) {
     'use strict';
 
@@ -49,7 +50,6 @@ define([
 
         assetPickerData: {
             id: 'sirv-asset-picker-frame',
-            templateUrl: '',
             sirvBaseUrl: '',
             folderContentUrl: ''
         },
@@ -173,7 +173,8 @@ define([
         _addItem: function (event, imageData) {
             var count = this.element.find(this.options.imageSelector).length,
                 element,
-                imgElement;
+                imgElement,
+                skip = false;
 
             imageData = $.extend({
                 'file_id': imageData.value_id ? imageData.value_id : Math.random().toString(33).substr(2, 18),
@@ -184,12 +185,20 @@ define([
             element = this.imgTmpl({
                 data: imageData
             });
-
             element = $(element).data('imageData', imageData);
 
             if (count === 0) {
                 element.prependTo(this.element);
             } else {
+                this.element.find('[data-role="sirv-asset"]').each(function(i, el) {
+                    var data = $(this).data('imageData');
+                    if (data.file == imageData.file) {
+                        skip = true;
+                    }
+                });
+                if (skip) {
+                    return;
+                }
                 element.insertAfter(this.element.find(this.options.imageSelector + ':last'));
             }
 
@@ -254,13 +263,13 @@ define([
                 clickableOverlay: false,
                 type: 'popup',
                 innerScroll: true,
-                buttons: [{
+                buttons: [/*{
                     text: $.mage.__('Close'),
                     class: 'close-button',
                     click: function () {
                         self._closeModalWindow();
                     }
-                }],
+                }*/],
                 closed: function () {
                 },
                 modalCloseBtnHandler: function () {
@@ -289,15 +298,6 @@ define([
 
             this.modalWindow = $('<div></div>').modal(dialogProperties);
 
-            modalParent = this.modalWindow.parents('.sirv-asset-picker-modal');
-            uploadButtonHtml = '' +
-                '<button class="file-upload-button" type="button" data-role="action">' +
-                '<span>Upload</span>' +
-                '<label for="sirv-file-upload-input" class="file-upload-label">' +
-                '</label></button>';
-
-            modalParent.find('.modal-footer .close-button').before(uploadButtonHtml);
-
             return this.modalWindow;
         },
 
@@ -306,7 +306,7 @@ define([
          * @protected
          */
         _closeModalWindow: function () {
-            this.modalWindow.modal('closeModal');
+            this.modalWindow && this.modalWindow.modal('closeModal');
         },
 
         /**
@@ -322,8 +322,10 @@ define([
             this._createModalWindow();
             this.modalWindow.html('');
             $(mageTemplate(assetPickerModalTpl, {
-                'assetPickerData': this.assetPickerData
+                /*'assetPickerData': this.assetPickerData*/
             })).appendTo(this.modalWindow);
+
+            this.modalWindow.find('.sirv-asset-picker-container').sirvAssetPicker(this.assetPickerData);
 
             this.modalWindow.modal('openModal');
         }
