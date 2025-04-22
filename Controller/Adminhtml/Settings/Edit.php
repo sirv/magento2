@@ -124,7 +124,8 @@ class Edit extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
         /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
         $resultPage = $this->resultPageFactory->create();
-        $resultPage->setActiveMenu('Magento_Backend::system');
+        //$resultPage->setActiveMenu('Magento_Backend::system');
+        $resultPage->setActiveMenu('Sirv_Magento2::sirv_settings');
         $title = $resultPage->getConfig()->getTitle();
         $title->prepend('Sirv CDN');
         $title->prepend('Configuration');

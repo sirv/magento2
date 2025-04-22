@@ -36,6 +36,14 @@ class AssetsFolderContents extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $path = $queryData['path'] ?? '';
         $search = $queryData['search'] ?? '';
 
+        $create = $queryData['create'] ?? '';
+        if ($create != '') {
+            $dataHelper = $this->getDataHelper();
+            $sirvClient = $dataHelper->getSirvClient();
+            $sirvClient->uploadFile($path . '/' . $create . '/sirv_tmp.txt', '', "\n");
+            $sirvClient->deleteFile($path . '/' . $create . '/sirv_tmp.txt');
+        }
+
         $contents = empty($search) ? $this->getFolderContents($path) : $this->searchContents($search);
 
         /** @var \Magento\Framework\Controller\Result\Json $resultJson */

@@ -86,6 +86,34 @@
   padding: 6px;
 }
 
+.sirv-assets-block .image[data-role=sirv-asset] .item-error {
+  color: red;
+  font-size: 1.2rem;
+  position: relative;
+}
+.sirv-assets-block .image[data-role=sirv-asset] .item-error:before {
+  background: none;
+  border: 0;
+  font-family: 'Admin Icons';
+  font-size: 1.4rem;
+  font-style: normal;
+  font-weight: 400;
+  height: auto;
+  /* left: 1.9rem; */
+  line-height: inherit;
+  position: absolute;
+  speak: none;
+  text-shadow: none;
+  /* top: 50%; */
+  /* margin-top: -1.25rem; */
+  width: auto;
+  color: #eb5202;
+  content: '\e623';
+}
+.sirv-assets-block .image[data-role=sirv-asset] .item-error span {
+  margin-left: 2rem;
+}
+
 .sirv-assets-block .sirv-assets-folder-link.sirv-no-folder:before {
   color: #cccccc;
 }
@@ -507,6 +535,7 @@
   border-bottom: 1px solid #ddd;
   background: rgb(242 242 242);
   height: 52px;
+  z-index: 1;
 }
 .sirv-asset-picker-content .sv-breadcrumbs-block {
   margin-top: 5px;
@@ -560,6 +589,7 @@
   outline: 1px solid red;
 }
 
+.sirv-asset-picker-content .sv-new-folder-button,
 .sirv-asset-picker-content .sv-add-button,
 .sirv-asset-picker-content .sv-file-upload-button,
 .sirv-asset-picker-content .sv-search-button {
@@ -584,6 +614,7 @@
   margin-left: 5px;
   float: right;
 }
+.sirv-asset-picker-content .sv-new-folder-button:hover,
 .sirv-asset-picker-content .sv-add-button:hover,
 .sirv-asset-picker-content .sv-file-upload-button:hover,
 .sirv-asset-picker-content .sv-search-button:hover {
@@ -697,4 +728,15 @@
 .sirv-asset-picker-content .sv-content .empty-folder-message {
   max-width: 500px;
   margin: 10% auto;
+}
+
+.sirv-asset-picker-content .sv-bottom-bar {
+  padding: 10px;
+  /*background: rgb(242 242 242);*/
+  height: 52px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  margin: 0;
 }

@@ -192,7 +192,7 @@
                 <notice><![CDATA[You can enter full URLs and the domain will be stripped.<br/>Use * to specify all files at a certain path.]]></notice>
                 <type>textarea</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Textarea</type_class>
-                <value></value>
+                <value>/captcha*</value>
             </field>
             <field>
                 <name>excluded_pages</name>
@@ -512,6 +512,79 @@
             </field>
             <field>
                 <field_group_legend>Gallery experience</field_group_legend>
+                <name>smv_layout</name>
+                <label>Layout</label>
+                <type>radios</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Buttons</type_class>
+                <options>
+                    <option>
+                        <label>Slider</label>
+                        <value>slider</value>
+                    </option>
+                    <option>
+                        <label>1 column</label>
+                        <value>grid_columns_1</value>
+                    </option>
+                    <option>
+                        <label>2 columns</label>
+                        <value>grid_columns_2</value>
+                    </option>
+                    <option>
+                        <label>3 columns</label>
+                        <value>grid_columns_3</value>
+                    </option>
+                    <option>
+                        <label>1 then 2</label>
+                        <value>grid_columns_1_2</value>
+                    </option>
+                    <option>
+                        <label>1 then 3</label>
+                        <value>grid_columns_1_3</value>
+                    </option>
+                </options>
+                <value>slider</value>
+            </field>
+            <field>
+                <name>smv_grid_gap</name>
+                <label>Spacing between items in the grid</label>
+                <type>text</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Text</type_class>
+                <value>20</value>
+            </field>
+            <field>
+                <name>smv_aspect_ratio</name>
+                <label>Aspect ratio of item(s)</label>
+                <type>radios</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Buttons</type_class>
+                <options>
+                    <option>
+                        <label>Auto</label>
+                        <value>auto</value>
+                    </option>
+                    <option>
+                        <label>1/1</label>
+                        <value>1/1</value>
+                    </option>
+                    <option>
+                        <label>4/3</label>
+                        <value>4/3</value>
+                    </option>
+                    <option>
+                        <label>16/9</label>
+                        <value>16/9</value>
+                    </option>
+                    <option>
+                        <label>3/4</label>
+                        <value>3/4</value>
+                    </option>
+                    <option>
+                        <label>9/16</label>
+                        <value>9/16</value>
+                    </option>
+                </options>
+                <value>auto</value>
+            </field>
+            <field>
                 <name>smv_max_height</name>
                 <label>Max height</label>
                 <type>text</type>
@@ -714,28 +787,32 @@
                     If required, you can regenerate the Magento image cache with the Magento CLI command: <b>php bin/magento catalog:images:resize</b>
                 ]]></tooltip>
                 <notice><![CDATA[
-                    Your Magento cache contains {{COUNT}} resized image{{SUFFIX}}.
+                    <div class="cached_images_notice" data-mage-init='{"sirvCatalogImagesCacheData": {"ajaxUrl": "{{CATALOG_IMAGES_CACHE_INFO_URL}}", "flushUrl": "{{FLUSH_URL}}", "cacheInfo": {"count": {{COUNT}}, "countLabel": "{{COUNT_LABEL}}", "timestamp": {{TIMESTAMP}}}} }'>
+
+                    <div class="catalog-images-cache-data-spinner spinner hidden"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><span class="catalog-images-cache-data-progress hidden"> Calculating cache size... <span class="catalog-images-cache-data-progress-counter" data-count="0">0</span>%</span>
+
+                    <div class="catalog-images-cache-data">
+
+                    Your Magento cache contains <span class="catalog-images-cache-info-count">{{COUNT_LABEL}} resized image{{SUFFIX}} on {{DATE}}</span>.
+
                     <a href="#"
                         onclick="return false"
-                        data-mage-init='{
-                            "sirvButton": {
-                                "showLoader": true,
-                                "needConfirmation": true,
-                                "confirmationMessage": "
-                                    <b>Delete {{COUNT}} resized Magento image{{SUFFIX}}?</b><br/>
-                                    This might take a long time.<br/>
-                                    Keep this page open until deletion is complete.",
-                                "confirmationButtonText": "Empty image cache",
-                                "event": "sirv-sync",
-                                "target": "[data-role=sirv-synchronizer]",
-                                "eventData": {
-                                    "action": "flush-magento-images-cache",
-                                    "actionUrl": "{{URL}}"
-                                }
-                            }
-                        }'
+                        class="catalog-images-cache-info-recalculate-link"
+                        title="Count the number of images in the cache"
+                        >Recalculate.</a>
+
+                    <br/>
+                    <span class="catalog-images-cache-flush">
+                    <a href="#"
+                        onclick="return false"
+                        class="catalog-images-cache-flush-link"
                         title="Delete pregenerated product images files"
                         >Delete cache...</a>
+                    </span>
+
+                    </div>
+
+                    </div>
                 ]]></notice>
                 <value>false</value>
             </field>

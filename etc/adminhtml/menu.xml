@@ -14,8 +14,7 @@
         <add id="Sirv_Magento2::sirv_settings"
             title="Sirv CDN"
             module="Sirv_Magento2"
-            sortOrder="90"
-            parent="Magento_Backend::system"
+            sortOrder="79"
             resource="Sirv_Magento2::sirv_settings"/>
         <add id="Sirv_Magento2::sirv_settings_edit"
             title="Configuration"
@@ -32,5 +31,27 @@
             action="sirv/documentation/index"
             target="_blank"
             resource="Sirv_Magento2::sirv_documentation"/>
+
+        <add id="Sirv_Magento2::sirv_settings_system"
+            title="Sirv CDN"
+            module="Sirv_Magento2"
+            sortOrder="90"
+            parent="Magento_Backend::system"
+            resource="Sirv_Magento2::sirv_settings_system"/>
+        <add id="Sirv_Magento2::sirv_settings_edit_system"
+            title="Configuration"
+            module="Sirv_Magento2"
+            sortOrder="10"
+            parent="Sirv_Magento2::sirv_settings_system"
+            action="sirv/settings/edit"
+            resource="Sirv_Magento2::sirv_settings_edit_system"/>
+        <add id="Sirv_Magento2::sirv_documentation_system"
+            title="Documentation"
+            module="Sirv_Magento2"
+            sortOrder="20"
+            parent="Sirv_Magento2::sirv_settings_system"
+            action="sirv/documentation/index"
+            target="_blank"
+            resource="Sirv_Magento2::sirv_documentation_system"/>
     </menu>
 </config>

@@ -315,12 +315,17 @@ class Save extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $excludedList = trim($excludedList);
                 if (!empty($excludedList)) {
                     $excludedList = explode("\r\n", $excludedList);
+                    $newExcludedList = [];
                     foreach ($excludedList as &$excludedUrl) {
+                        if (empty($excludedUrl)) {
+                            continue;
+                        }
                         $excludedUrl = preg_replace('#^(?:https?\:)?//[^/]+/#', '/', $excludedUrl);
                         $excludedUrl = preg_replace('#\*++#', '*', $excludedUrl);
                         //$excludedUrl = '/' . preg_replace('#^/#', '', $excludedUrl);
+                        $newExcludedList[] = $excludedUrl;
                     }
-                    $excludedList = array_unique($excludedList);
+                    $excludedList = array_unique($newExcludedList);
                     $excludedList = implode("\n", $excludedList);
                 }
                 $dataHelper->saveConfig($optionId, $excludedList);

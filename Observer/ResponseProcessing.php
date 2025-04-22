@@ -592,6 +592,7 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
             if (empty($excludedFiles)) {
                 $regExp = '';
             } else {
+                $excludedFiles = preg_replace("#\n++#", "\n", $excludedFiles);
                 $excludedFiles = explode("\n", $excludedFiles);
                 foreach ($excludedFiles as &$pattern) {
                     $pattern = str_replace(

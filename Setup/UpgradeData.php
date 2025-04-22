@@ -122,21 +122,24 @@ class UpgradeData implements UpgradeDataInterface
                 $connection->insertMultiple($tableName, $data);
             }
 
-            //NOTE: update value for 'excluded_from_lazy_load' param
-            $params = $connection->fetchAll(
-                $connection->select()
-                    ->from($tableName, ['id', 'value'])
-                    ->where('name = ?', 'excluded_from_lazy_load')
-            );
-            foreach ($params as $param) {
-                $value = trim($param['value'], "\n");
-                $value = empty($value) ? [] : explode("\n", $value);
-                if (in_array('/captcha*', $value)) {
-                    continue;
+            //NOTE: update value for 'excluded_from_lazy_load' and 'excluded_files' params
+            $pNames = ['excluded_from_lazy_load', 'excluded_files'];
+            foreach ($pNames as $pName) {
+                $params = $connection->fetchAll(
+                    $connection->select()
+                        ->from($tableName, ['id', 'value'])
+                        ->where('name = ?', $pName)
+                );
+                foreach ($params as $param) {
+                    $value = trim($param['value'], "\n");
+                    $value = empty($value) ? [] : explode("\n", $value);
+                    if (in_array('/captcha*', $value)) {
+                        continue;
+                    }
+                    $value[] = '/captcha*';
+                    $value = implode("\n", $value);
+                    $connection->update($tableName, ['value' => $value], ['id = ?' => $param['id']]);
                 }
-                $value[] = '/captcha*';
-                $value = implode("\n", $value);
-                $connection->update($tableName, ['value' => $value], ['id = ?' => $param['id']]);
             }
 
             //NOTE: update value for 'slides_order' param

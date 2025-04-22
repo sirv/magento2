@@ -256,9 +256,20 @@ define([
                     this.structure[this.stIndex].template,
                     product
                 );
-                found = this.structure[this.stIndex].list.find(function (value) {
-                    return value == dir;
-                });
+                if (dir == '') {
+                    found = false;
+                } else {
+                    if (dir.indexOf('/') == -1) {
+                        found = this.structure[this.stIndex].list.find(function (value) {
+                            return value == dir;
+                        });
+                    } else {
+                        let dirArr = dir.split('/', 2);
+                        found = this.structure[this.stIndex].list.find(function (value) {
+                            return value == dirArr[0];
+                        });
+                    }
+                }
                 if (found) {
                     products.push(product);
                     dirList.push(dir);

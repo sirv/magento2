@@ -156,43 +156,17 @@ class Backend extends \Sirv\Magento2\Helper\Data
         static $data = null;
 
         if ($data === null) {
-            $data = ['count' => 0];
+            $cachedData = $this->getConfig('sirv_catalog_images_cache_info', self::SCOPE_BACKEND);
 
-            /** @var \Magento\Framework\Filesystem $filesystem */
-            $filesystem = $this->objectManager->get(\Magento\Framework\Filesystem::class);
-            /** @var \Magento\Framework\Filesystem\Directory\ReadInterface $mediaDirectory */
-            $mediaDirectory = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-            $mediaDirAbsPath = $mediaDirectory->getAbsolutePath();
-            $cacheDirAbsPath = rtrim($mediaDirAbsPath, '\\/') . '/catalog/product/cache';
+            if ($cachedData) {
+                $cachedData = $this->getUnserializer()->unserialize($cachedData);
+            }
 
-            if (is_dir($cacheDirAbsPath)) {
-                /** @var \Magento\Framework\Shell $shell */
-                $shell = $this->objectManager->get(\Magento\Framework\Shell::class);
-                $command = 'find ' . $cacheDirAbsPath . ' -type f | wc -l';
-                try {
-                    $output = $shell->execute($command);
-                    $data['count'] = $output;
-                } catch (\Exception $e) {
-                    $flags = \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::UNIX_PATHS;
-                    try {
-                        $iterator = new \RecursiveIteratorIterator(
-                            new \RecursiveDirectoryIterator($cacheDirAbsPath, $flags),
-                            \RecursiveIteratorIterator::CHILD_FIRST
-                        );
-                        $count = 0;
-                        foreach ($iterator as $item) {
-                            if ($item->isFile()) {
-                                $count++;
-                            }
-                        }
-                        $data['count'] = $count;
-                    } catch (\Exception $e) {
-                        throw new \Magento\Framework\Exception\FileSystemException(
-                            new \Magento\Framework\Phrase($e->getMessage()),
-                            $e
-                        );
-                    }
-                }
+            if (is_array($cachedData)) {
+                $data = $cachedData;
+                $data['date'] = date('F j, Y', $data['timestamp']);
+            } else {
+                $data = ['count' => 0, 'countLabel' => '0', 'timestamp' => 0, 'date' => date('F j, Y')];
             }
         }
 

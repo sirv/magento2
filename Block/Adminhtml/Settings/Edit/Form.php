@@ -517,6 +517,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     case 'pinned_items':
                         $fieldConfig['value'] = json_decode($fieldConfig['value'], true);
                         break;
+                    case 'smv_grid_gap':
                     case 'smv_max_height':
                         $fieldConfig['after_element_html'] = ' px';
                         break;
@@ -528,10 +529,27 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         );
                         break;
                     case 'delete_cached_images':
+                        $fieldConfig['note'] = str_replace(
+                            '{{CATALOG_IMAGES_CACHE_INFO_URL}}',
+                            $this->getUrl('sirv/ajax/catalogimagescacheinfo', []),
+                            $fieldConfig['note']
+                        );
+
                         $data = $this->dataHelper->getMagentoCatalogImagesCacheData();
+
                         $fieldConfig['note'] = str_replace(
                             '{{COUNT}}',
                             $data['count'],
+                            $fieldConfig['note']
+                        );
+                        $fieldConfig['note'] = str_replace(
+                            '{{COUNT_LABEL}}',
+                            $data['countLabel'],
+                            $fieldConfig['note']
+                        );
+                        $fieldConfig['note'] = str_replace(
+                            '{{TIMESTAMP}}',
+                            $data['timestamp'],
                             $fieldConfig['note']
                         );
                         $fieldConfig['note'] = str_replace(
@@ -540,10 +558,17 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                             $fieldConfig['note']
                         );
                         $fieldConfig['note'] = str_replace(
-                            '{{URL}}',
+                            '{{DATE}}',
+                            $data['date'],
+                            $fieldConfig['note']
+                        );
+
+                        $fieldConfig['note'] = str_replace(
+                            '{{FLUSH_URL}}',
                             $this->getUrl('*/*/flushmagentoimagescache', []),
                             $fieldConfig['note']
                         );
+
                         $fieldConfig['note'] = preg_replace(
                             "#\n++ *+#",
                             ' ',

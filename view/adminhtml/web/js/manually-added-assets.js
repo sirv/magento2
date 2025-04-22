@@ -237,6 +237,7 @@ define([
             imgElement.addClass('failed-item');
             imgContainer.find('[data-role=image-dimens-wrapper]').remove();
             imgContainer.find('[data-role=image-size]').remove();
+            imgContainer.find('.item-description').html('<span class="item-error"><span>Missing on Sirv</span></span>');
         },
 
         /**

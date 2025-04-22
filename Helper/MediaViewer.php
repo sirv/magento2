@@ -110,6 +110,13 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
     protected $usePlaceholder = false;
 
     /**
+     * SMV layout
+     *
+     * @var stirng
+     */
+    protected $smvLayout = 'slider';
+
+    /**
      * Items order
      *
      * @var array
@@ -227,7 +234,12 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
                     )
                 ) . '#';
         }
+        $this->smvLayout = $this->dataHelper->getConfig('smv_layout') ?: 'slider';
         $this->usePlaceholder = $this->dataHelper->getConfig('use_placeholder_with_smv') == 'true';
+        if ($this->smvLayout != 'slider') {
+            $this->usePlaceholder = false;
+        }
+
         $itemsOrder = $this->dataHelper->getConfig('slides_order') ?: '';
         if (!empty($itemsOrder)) {
             $this->itemsOrder = explode(',', $itemsOrder);
@@ -288,7 +300,18 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getViewerCss()
     {
-        return $this->dataHelper->getConfig('smv_custom_css') ?: '';
+        $css = $this->dataHelper->getConfig('smv_custom_css') ?: '';
+
+        switch ($this->smvLayout) {
+            case 'grid_columns_1_2':
+                $css = '.smv-pg-container .Sirv .smv-slide:nth-child(1) { grid-column: span 2; }' . $css;
+                break;
+            case 'grid_columns_1_3':
+                $css = '.smv-pg-container .Sirv .smv-slide:nth-child(1) { grid-column: span 3; }' . $css;
+                break;
+        }
+
+        return $css;
     }
 
     /**
@@ -309,6 +332,29 @@ class MediaViewer extends \Magento\Framework\App\Helper\AbstractHelper
 
         if ($this->usePlaceholder) {
             $options .= 'thumbnails.target: .pdp-gallery-thumbnails;';
+        }
+
+        if ($this->smvLayout == 'slider') {
+            $options .= 'layout.type: slider;';
+        } else {
+            $options .= 'layout.type: grid;';
+            switch ($this->smvLayout) {
+                case 'grid_columns_1':
+                    $options .= 'layout.grid.columns: 1;';
+                    break;
+                case 'grid_columns_2':
+                case 'grid_columns_1_2':
+                    $options .= 'layout.grid.columns: 2;';
+                    break;
+                case 'grid_columns_3':
+                case 'grid_columns_1_3':
+                    $options .= 'layout.grid.columns: 3;';
+                    break;
+            }
+            $smvGridGap = $this->dataHelper->getConfig('smv_grid_gap') ?: '20';
+            $options .= 'layout.grid.gap: ' . $smvGridGap . ';';
+            $smvAspectRatio = $this->dataHelper->getConfig('smv_aspect_ratio') ?: 'auto';
+            $options .= 'layout.aspectRatio: ' . $smvAspectRatio . ';';
         }
 
         return $options;

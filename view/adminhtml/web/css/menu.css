@@ -7,7 +7,7 @@
  * @link      https://sirv.com/integration/magento/
  */
 
-.admin__menu [data-ui-id="menu-sirv-magento2-sirv-settings"] .submenu-group-title span {
+.admin__menu [data-ui-id="menu-sirv-magento2-sirv-settings-system"] .submenu-group-title span {
   display: inline-block;
   box-sizing: border-box;
   padding: 0;
@@ -15,8 +15,7 @@
   color: #ffffff;
 }
 
-.admin__menu [data-ui-id="menu-sirv-magento2-sirv-settings"] .submenu-group-title span:before
-{
+.admin__menu [data-ui-id="menu-sirv-magento2-sirv-settings-system"] .submenu-group-title span:before {
   display: inline-block;
   box-sizing: border-box;
   padding: 0;
@@ -26,4 +25,17 @@
   content: '\00A0';
   background: url(../images/menu-icon.svg) no-repeat;
   background-position: left center;
+}
+
+.admin__menu .item-sirv-settings > a:before {
+  content: '\00A0' !important;
+  background: url(../images/menu-icon.svg) no-repeat;
+  background-position: center center;
+  /* color: #aaa6a0; */
+  filter: brightness(0) saturate(100%) invert(68%) sepia(12%) saturate(132%) hue-rotate(355deg) brightness(96%) contrast(90%);
+}
+.admin__menu .item-sirv-settings:hover > a:before,
+.admin__menu .item-sirv-settings._active > a:before {
+  /* color: #f7f3eb; */
+  filter: brightness(0) saturate(100%) invert(98%) sepia(7%) saturate(605%) hue-rotate(348deg) brightness(109%) contrast(91%);
 }

@@ -23,6 +23,13 @@ class FlushMagentoImagesCache extends \Sirv\Magento2\Controller\Adminhtml\Settin
             $this->_objectManager->create(\Magento\Catalog\Model\Product\Image::class)->clearCache();
             $this->_eventManager->dispatch('clean_catalog_images_cache_after');
             $this->messageManager->addSuccessMessage(__('The image cache was cleaned.'));
+
+            /** @var \Sirv\Magento2\Helper\Data\Backend $dataHelper */
+            $dataHelper = $this->getDataHelper();
+            $dataHelper->saveBackendConfig(
+                'sirv_catalog_images_cache_info',
+                ''
+            );
         } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
         } catch (\Exception $e) {

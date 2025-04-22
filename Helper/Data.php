@@ -367,6 +367,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             if (($isEnabled = static::$isSirvEnabled) && !static::$isBackend) {
                 $excludedPages = $this->getConfig('excluded_pages') ?: '';
                 if (!empty($excludedPages)) {
+                    $excludedPages = preg_replace("#\n++#", "\n", $excludedPages);
                     $excludedPages = explode("\n", $excludedPages);
                     foreach ($excludedPages as &$pattern) {
                         $pattern = str_replace(

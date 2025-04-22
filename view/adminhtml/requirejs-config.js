@@ -28,6 +28,7 @@ var config = {
             sirvProductsList: 'Sirv_Magento2/js/products-list',
             sirvUsage: 'Sirv_Magento2/js/usage',
             sirvMediaStorageInfo: 'Sirv_Magento2/js/media-storage-info',
+            sirvCatalogImagesCacheData: 'Sirv_Magento2/js/catalog-images-cache-data',
             sirvCopyAltText: 'Sirv_Magento2/js/copy-alt-text',
             sirvAutomaticallyAddedAssets: 'Sirv_Magento2/js/automatically-added-assets',
             sirvManuallyAddedAssets: 'Sirv_Magento2/js/manually-added-assets',

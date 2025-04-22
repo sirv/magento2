@@ -63,7 +63,12 @@ define([
                         }
                     });
 
-                    $('body').trigger('processStart');
+                    /* $('body').trigger('processStart'); */
+                    $('.sirv-asset-picker-container').parents('.modal-inner-wrap').loader({
+                        texts: {
+                            loaderText: $.mage.__('Uploading...')
+                        }
+                    }).trigger('processStart');
 
                     $.each(data.files, function (index, file) {
                         data.fileId = Math.random().toString(33).substr(2, 18);
@@ -89,7 +94,8 @@ define([
                         $('.sirv-asset-picker-container').sirvAssetPicker('updateViewForce');
                     }
 
-                    $('body').trigger('processStop');
+                    /* $('body').trigger('processStop'); */
+                    $('.sirv-asset-picker-container').parents('.modal-inner-wrap').trigger('processStop');
                 },
 
                 /**
