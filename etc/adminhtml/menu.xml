@@ -11,27 +11,12 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
-        <add id="Sirv_Magento2::sirv_settings"
+        <add id="Sirv_Magento2::sirv_settings_edit"
             title="Sirv CDN"
             module="Sirv_Magento2"
             sortOrder="79"
-            resource="Sirv_Magento2::sirv_settings"/>
-        <add id="Sirv_Magento2::sirv_settings_edit"
-            title="Configuration"
-            module="Sirv_Magento2"
-            sortOrder="10"
-            parent="Sirv_Magento2::sirv_settings"
             action="sirv/settings/edit"
             resource="Sirv_Magento2::sirv_settings_edit"/>
-        <add id="Sirv_Magento2::sirv_documentation"
-            title="Documentation"
-            module="Sirv_Magento2"
-            sortOrder="20"
-            parent="Sirv_Magento2::sirv_settings"
-            action="sirv/documentation/index"
-            target="_blank"
-            resource="Sirv_Magento2::sirv_documentation"/>
-
         <add id="Sirv_Magento2::sirv_settings_system"
             title="Sirv CDN"
             module="Sirv_Magento2"

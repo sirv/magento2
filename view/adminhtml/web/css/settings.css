@@ -334,6 +334,40 @@ a.save-message {
   padding-bottom: 8px;
 }
 
+.admin-field-additional-info {
+  clear: both;
+  margin-left: 30px;
+  /* width: calc((100%)* 0.75 - 30px); */
+  padding-top: 20px;
+}
+
+.smv-setup-step {
+  background-color: #c8e8ba;
+  clear: both;
+  padding: 10px;
+  border: 1px solid green;
+}
+.smv-setup-step-title {
+  font-size: 1.8rem;
+}
+.smv-setup-step button {
+  margin-left: 250px;
+}
+.admin-field-additional-info .smv-setup-step-1,
+.admin-field-additional-info .smv-setup-step-2,
+.smv-setup-step-2 .smv-setup-step-2-success-hidden,
+.smv-setup-step-2 .smv-setup-step-2-failed-hidden {
+  display: none;
+}
+.smv-setup-step-2.step-2-failed {
+  background-color: #fffbbb;
+}
+.smv-setup-step-1-next,
+.smv-setup-step-2-done,
+.smv-setup-step-2-contact {
+  background-color: #ffffff;
+}
+
 .mt-config .field .mt-option {
   width: 400px;
 }

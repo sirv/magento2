@@ -20,6 +20,13 @@ class SyncProductGallery implements \Magento\Framework\Event\ObserverInterface
     protected $isSirvEnabled = false;
 
     /**
+     * Whether to delete image from Sirv if it or its product is deleted from Magento.
+     *
+     * @var bool
+     */
+    protected $notDeleteImagesFromSirv = false;
+
+    /**
      * Sync helper
      *
      * @var \Sirv\Magento2\Helper\Sync\Backend
@@ -54,6 +61,7 @@ class SyncProductGallery implements \Magento\Framework\Event\ObserverInterface
         \Magento\Catalog\Model\ResourceModel\Product\Gallery $resourceModel
     ) {
         $this->isSirvEnabled = $dataHelper->isSirvEnabled();
+        $this->notDeleteImagesFromSirv = ($dataHelper->getConfig('delete_images_from_sirv') == 'false');
         $this->syncHelper = $syncHelper;
         $this->resourceModel = $resourceModel;
     }
@@ -66,7 +74,7 @@ class SyncProductGallery implements \Magento\Framework\Event\ObserverInterface
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
-        if (!$this->isSirvEnabled) {
+        if (!$this->isSirvEnabled || $this->notDeleteImagesFromSirv) {
             return;
         }
 

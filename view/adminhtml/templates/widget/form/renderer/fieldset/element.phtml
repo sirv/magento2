@@ -37,7 +37,7 @@ $fieldAttributes = $fieldId . ' class="' . $fieldClass . '" '
     <?php if ($element->getType() == 'hidden') : ?>
         <?= $element->getElementHtml() ?>
     <?php else : ?>
-    <div<?= /* @noEscape */ $fieldAttributes ?>>
+    <div <?= /* @noEscape */ $fieldAttributes ?>>
         <?php if ($elementBeforeLabel) : ?>
             <?= $element->getElementHtml() ?>
             <?= $element->getLabelHtml('', $element->getScopeLabel()) ?>
@@ -80,6 +80,9 @@ $fieldAttributes = $fieldId . ' class="' . $fieldClass . '" '
                         </div>
                     </div>
                 </div>
+            <?php endif; ?>
+            <?php if ($element->getData('field_additional_info')) : ?>
+            <div class="admin-field-additional-info"><?= $element->getData('field_additional_info') ?></div>
             <?php endif; ?>
         <?php endif; ?>
     </div>

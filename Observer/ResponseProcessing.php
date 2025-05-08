@@ -621,10 +621,17 @@ class ResponseProcessing implements \Magento\Framework\Event\ObserverInterface
         if (!isset($list[$tagHtml])) {
             $list[$tagHtml] = false;
             $matches = [];
-            $attrRegExp = '#\b[^\s="\'>/]++\s*+=\s*+("|\')((?:.(?!\1))*+(?:.(?=\1))?)\1#';
+            $attrRegExp = '#\b([^\s="\'>/]++)\s*+(?:[^\s="\'>/]|=\s*+("|\')(?:\2|((?:.(?!\2))*+(?:.(?=\2)))\2))#';
             if (preg_match_all($attrRegExp, $tagHtml, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $key => $attrMatches) {
-                    $list[$tagHtml] = preg_match($regExp, $attrMatches[2]);
+                    $list[$tagHtml] = preg_match($regExp, $attrMatches[1]);
+                    if ($list[$tagHtml]) {
+                        break;
+                    }
+                    if (empty($attrMatches[3])) {
+                        continue;
+                    }
+                    $list[$tagHtml] = preg_match($regExp, $attrMatches[3]);
                     if ($list[$tagHtml]) {
                         break;
                     }

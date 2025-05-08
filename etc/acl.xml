@@ -13,17 +13,15 @@
     <acl>
         <resources>
             <resource id="Magento_Backend::admin">
-                <resource id="Sirv_Magento2::sirv_settings" title="Sirv CDN" sortOrder="79">
-                    <resource id="Sirv_Magento2::sirv_settings_edit" title="Configuration" sortOrder="10"/>
-                    <resource id="Sirv_Magento2::sirv_documentation" title="Documentation" sortOrder="20"/>
-                </resource>
-
+                <resource id="Sirv_Magento2::sirv_settings_edit" title="Sirv CDN" sortOrder="79" />
+                <!--
                 <resource id="Magento_Backend::system">
                     <resource id="Sirv_Magento2::sirv_settings_system" title="Sirv CDN" sortOrder="90">
                         <resource id="Sirv_Magento2::sirv_settings_edit_system" title="Configuration" sortOrder="10"/>
                         <resource id="Sirv_Magento2::sirv_documentation_system" title="Documentation" sortOrder="20"/>
                     </resource>
                 </resource>
+                -->
             </resource>
         </resources>
     </acl>

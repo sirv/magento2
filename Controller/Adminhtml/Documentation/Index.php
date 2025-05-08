@@ -36,6 +36,6 @@ class Index extends \Magento\Backend\App\Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed('Sirv_Magento2::sirv_documentation');
+        return $this->_authorization->isAllowed('Sirv_Magento2::sirv_documentation_system');
     }
 }

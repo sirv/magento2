@@ -898,4 +898,97 @@ class Backend extends \Sirv\Magento2\Helper\Data
         return 'File size: ' . $this->getFormatedSize($data[$url]['download_size']) .
             ' (unzipped ' . $this->getFormatedSize($data[$url]['resource_size']) . ')';
     }
+
+    /**
+     * Get product page URL
+     *
+     * @param string $url
+     * @return string
+     */
+    public function getProductPageUrl()
+    {
+        $productModelFactory = $this->objectManager->get(\Magento\Catalog\Model\ProductFactory::class);
+        /** @var \Magento\Catalog\Model\Product $productModel */
+        $productModel = $productModelFactory->create();
+        /** @var  \Magento\Catalog\Model\ResourceModel\Product $resource */
+        $resource = $productModel->getResource();
+        /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+        $connection = $resource->getConnection();
+
+        $productTable = $resource->getTable('catalog_product_entity');
+        $mediaToEntityTable = $resource->getTable(\Magento\Catalog\Model\ResourceModel\Product\Gallery::GALLERY_VALUE_TO_ENTITY_TABLE);
+
+        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $statement */
+        $statement = $connection->query("SHOW COLUMNS FROM `{$mediaToEntityTable}` LIKE 'entity_id'");
+        $columns = $statement->fetchAll();
+        $fieldName = empty($columns) ? 'row_id' : 'entity_id';
+
+        /** @var \Magento\Framework\DB\Select $conditionSelect */
+        $conditionSelect = clone $connection->select();
+        $conditionSelect->reset()
+            ->from(
+                ['mtet' => $mediaToEntityTable]
+            )
+            ->where('`pt`.`' . $fieldName . '` = `mtet`.`' . $fieldName . '`');
+
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = clone $connection->select();
+        $select->reset()
+            ->from(
+                ['pt' => $productTable],
+                ['id' => 'pt.' . $fieldName]
+            )
+            ->where('EXISTS ?', new \Zend_Db_Expr("({$conditionSelect})"))
+            ->limit(1);
+
+        /** @var array $result */
+        $result = $connection->fetchCol($select, []);
+
+        $url = '';
+        if (!empty($result)) {
+            $id = reset($result);
+            $product = $productModel->load($id);
+            $url = $product->getProductUrl();
+        }
+
+        return $url;
+    }
+
+    /**
+     * Download contents
+     *
+     * @param string $url
+     * @return string
+     */
+    public function downloadContents($url)
+    {
+        if (!isset(self::$curlHandle)) {
+            self::$curlHandle = curl_init();
+        }
+
+        $url = str_replace(' ', '%20', $url);
+
+        curl_setopt_array(
+            self::$curlHandle,
+            [
+                CURLOPT_URL => $url,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HEADER => false,
+                CURLOPT_NOBODY => false,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_SSL_VERIFYPEER => false,
+            ]
+        );
+
+        $contents = curl_exec(self::$curlHandle);
+        $error = curl_errno(self::$curlHandle);
+        $code = curl_getinfo(self::$curlHandle, CURLINFO_HTTP_CODE);
+
+        if ($error || $code != 200) {
+            $contents = '';
+        }
+
+        return $contents;
+    }
 }

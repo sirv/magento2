@@ -52,6 +52,7 @@ abstract class Settings extends \Magento\Backend\App\Action
     protected function _isAllowed()
     {
         return $this->_authorization->isAllowed('Sirv_Magento2::sirv_settings_edit');
+        // || $this->_authorization->isAllowed('Sirv_Magento2::sirv_settings_edit_system');
     }
 
     /**

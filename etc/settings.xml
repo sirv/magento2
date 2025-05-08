@@ -411,6 +411,32 @@
                 <name>product_gallery_view</name>
                 <label>Use Sirv Media Viewer as product gallery</label>
                 <tooltip><![CDATA[Replace your product media gallery viewer with <a class="sirv-open-in-new-window" target="_blank" href="https://sirv.com/help/articles/sirv-media-viewer/">Sirv Media Viewer</a>.]]></tooltip>
+                <additional_info><![CDATA[
+<div class="smv-setup-step smv-setup-step-1">
+<p class="smv-setup-step-title">Step 1</p>
+<p>The Sirv extension will try to replace your existing gallery with Sirv Media Viewer. You can easily undo this in the future, if you wish.</p>
+<p>Please continue to the next step:</p>
+<button class="smv-setup-step-1-next" type="button" data-role="action" title="Next..."><span>Next...</span></button>
+</div>
+
+<div class="smv-setup-step smv-setup-step-2 step-2-success-hidden step-2-failed-hidden">
+<div class="smv-setup-step-2-success-hidden">
+<p class="smv-setup-step-title">Step 2</p>
+<p>Success! We detected that Sirv Media Viewer has installed successfully. Please check your product page to see if it worked.</p>
+<p>View example page <a target="_blank" class="sirv-open-in-new-window" href="{{URL}}">{{URL}}</a></p>
+<br/>
+<p>You can change gallery settings below. You can also use the <a target="_blank" class="sirv-open-in-new-window" href="https://sirv.com/help/viewer">configuration wizard</a> to change another 120 additional settings.</p>
+<p>Please contact the Sirv <a target="_blank" class="sirv-open-in-new-window" href="https://sirv.com/help/support/#support">support team</a> if you need help.</p>
+<button class="smv-setup-step-2-done" type="button" data-role="action" title="Done"><span>Done</span></button>
+</div>
+<div class="smv-setup-step-2-failed-hidden">
+<p class="smv-setup-step-title">Could not install</p>
+<p>Automatic installation was not possible. This may because your theme uses a custom gallery or non-standard styles.</p>
+<p>Please <a target="_blank" class="smv-setup-step-2-contact-link sirv-open-in-new-window" href="https://sirv.com/help/support/#support">tell the Sirv team</a> and they can manually configure Sirv Media Viewer on your product page.</p>
+<button class="smv-setup-step-2-contact" type="button" data-role="action" title="Contact Sirv team"><span>Contact Sirv team</span></button>
+</div>
+</div>
+                ]]></additional_info>
                 <type>radios</type>
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\ProductGalleryView</type_class>
                 <options>
@@ -425,6 +451,11 @@
                 </options>
                 <value>smv</value>
                 <install/>
+            </field>
+            <field>
+                <name>product_gallery_setup</name>
+                <type>hidden</type>
+                <value>hidden</value>
             </field>
             <field>
                 <field_group_legend>Content from Sirv</field_group_legend>
@@ -863,6 +894,24 @@
                 <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\AdvancedButton\FlushUrls</type_class>
             </field>
             -->
+            <field>
+                <name>delete_images_from_sirv</name>
+                <label>Delete from Sirv</label>
+                <notice><![CDATA[Delete image from Sirv if it or its product is deleted from Magento.]]></notice>
+                <type>radios</type>
+                <type_class>\Sirv\Magento2\Block\Adminhtml\Settings\Edit\Form\Element\Radios\Switcher</type_class>
+                <options>
+                    <option>
+                        <label>Enable</label>
+                        <value>true</value>
+                    </option>
+                    <option>
+                        <label>Disable</label>
+                        <value>false</value>
+                    </option>
+                </options>
+                <value>true</value>
+            </field>
             <field>
                 <name>http_auth</name>
                 <label>HTTP authentication</label>

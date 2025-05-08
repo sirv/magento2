@@ -268,6 +268,9 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 if (isset($field->field_group_separator)) {
                     $fieldConfig['field_group_separator'] = true;
                 }
+                if (isset($field->additional_info)) {
+                    $fieldConfig['field_additional_info'] = (string)$field->additional_info;
+                }
 
                 if ($value !== null) {
                     if ($type == 'checkboxes') {
@@ -488,6 +491,25 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                         $config['cdn_url'] = $this->dataHelper->syncConfig('cdn_url');//NOTE: is it still needed here?
                     case 'product_assets_folder':
                         $fieldConfig['value_prefix'] = $this->dataHelper->getSirvDomain(false) . '/';
+                        break;
+                    case 'product_gallery_view':
+                        $productGallerySetup = isset($config['product_gallery_setup']) ? $config['product_gallery_setup'] : 'hidden';
+                        if ($productGallerySetup == 'step1') {
+                            $url = $this->dataHelper->getProductPageUrl();
+                            $fieldConfig['field_additional_info'] = str_replace(
+                                '{{URL}}',
+                                $url,
+                                $fieldConfig['field_additional_info']
+                            );
+                            $contents = $this->dataHelper->downloadContents($url);
+                            $replace = preg_match('#smv-pg-container#', $contents) ? 'success' : 'failed';
+                            $fieldConfig['field_additional_info'] = str_replace(
+                                'step-2-' . $replace . '-hidden',
+                                'step-2-' . $replace,
+                                $fieldConfig['field_additional_info']
+                            );
+                            $this->dataHelper->saveConfig('product_gallery_setup', 'step2');
+                        }
                         break;
                     case 'copy_primary_images_to_magento':
                         $url = $this->getUrl('sirv/ajax/copyprimaryimages', []);

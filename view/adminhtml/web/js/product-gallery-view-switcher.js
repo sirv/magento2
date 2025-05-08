@@ -12,17 +12,47 @@ define([
 ], function ($) {
     'use strict';
 
+    var doInit = true,
+        productGalleryView = 'smv',
+        productGallerySetup = 'hidden';
+
     $.widget('sirv.productGalleryViewSwitcher', {
 
         options: {},
 
         /** @inheritdoc */
         _create: function () {
-            var value = $('[name=mt-config\\[product_gallery_view\\]]:checked').val();
-            if (value != 'smv') {
-                this._switchDisabled(true);
-            }
             this.element.on('change', $.proxy(this._eventHandler, this));
+            if (doInit) {
+                doInit = false;
+                productGalleryView = $('[name=mt-config\\[product_gallery_view\\]]:checked').val();
+                productGallerySetup = $('[name=mt-config\\[product_gallery_setup\\]]').val();
+
+                if (productGalleryView != 'smv') {
+                    this._switchDisabled(true);
+                }
+
+                $('.smv-setup-step-1-next').on('click', $.proxy(function(e) {
+                    $('#sirv-save-config-button').trigger('click');
+                }, this));
+
+                $('.smv-setup-step-2-done').on('click', $.proxy(function(e) {
+                    $('.admin-field-additional-info .smv-setup-step-2').css('display', 'none');
+                    productGallerySetup = 'step2';
+                }, this));
+
+                $('.smv-setup-step-2-contact').on('click', $.proxy(function(e) {
+                    $('.smv-setup-step-2-contact-link').click(function() {
+                        this.click();
+                    });
+                    $('.smv-setup-step-2-contact-link').trigger('click');
+                }, this));
+
+                if (productGallerySetup == 'step1') {
+                    $('.admin-field-additional-info .smv-setup-step-2').css('display', 'block');
+                    $('[name=mt-config\\[product_gallery_setup\\]]').val('step2');
+                }
+            }
         },
 
         /**
@@ -31,7 +61,37 @@ define([
          * @param {Object} data - event data object
          */
         _eventHandler: function (e, data) {
-            this._switchDisabled(!(this.element.attr('value') == 'smv'));
+            var enabled = (this.element.attr('value') == 'smv');
+            this._switchDisabled(!enabled);
+            if (enabled) {
+                switch (productGallerySetup) {
+                    case 'hidden':
+                        $('.admin-field-additional-info .smv-setup-step-1').css('display', 'block');
+                        $('[name=mt-config\\[product_gallery_setup\\]]').val('step1');
+                        break;
+                    case 'step1':
+                        $('.admin-field-additional-info .smv-setup-step-2').css('display', 'block');
+                        $('[name=mt-config\\[product_gallery_setup\\]]').val('step2');
+                        break;
+                    case 'step2':
+                        $('[name=mt-config\\[product_gallery_setup\\]]').val('step2');
+                        break;
+                }
+            } else {
+                switch (productGallerySetup) {
+                    case 'hidden':
+                        $('.admin-field-additional-info .smv-setup-step-1').css('display', 'none');
+                        $('[name=mt-config\\[product_gallery_setup\\]]').val('hidden');
+                        break;
+                    case 'step1':
+                        $('.admin-field-additional-info .smv-setup-step-2').css('display', 'none');
+                        $('[name=mt-config\\[product_gallery_setup\\]]').val('hidden');
+                        break;
+                    case 'step2':
+                        $('[name=mt-config\\[product_gallery_setup\\]]').val('hidden');
+                        break;
+                }
+            }
         },
 
         /**
