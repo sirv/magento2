@@ -61,6 +61,7 @@
     <preference for="Magento\Catalog\Model\Category" type="Sirv\Magento2\Model\Category" />
 
     <!-- NOTE: to use Sirv & Magic360 molules together -->
+    <!--
     <preference for="MagicToolbox\Magic360\Helper\Image" type="MagicToolbox\Magic360\Helper\SirvImage" />
     <preference for="MagicToolbox\Magic360\Model\Product\Image" type="MagicToolbox\Magic360\Model\Product\SirvImage" />
     <type name="MagicToolbox\Magic360\Model\Product\SirvImage">
@@ -69,6 +70,7 @@
         </arguments>
     </type>
     <preference for="MagicToolbox\Magic360\Model\Image" type="MagicToolbox\Magic360\Model\SirvImage" />
+    -->
 
     <!-- NOTE: override image helper for Related Products -->
     <!--

@@ -132,6 +132,20 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
     protected static $mediaUrlFormat = 'hash';
 
     /**
+     * Hashing algorithm
+     *
+     * @var string
+     */
+    protected const HASH_ALGORITHM = 'md5';
+
+    /**
+     * Flag, use PHP hash function
+     *
+     * @var bool
+     */
+    protected static $usePhpHashFnc;
+
+    /**
      * Constructor
      *
      * @param \Magento\Catalog\Model\Product\Media\ConfigInterface $mediaConfig
@@ -193,6 +207,7 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
         $productMetadata = $objectManager->get(\Magento\Framework\App\ProductMetadataInterface::class);
         $version = $productMetadata->getVersion();
         static::$outdatedMagentoVersion = version_compare($version, '2.3.4', '<') && version_compare($version, '2.3.0', '>=');
+        static::$usePhpHashFnc = version_compare($version, '2.4.8', '>=');
 
         //NOTE: this class exists since version 2.4.2
         if (class_exists('\Magento\Catalog\Model\Config\CatalogMediaConfig')) {
@@ -390,10 +405,17 @@ class Image implements \Magento\Framework\View\Asset\LocalInterface
      */
     protected function getMiscPath()
     {
-        return $this->encryptor->hash(
-            implode('_', $this->convertToReadableFormat($this->miscParams)),
-            \Magento\Framework\Encryption\Encryptor::HASH_VERSION_MD5
-        );
+        $data = implode('_', $this->convertToReadableFormat($this->miscParams));
+        if (static::$usePhpHashFnc) {
+            $hash = hash(self::HASH_ALGORITHM, $data);
+        } else {
+            $hash = $this->encryptor->hash(
+                $data,
+                \Magento\Framework\Encryption\Encryptor::HASH_VERSION_MD5
+            );
+        }
+
+        return $hash;
     }
 
     /**

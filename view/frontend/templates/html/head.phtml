@@ -29,6 +29,7 @@ $sirvDomain = parse_url($sirvUrl, PHP_URL_HOST) ?: '';
 $staticDomain = parse_url($baseStaticUrl, PHP_URL_HOST) ?: '';
 ?>
 <script>
+    (typeof(require) != 'undefined') &&
     require.config({
         'config': {
             'text': {
