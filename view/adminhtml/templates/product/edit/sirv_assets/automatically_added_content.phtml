@@ -10,8 +10,6 @@
  * @codingStandardsIgnoreFile
  */
 
-// @codingStandardsIgnoreFile
-
 /** @var $block \Sirv\Magento2\Block\Adminhtml\Product\Edit\SirvAssets\AutomaticallyAdded\Content */
 
 $elementName = $block->getElement()->getName();
@@ -19,9 +17,9 @@ $formName = $block->getFormName();
 $productId = $block->getElement()->getProductId();
 
 ?>
-<div id="<?= $block->getHtmlId() ?>"
+<div id="<?= /* @noEscape */ $block->getHtmlId() ?>"
      class="gallery sirv-automatically-added-assets"
-     data-mage-init='{"sirvAutomaticallyAddedAssets":{"template":"#<?= $block->getHtmlId() ?>-template"}}'
+     data-mage-init='{"sirvAutomaticallyAddedAssets":{"template":"#<?= /* @noEscape */ $block->getHtmlId() ?>-template"}}'
      data-parent-component="<?= $block->escapeHtml($block->getData('config/parentComponent')) ?>"
      data-refresh-cache-url="<?= $block->escapeHtml($block->getRefreshCacheUrl()) ?>"
      data-assets-gallery-url="<?= $block->escapeHtml($block->getAssetsGalleryControllerUrl()) ?>"
@@ -32,48 +30,48 @@ $productId = $block->getElement()->getProductId();
     <div class="image image-placeholder sirv-no-folder hidden-element">
         <div class="product-image-wrapper">
             <p class="image-placeholder-text">
-                <?= /* @escapeNotVerified */ __('No folder'); ?>
+                <?= $block->escapeHtml(__('No folder')) ?>
             </p>
         </div>
     </div>
     <div class="image image-placeholder sirv-no-files hidden-element">
         <div class="product-image-wrapper">
             <p class="image-placeholder-text">
-                <?= /* @escapeNotVerified */ __('No files'); ?>
+                <?= $block->escapeHtml(__('No files')) ?>
             </p>
         </div>
     </div>
     <div class="image image-placeholder action-refresh">
         <div class="product-image-wrapper">
             <p class="image-placeholder-text">
-                <?= /* @escapeNotVerified */ __('Refresh'); ?>
+                <?= $block->escapeHtml(__('Refresh')) ?>
             </p>
         </div>
     </div>
 
-    <script id="<?= $block->getHtmlId() ?>-template" type="text/x-magento-template">
+    <script id="<?= /* @noEscape */ $block->getHtmlId() ?>-template" type="text/x-magento-template">
         <div class="image item" data-role="sirv-asset">
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][position]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][position]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.position %>"
                    class="position"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][file]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][file]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.file %>"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][id]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][id]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.id %>"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][removed]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][removed]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value=""
                    class="is-removed"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][name]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][name]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.name %>"/>
 
             <div class="product-image-wrapper">

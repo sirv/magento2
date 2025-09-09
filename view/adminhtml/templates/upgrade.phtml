@@ -14,17 +14,17 @@
  * @var $block \Sirv\Magento2\Block\Adminhtml\Upgrade
  */
 
-$changelogUrl = $block->escapeUrl($block->getChangelogUrl());
+$changelogUrl = $block->getChangelogUrl();
 ?>
 <?php if ($block->hasNewVersion()): ?>
 <div class="sirv-banner-wrapper">
     <div class="sirv-banner sirv-upgrade-banner">
         New version available!
         <span class="sirv-latest-version">
-            <a href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#installation" target="_blank">Download <?= $block->getLatestVersion() ?></a>
+            <a href="https://sirv.com/help/articles/magento-cdn-sirv-extension/#installation" target="_blank">Download <?= /* @noEscape */ $block->getLatestVersion() ?></a>
         </span>
         <span class="sirv-whats-new">
-            &nbsp;<a href="#" data-mage-init='{"sirvChangelog":{"changelogUrl":"<?= $changelogUrl; ?>"}}'>What's new...</a>
+            &nbsp;<a href="#" data-mage-init='{"sirvChangelog":{"changelogUrl":"<?= $block->escapeUrl($changelogUrl) ?>"}}'>What's new...</a>
         </span>
     </div>
 </div>

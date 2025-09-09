@@ -370,6 +370,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $excludedPages = preg_replace("#\n++#", "\n", $excludedPages);
                     $excludedPages = explode("\n", $excludedPages);
                     foreach ($excludedPages as &$pattern) {
+                        if ($pattern == '/') {
+                            $pattern = '^/$';
+                            continue;
+                        }
                         $pattern = str_replace(
                             '__ASTERISK__',
                             '.*',

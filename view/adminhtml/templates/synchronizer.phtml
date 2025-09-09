@@ -28,34 +28,34 @@ $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidde
       <div class="row visible-in-modal-view">
         <h1 class="sync-status-header">
           <span class="sync-progress-label">
-            <?= __('Synchronizing...') ?>
+            <?= $block->escapeHtml(__('Synchronizing...')) ?>
           </span>
           <span class="sync-completed-label hidden-element">
-            <?= __('Synchronization complete') ?>
+            <?= $block->escapeHtml(__('Synchronization complete')) ?>
           </span>
           <span class="sync-failed-label hidden-element">
-            <?= __('Synchronization failed') ?>
+            <?= $block->escapeHtml(__('Synchronization failed')) ?>
           </span>
         </h1>
       </div>
       <div class="row visible-in-modal-view">
         <p class="sync-status-notice">
-          <?= __('Keep this page open while images copy to Sirv.') ?><br/>
-          <span class="estimated-duration-notice"><?= __($block->getEstimatedDurationMessage()) ?></span><br/>
+          <?= $block->escapeHtml(__('Keep this page open while images copy to Sirv.')) ?><br/>
+          <span class="estimated-duration-notice"><?= $block->escapeHtml(__($block->getEstimatedDurationMessage())) ?></span><br/>
         </p>
       </div>
       <div class="row">
         <p class="progress-label">
           <span class="progress-percent-label">
             <b>
-              <span class="progress-percent-value"><?= $data['synced-percent'] ?></span>%
+              <span class="progress-percent-value"><?= /* @noEscape */ $data['synced-percent'] ?></span>%
             </b>
           </span>
           <span class="progress-completed-label">
             <b>
-              <span class="items-completed-value"><?= $data['synced'] ?></span>
+              <span class="items-completed-value"><?= /* @noEscape */ $data['synced'] ?></span>
               out of
-              <span class="items-total-value"><?= $data['total'] ?></span>
+              <span class="items-total-value"><?= /* @noEscape */ $data['total'] ?></span>
             </b>
             items completed
           </span>
@@ -64,39 +64,39 @@ $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidde
       <div class="row">
         <div class="progress-bar-holder">
           <div class="progress-bar progress-bar-timer" role="timerbar" data-content="Resuming in ..."></div>
-          <div class="progress-bar progress-bar-synced" role="progressbar" style="width: <?= $syncedBarWidth ?>%"></div>
-          <div class="progress-bar progress-bar-queued" role="progressbar" style="width: <?= $queuedBarWidth ?>%"></div>
-          <div class="progress-bar progress-bar-failed" role="progressbar" style="width: <?= $failedBarWidth ?>%"></div>
+          <div class="progress-bar progress-bar-synced" role="progressbar" style="width: <?= /* @noEscape */ $syncedBarWidth ?>%"></div>
+          <div class="progress-bar progress-bar-queued" role="progressbar" style="width: <?= /* @noEscape */ $queuedBarWidth ?>%"></div>
+          <div class="progress-bar progress-bar-failed" role="progressbar" style="width: <?= /* @noEscape */ $failedBarWidth ?>%"></div>
         </div>
       </div>
       <div class="row">
         <ul class="progress-counters-list">
           <li class="list-item list-item-synced">
             <span class="list-item-style-type"></span>
-            <span class="list-item-title"><?= __('Synced images') ?></span>
-            <span class="list-item-value"><?= $data['synced'] ?></span>
+            <span class="list-item-title"><?= $block->escapeHtml(__('Synced images')) ?></span>
+            <span class="list-item-value"><?= /* @noEscape */ $data['synced'] ?></span>
             <?php $hideClass = $data['synced'] ? '' : ' hidden-element'; ?>
-            <span class="list-item-link view-synced-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-synced-items"}}}' title="View synced images">View images</a></span>
-            <span class="list-item-link clear-synced-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-synced-items"}}}' title="Clear synced images">Clear cache</a></span>
+            <span class="list-item-link view-synced-items-link hidden-in-modal-view<?= /* @noEscape */ $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-synced-items"}}}' title="View synced images">View images</a></span>
+            <span class="list-item-link clear-synced-items-link hidden-in-modal-view<?= /* @noEscape */ $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-synced-items"}}}' title="Clear synced images">Clear cache</a></span>
           </li>
           <li class="list-item list-item-queued">
             <span class="list-item-style-type"></span>
-            <span class="list-item-title"><?= __('Queued images') ?></span>
-            <span class="list-item-value"><?= $data['queued'] ?></span>
+            <span class="list-item-title"><?= $block->escapeHtml(__('Queued images')) ?></span>
+            <span class="list-item-value"><?= /* @noEscape */ $data['queued'] ?></span>
             <?php $hideClass = $data['queued'] ? '' : ' hidden-element'; ?>
-            <span class="list-item-link view-queued-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-queued-items"}}}' title="View queued images">View images</a></span>
-            <span class="list-item-link clear-queued-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-queued-items"}}}' title="Clear synced images">Clear cache</a></span>
+            <span class="list-item-link view-queued-items-link hidden-in-modal-view<?= /* @noEscape */ $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-queued-items"}}}' title="View queued images">View images</a></span>
+            <span class="list-item-link clear-queued-items-link hidden-in-modal-view<?= /* @noEscape */ $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-queued-items"}}}' title="Clear synced images">Clear cache</a></span>
           </li>
           <li class="list-item list-item-failed">
             <span class="list-item-style-type"></span>
-            <span class="list-item-title"><?= __('Failed images') ?></span>
-            <span class="list-item-value"><?= $data['failed'] ?></span>
+            <span class="list-item-title"><?= $block->escapeHtml(__('Failed images')) ?></span>
+            <span class="list-item-value"><?= /* @noEscape */ $data['failed'] ?></span>
             <?php $hideClass = $data['failed'] ? '' : ' hidden-element'; ?>
-            <span class="list-item-link view-failed-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-failed-items"}}}' title="View failed images">Cause of errors</a></span>
-            <span class="list-item-link clear-failed-items-link hidden-in-modal-view<?= $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-failed-items"}}}' title="Clear synced images">Clear cache</a></span>
+            <span class="list-item-link view-failed-items-link hidden-in-modal-view<?= /* @noEscape */ $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "view-failed-items"}}}' title="View failed images">Cause of errors</a></span>
+            <span class="list-item-link clear-failed-items-link hidden-in-modal-view<?= /* @noEscape */ $hideClass ?>"><a href="#" data-mage-init='{"sirvButton": {"target": "[data-role=sirv-synchronizer]", "event": "sirv-cache", "eventData": {"action": "clear-failed-items"}}}' title="Clear synced images">Clear cache</a></span>
             <span class="hidden-element">
-            <span class="list-item-link<?= $hideClass ?>">
-              <a class="<?= $viewFailedLinkClass ?>" href="#" data-mage-init='{"button": {"event": "sirv-sync", "target": "[data-role=sirv-synchronizer]", "eventData": {"action": "view-failed"}}}'><?= __('View list') ?></a>
+            <span class="list-item-link<?= /* @noEscape */ $hideClass ?>">
+              <a class="<?= /* @noEscape */ $viewFailedLinkClass ?>" href="#" data-mage-init='{"button": {"event": "sirv-sync", "target": "[data-role=sirv-synchronizer]", "eventData": {"action": "view-failed"}}}'><?= $block->escapeHtml(__('View list')) ?></a>
             </span>
             </span>
           </li>
@@ -116,11 +116,11 @@ $viewFailedLinkClass = 'sirv-view-failed-link' . ($data['failed'] ? '' : ' hidde
         "[data-role=sirv-synchronizer]": {
             "sirvSynchronizer": {
                 "ajaxUrl": "<?= $block->escapeUrl($block->getSyncAjaxUrl()) ?>",
-                "total": <?= /* @escapeNotVerified */ $data['total'] ?>,
-                "synced": <?= /* @escapeNotVerified */ $data['synced'] ?>,
-                "queued": <?= /* @escapeNotVerified */ $data['queued'] ?>,
-                "failed": <?= /* @escapeNotVerified */ $data['failed'] ?>,
-                "maxSpeed": <?= /* @escapeNotVerified */ $data['max-speed'] ?>
+                "total": <?= /* @noEscape */ $data['total'] ?>,
+                "synced": <?= /* @noEscape */ $data['synced'] ?>,
+                "queued": <?= /* @noEscape */ $data['queued'] ?>,
+                "failed": <?= /* @noEscape */ $data['failed'] ?>,
+                "maxSpeed": <?= /* @noEscape */ $data['max-speed'] ?>
             },
             "sirvCache": {
                 "ajaxUrl": "<?= $block->escapeUrl($block->getCacheAjaxUrl()) ?>"

@@ -17,9 +17,9 @@ $formName = $block->getFormName();
 $productId = $block->getElement()->getProductId();
 
 ?>
-<div id="<?= $block->getHtmlId() ?>"
+<div id="<?= /* @noEscape */ $block->getHtmlId() ?>"
      class="gallery sirv-manually-added-assets"
-     data-mage-init='{"sirvManuallyAddedAssets":{"template":"#<?= $block->getHtmlId() ?>-template"}}'
+     data-mage-init='{"sirvManuallyAddedAssets":{"template":"#<?= /* @noEscape */ $block->getHtmlId() ?>-template"}}'
      data-parent-component="<?= $block->escapeHtml($block->getData('config/parentComponent')) ?>"
      data-asset-picker-config="<?= $block->escapeHtml($block->getAssetPickerConfigJson()) ?>"
      data-product-id="<?= $block->escapeHtml($productId) ?>"
@@ -29,50 +29,50 @@ $productId = $block->getElement()->getProductId();
         <div class="image image-placeholder action-add-item">
             <div class="product-image-wrapper">
                 <p class="image-placeholder-text">
-                    <?= /* @escapeNotVerified */ __('Add from Sirv'); ?>
+                    <?= $block->escapeHtml(__('Add from Sirv')) ?>
                 </p>
             </div>
         </div>
     <?php } ?>
-    <script id="<?= $block->getHtmlId() ?>-template" type="text/x-magento-template">
+    <script id="<?= /* @noEscape */ $block->getHtmlId() ?>-template" type="text/x-magento-template">
         <div class="image item" data-role="sirv-asset">
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][position]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][position]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.position %>"
                    class="position"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][file]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][file]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.file %>"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][id]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][id]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.id %>"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][removed]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][removed]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value=""
                    class="is-removed"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][name]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][name]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.name %>"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][type]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][type]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.type %>"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][width]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][width]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.width %>"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][height]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][height]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.height %>"/>
             <input type="hidden"
-                   name="<?= /* @escapeNotVerified */ $elementName ?>[<%- data.file_id %>][size]"
-                   data-form-part="<?= /* @escapeNotVerified */ $formName ?>"
+                   name="<?= /* @noEscape */ $elementName ?>[<%- data.file_id %>][size]"
+                   data-form-part="<?= /* @noEscape */ $formName ?>"
                    value="<%- data.size %>"/>
 
             <div class="product-image-wrapper">
@@ -106,7 +106,7 @@ $productId = $block->getElement()->getProductId();
             </div>
         </div>
     </script>
-    <?= $block->getUploaderHtml(); ?>
+    <?= /* @noEscape */ $block->getUploaderHtml() ?>
 </div>
 <script>
     jQuery('body').trigger('contentUpdated');

@@ -15,7 +15,7 @@
 $config = $block->getConfig();
 $fileField = $config->getFileField();
 ?>
-<div id="<?= $block->getHtmlId() ?>" class="sirv_assets_uploader"
+<div id="<?= /* @noEscape */ $block->getHtmlId() ?>" class="sirv_assets_uploader"
     data-mage-init='{
         "Sirv_Magento2/js/sirv-media-uploader" : {
             "maxFileSize": <?= /* @noEscape */ $block->getFileSizeService()->getMaxFileSize() ?>,

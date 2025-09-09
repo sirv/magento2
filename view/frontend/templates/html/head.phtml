@@ -20,7 +20,7 @@ if (!$block->isVisibile()) {
 
 $styles = $block->getCustomCss();
 if (!empty($styles)) {
-    echo '<style>' . $styles . '</style>';
+    /* @noEscape */ echo '<style>' . $styles . '</style>';
 }
 
 $sirvUrl = $block->getSirvUrl();
@@ -37,7 +37,7 @@ $staticDomain = parse_url($baseStaticUrl, PHP_URL_HOST) ?: '';
                     'sirv': '<?= $block->escapeUrl($sirvDomain) ?>',
                     'static': '<?= $block->escapeUrl($staticDomain) ?>'
                 },
-                'fetchMode': '<?= $block->getFetchMode() ?>'
+                'fetchMode': '<?= /* @noEscape */ $block->getFetchMode() ?>'
             }
         }
     });

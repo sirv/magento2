@@ -143,7 +143,7 @@ class ImageFactory extends \Magento\Catalog\Block\Product\ImageFactory
      * @param array|null $attributes
      * @return \Magento\Catalog\Block\Product\Image
      */
-    public function create(\Magento\Catalog\Model\Product $product, string $imageId, array $attributes = null): \Magento\Catalog\Block\Product\Image
+    public function create(\Magento\Catalog\Model\Product $product, string $imageId, ?array $attributes = null): \Magento\Catalog\Block\Product\Image
     {
         $viewImageConfig = $this->presentationConfig->getViewConfig()->getMediaAttributes(
             'Magento_Catalog',

@@ -44,7 +44,7 @@ $customCss = $viewerHelper->getViewerCss();
 $dataOptions = $viewerHelper->getViewerDataOptions();
 $assetsCacheData = $viewerHelper->getAssetsCacheData();
 ?>
-<?= $jsOptions ?>
+<?= /* @noEscape */ $jsOptions ?>
 <style>
 .smv-pg-container {
     width: 100%;
@@ -56,30 +56,30 @@ $assetsCacheData = $viewerHelper->getAssetsCacheData();
 .smv-pg-container .pdp-gallery-main,
 .smv-pg-container .pdp-gallery-placeholder,
 .smv-pg-container .Sirv > .smv {
-    max-height: <?= $maxHeight ?>px;
+    max-height: <?= /* @noEscape */ $maxHeight ?>px;
 }
 <?php endif; ?>
 .pdp-gallery-thumbnails {
-    <?= ($isThumbsLayoutH ? 'height' : 'width') . ': ' . $thumbSize . 'px;' ?>
+    <?= /* @noEscape */ ($isThumbsLayoutH ? 'height' : 'width') . ': ' . $thumbSize . 'px;' ?>
 }
-<?= $customCss ?>
+<?= /* @noEscape */ $customCss ?>
 </style>
 <?php if ($usePlaceholder) : ?>
-<div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>" data-mage-init='{"sirvAssetsCache":<?= $assetsCacheData ?>}'>
-    <div class="pdp-gallery-container<?= $isThumbsLayoutH ? ' pdp-gallery-container-h' : '' ?>">
+<div class="smv-pg-container" data-json-config="<?= /* @noEscape */ $jsonConfig ?>" data-mage-init='{"sirvAssetsCache":<?= /* @noEscape */ $assetsCacheData ?>}'>
+    <div class="pdp-gallery-container<?= /* @noEscape */ $isThumbsLayoutH ? ' pdp-gallery-container-h' : '' ?>">
         <div class="pdp-gallery-thumbnails"></div>
         <div class="pdp-gallery-main">
-            <img width="<?= $placeholder['width'] ?>" height="<?= $placeholder['height'] ?>" class="pdp-gallery-placeholder" src="<?= $placeholder['url'] ?>" alt="" loading="lazy">
-            <div class="Sirv mainimage" data-options="<?= $dataOptions ?>">
-                <?= implode("\n", $viewerSlides) ?>
+            <img width="<?= /* @noEscape */ $placeholder['width'] ?>" height="<?= /* @noEscape */ $placeholder['height'] ?>" class="pdp-gallery-placeholder" src="<?= /* @noEscape */ $placeholder['url'] ?>" alt="" loading="lazy">
+            <div class="Sirv mainimage" data-options="<?= /* @noEscape */ $dataOptions ?>">
+                <?= /* @noEscape */ implode("\n", $viewerSlides) ?>
             </div>
         </div>
     </div>
 </div>
 <?php else : ?>
-<div class="smv-pg-container" data-json-config="<?= $jsonConfig ?>" data-mage-init='{"sirvAssetsCache":<?= $assetsCacheData ?>}'>
-    <div class="Sirv" data-options="<?= $dataOptions ?>">
-        <?= implode("\n", $viewerSlides) ?>
+<div class="smv-pg-container" data-json-config="<?= /* @noEscape */ $jsonConfig ?>" data-mage-init='{"sirvAssetsCache":<?= /* @noEscape */ $assetsCacheData ?>}'>
+    <div class="Sirv" data-options="<?= /* @noEscape */ $dataOptions ?>">
+        <?= /* @noEscape */ implode("\n", $viewerSlides) ?>
     </div>
 </div>
 <?php endif; ?>

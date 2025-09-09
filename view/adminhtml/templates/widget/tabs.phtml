@@ -39,7 +39,7 @@ $_tabContents = '';
     </li>
     <?php endforeach; ?>
 </ul>
-<?= $_tabContents ?>
+<?= /* @noEscape */ $_tabContents ?>
 </div>
 <script>
 require(["jquery","mage/backend/tabs"], function($){

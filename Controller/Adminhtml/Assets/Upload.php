@@ -59,8 +59,8 @@ class Upload extends \Magento\Backend\App\Action implements HttpPostActionInterf
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\Controller\Result\RawFactory $resultRawFactory,
-        \Magento\Framework\Filesystem $filesystem = null,
-        \Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory
+        ?\Magento\Framework\Filesystem $filesystem = null,
+        ?\Sirv\Magento2\Helper\Data\BackendFactory $dataHelperFactory = null
     ) {
         parent::__construct($context);
         $this->resultRawFactory = $resultRawFactory;

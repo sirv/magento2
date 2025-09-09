@@ -51,7 +51,10 @@ class MediaStorageInfo extends \Sirv\Magento2\Controller\Adminhtml\Settings
                 $filesystem = $objectManager->get(\Magento\Framework\Filesystem::class);
                 /** @var \Magento\Framework\Filesystem\Directory\ReadInterface $mediaDirectory */
                 $mediaDirectory = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-                $pathes = $mediaDirectory->read('catalog/product');
+                $pathes = [];
+                if ($mediaDirectory->isDirectory('catalog/product')) {
+                    $pathes = $mediaDirectory->read('catalog/product');
+                }
                 $pathes[] = 'catalog/category';
                 $pathes[] = 'wysiwyg';
                 $list = [];

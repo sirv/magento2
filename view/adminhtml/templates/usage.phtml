@@ -17,11 +17,11 @@
 $data = $block->getUsageData();
 
 if (empty($data)) {
-    echo '<a target="_blank" class="sirv-open-in-new-window" href="https://my.sirv.com/#/account/usage">Usage data</a> is currently unavailable.';
+    /* @noEscape */ echo '<a target="_blank" class="sirv-open-in-new-window" href="https://my.sirv.com/#/account/usage">Usage data</a> is currently unavailable.';
     return;
 }
 
-$refreshUrl = $block->escapeUrl($block->getAjaxUrl());
+$refreshUrl = $block->getAjaxUrl();
 $disconnectUrl = $this->getUrl('*/*/disconnect');
 ?>
 <div class="sirv-usage-wraper">
@@ -31,21 +31,15 @@ $disconnectUrl = $this->getUrl('*/*/disconnect');
             <h3>Your account</h3>
             <div class="row">
                 <div class="col-sm-3"><label>Account</label></div>
-                <div class="col-sm-9"><?= $data['account'] ?></div>
+                <div class="col-sm-9"><?= /* @noEscape */ $data['account'] ?></div>
             </div>
             <div class="row">
                 <div class="col-sm-3"><label>Plan</label></div>
-                <div class="col-sm-9"><?= $data['plan']['name'] ?>&nbsp;&nbsp;<a target="_blank" class="sirv-open-in-new-window" href="https://my.sirv.com/#/account/billing/plan/">Upgrade plan</a></div>
+                <div class="col-sm-9"><?= /* @noEscape */ $data['plan']['name'] ?>&nbsp;&nbsp;<a target="_blank" class="sirv-open-in-new-window" href="https://my.sirv.com/#/account/billing/plan/">Upgrade plan</a></div>
             </div>
-            <?php /* ?>
-            <div class="row">
-                <div class="col-sm-3"><label>Allowance</label></div>
-                <div class="col-sm-9"><?= $data['plan']['storage_limit']?>, <?= $data['plan']['data_transfer_limit']?> monthly transfer</div>
-            </div>
-            <?php */ ?>
             <div class="row">
                 <div class="col-sm-3"><label>User</label></div>
-                <div class="col-sm-9"><?= $data['email'] ?>&nbsp;&nbsp;
+                <div class="col-sm-9"><?= /* @noEscape */ $data['email'] ?>&nbsp;&nbsp;
                     <a href="#" onclick="return false"
                         data-mage-init='{
                             "sirvButton": {
@@ -54,7 +48,7 @@ $disconnectUrl = $this->getUrl('*/*/disconnect');
                                 "target": "[data-role=sirv-synchronizer]",
                                 "eventData": {
                                     "action": "disconnect-account",
-                                    "actionUrl": "<?= $disconnectUrl ?>"
+                                    "actionUrl": "<?= $block->escapeUrl($disconnectUrl) ?>"
                                 }
                             }
                         }'
@@ -70,25 +64,25 @@ $disconnectUrl = $this->getUrl('*/*/disconnect');
             <h3>Storage</h3>
             <div class="row">
                 <div class="col-sm-3"><label>Allowance</label></div>
-                <div class="col-sm-9"><?= $data['storage']['allowance'] ?></div>
+                <div class="col-sm-9"><?= /* @noEscape */ $data['storage']['allowance'] ?></div>
             </div>
             <div class="row">
                 <div class="col-sm-3"><label>Used</label></div>
                 <div class="col-sm-9">
-                    <?= $data['storage']['used'] ?>
-                    <span class="text-muted">(<?= $data['storage']['used_percent'] ?>%)</span>
+                    <?= /* @noEscape */ $data['storage']['used'] ?>
+                    <span class="text-muted">(<?= /* @noEscape */ $data['storage']['used_percent'] ?>%)</span>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-3"><label>Available</label></div>
                 <div class="col-sm-9">
-                    <?= $data['storage']['available'] ?>
-                    <span class="text-muted">(<?= $data['storage']['available_percent'] ?>%)</span>
+                    <?= /* @noEscape */ $data['storage']['available'] ?>
+                    <span class="text-muted">(<?= /* @noEscape */ $data['storage']['available_percent'] ?>%)</span>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-3"><label>Files</label></div>
-                <div class="col-sm-9"><?= $data['storage']['files'] ?></div>
+                <div class="col-sm-9"><?= /* @noEscape */ $data['storage']['files'] ?></div>
             </div>
         </div>
         <?php endif; ?>
@@ -97,17 +91,17 @@ $disconnectUrl = $this->getUrl('*/*/disconnect');
             <h3>Traffic</h3>
             <div class="row">
                 <div class="col-sm-3"><label>Allowance</label></div>
-                <div class="col-sm-9"><?= $data['traffic']['allowance'] ?></div>
+                <div class="col-sm-9"><?= /* @noEscape */ $data['traffic']['allowance'] ?></div>
             </div>
             <?php foreach ($data['traffic']['traffic'] as $label => $sdata): ?>
             <div class="row">
-                <div class="col-sm-3"><label><?= $label ?></label></div>
+                <div class="col-sm-3"><label><?= /* @noEscape */ $label ?></label></div>
                 <div class="col-sm-9">
                     <div class="row">
-                        <div class="col-sm-3"><?= $sdata['size'] ?></div>
+                        <div class="col-sm-3"><?= /* @noEscape */ $sdata['size'] ?></div>
                         <div class="col-sm-9">
                             <div class="progress-bar-holder">
-                                <div class="progress-bar progress-bar-<?= $sdata['traffic_attr'] ?>" style="width: <?= $sdata['size_percent'] ?>%"></div>
+                                <div class="progress-bar progress-bar-<?= /* @noEscape */ $sdata['traffic_attr'] ?>" style="width: <?= /* @noEscape */ $sdata['size_percent'] ?>%"></div>
                             </div>
                         </div>
                     </div>
@@ -122,9 +116,9 @@ $disconnectUrl = $this->getUrl('*/*/disconnect');
             <h3>
                 API usage
                 <span class="limits-update">
-                    <span class="last-update-time">Last update: <?= $data['current_time'] ?></span>&nbsp;&nbsp;
+                    <span class="last-update-time">Last update: <?= /* @noEscape */ $data['current_time'] ?></span>&nbsp;&nbsp;
                     <span class="refresh-api-usage-link">
-                        <a href="#" data-mage-init='{"sirvUsage":{"ajaxUrl":"<?= $refreshUrl ?>"},"loader":{}}'>Refresh</a>
+                        <a href="#" data-mage-init='{"sirvUsage":{"ajaxUrl":"<?= $block->escapeUrl($refreshUrl) ?>"},"loader":{}}'>Refresh</a>
                     </span>
                 </span>
             </h3>
@@ -140,10 +134,10 @@ $disconnectUrl = $this->getUrl('*/*/disconnect');
                 <tbody>
                     <?php foreach ($data['limits'] as $limitData): ?>
                     <tr class="even _clickable">
-                        <td class=""><?= $limitData['type'] ?></td>
-                        <td class="col-number"><?= $limitData['limit'] ?></td>
-                        <td class="col-number"><?= $limitData['count'] ?></td>
-                        <td class=""><?= $limitData['reset'] ?></td>
+                        <td class=""><?= /* @noEscape */ $limitData['type'] ?></td>
+                        <td class="col-number"><?= /* @noEscape */ $limitData['limit'] ?></td>
+                        <td class="col-number"><?= /* @noEscape */ $limitData['count'] ?></td>
+                        <td class=""><?= /* @noEscape */ $limitData['reset'] ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

@@ -14,12 +14,12 @@
  * @var $block \Sirv\Magento2\Block\Adminhtml\Version
  */
 
-$changelogUrl = $block->escapeUrl($block->getChangelogUrl());
+$changelogUrl = $block->getChangelogUrl();
 ?>
 <div class="mt-module-version">
     <span class="mt-current-version">
-        <a href="#" data-mage-init='{"sirvChangelog":{"changelogUrl":"<?= $changelogUrl; ?>"}}'>
-            Version: <?= $block->getCurrentVersion() ?>
+        <a href="#" data-mage-init='{"sirvChangelog":{"changelogUrl":"<?= $block->escapeUrl($changelogUrl) ?>"}}'>
+            Version: <?= /* @noEscape */ $block->getCurrentVersion() ?>
         </a>
     </span>
 </div>
