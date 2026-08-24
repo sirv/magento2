@@ -54,9 +54,9 @@ class CleanStaticFilesCacheCommand extends Command
      *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return void
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
             /** @var \Magento\Framework\App\State\CleanupFiles $cleanupFilesService */
@@ -73,5 +73,6 @@ class CleanStaticFilesCacheCommand extends Command
         } catch (\Exception $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
         }
+        return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
     }
 }
