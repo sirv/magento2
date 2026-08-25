@@ -291,7 +291,9 @@ class Validate extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $data['debug'] = $debug;
 
         if (isset($this->curlHandle)) {
-            curl_close($this->curlHandle);
+            if (PHP_VERSION_ID < 80000) {
+                curl_close($this->curlHandle);
+            }
             $this->curlHandle = null;
         }
 
@@ -350,7 +352,9 @@ class Validate extends \Sirv\Magento2\Controller\Adminhtml\Settings
         $result = curl_exec($this->curlHandle);
 
         if ($result === false || curl_errno($this->curlHandle)) {
-            curl_close($this->curlHandle);
+            if (PHP_VERSION_ID < 80000) {
+                curl_close($this->curlHandle);
+            }
             return null;
         }
 

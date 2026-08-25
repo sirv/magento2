@@ -236,7 +236,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                         'CONCAT(:pm_rel_path_with_slash, `tt`.`unique_value`) = `ct`.`path`',
                         []
                     )
-                    ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp))')
+                    ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND CONVERT(`ct`.`path` USING utf8mb4) REGEXP :pm_rel_path_regexp))')
                     ->group('ct.status');
 
                 /** @var array $pairs */
@@ -295,7 +295,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                             'status'
                         ]
                     )
-                    ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp))');
+                    ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND CONVERT(`ct`.`path` USING utf8mb4) REGEXP :pm_rel_path_regexp))');
 
                 /** @var array $cachedData */
                 $cachedData = $connection->fetchAll($ctSelect, $bind);
@@ -375,7 +375,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     ['ct' => $cacheTable],
                     ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
                 )
-                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)')
+                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND CONVERT(`ct`.`path` USING utf8mb4) REGEXP :pm_rel_path_regexp)')
                 ->where('`ct`.`status` != ?', self::IS_UNDEFINED);
 
             $mtSelect->reset()
@@ -431,7 +431,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     ['ct' => $cacheTable],
                     ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
                 )
-                ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp))')
+                ->where('(`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND CONVERT(`ct`.`path` USING utf8mb4) REGEXP :pm_rel_path_regexp))')
                 ->where('`ct`.`status` != ?', self::IS_UNDEFINED);
 
             $cachedPathes = $connection->fetchCol($ctSelect, $bind);
@@ -486,7 +486,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                 ['ct' => $cacheTable],
                 ['path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
             )
-            ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)')
+            ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND CONVERT(`ct`.`path` USING utf8mb4) REGEXP :pm_rel_path_regexp)')
             ->where('`ct`.`status` != ?', self::IS_UNDEFINED);
 
         $query = $ctSelect->insertIgnoreFromSelect($cacheTableTemp, ['path']);
@@ -565,7 +565,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
                 )
                 ->where('`ct`.`status` ' . (is_array($status) ? 'IN (?)' : ' = ?'), $status)
-                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
+                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND CONVERT(`ct`.`path` USING utf8mb4) REGEXP :pm_rel_path_regexp)');
 
             $mtSelect->reset()
                 ->distinct()
@@ -622,7 +622,7 @@ class Backend extends \Sirv\Magento2\Helper\Sync
                     ['short_path' => 'REPLACE(`ct`.`path`, :pm_rel_path, "")']
                 )
                 ->where('`ct`.`status` ' . (is_array($status) ? 'IN (?)' : ' = ?'), $status)
-                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND `ct`.`path` REGEXP :pm_rel_path_regexp)');
+                ->where('`ct`.`path_type` = :mpmp_type OR (`ct`.`path_type` = :mmp_type AND CONVERT(`ct`.`path` USING utf8mb4) REGEXP :pm_rel_path_regexp)');
 
             $pathes = $connection->fetchCol($ctSelect, $bind);
 

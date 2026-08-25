@@ -781,7 +781,9 @@ class S3
     public function __destruct()
     {
         if (isset(self::$curlHandle)) {
-            curl_close(self::$curlHandle);
+            if (PHP_VERSION_ID < 80000) {
+                curl_close(self::$curlHandle);
+            }
             self::$curlHandle = null;
         }
     }

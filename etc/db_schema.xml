@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Sirv module DB schema
+ *
+ * @copyright Copyright (c) 2018-2026 Sirv Limited <support@sirv.com>. All rights reserved
+ * @license   https://sirv.com/
+ * @link      https://sirv.com/integration/magento/
+ */
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="sirv_config" resource="default" engine="innodb" comment="Sirv configuration">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true" comment="ID"/>
+        <column xsi:type="varchar" name="scope" length="8" nullable="false" default="default" comment="Config Scope"/>
+        <column xsi:type="int" name="scope_id" unsigned="false" nullable="false" default="0" comment="Config Scope ID"/>
+        <column xsi:type="varchar" name="name" length="64" nullable="false" comment="Name"/>
+        <column xsi:type="text" name="value" nullable="false" comment="Value"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="SIRV_CONFIG_SCOPE_SCOPE_ID_NAME">
+            <column name="scope"/>
+            <column name="scope_id"/>
+            <column name="name"/>
+        </constraint>
+    </table>
+    <table name="sirv_cache" resource="default" engine="innodb" comment="Sirv cache">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true" comment="Primary key"/>
+        <column xsi:type="varbinary" name="path" length="255" nullable="false" default="" comment="Relative file path"/>
+        <column xsi:type="smallint" name="path_type" unsigned="true" nullable="false" default="0" comment="Path type"/>
+        <column xsi:type="smallint" name="status" unsigned="true" nullable="false" default="0" comment="Sync status"/>
+        <column xsi:type="smallint" name="attempt" unsigned="true" nullable="false" default="0" comment="Sync attempt"/>
+        <column xsi:type="int" name="modification_time" unsigned="true" nullable="false" default="0" comment="Modification time"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="SIRV_CACHE_PATH">
+            <column name="path"/>
+        </constraint>
+    </table>
+    <table name="sirv_assets" resource="default" engine="innodb" comment="Sirv assets">
+        <column xsi:type="int" name="product_id" unsigned="true" nullable="false" comment="Product ID"/>
+        <column xsi:type="text" name="contents" nullable="false" comment="Contents"/>
+        <column xsi:type="int" name="timestamp" unsigned="true" nullable="false" default="0" comment="Last checked time"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="product_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="SIRV_ASSETS_PRODUCT_ID">
+            <column name="product_id"/>
+        </constraint>
+    </table>
+    <table name="sirv_messages" resource="default" engine="innodb" comment="Sirv messages">
+        <column xsi:type="varchar" name="path" length="255" nullable="false" comment="Relative file path"/>
+        <column xsi:type="text" name="message" nullable="false" comment="Message"/>
+        <constraint xsi:type="unique" referenceId="SIRV_MESSAGES_PATH">
+            <column name="path"/>
+        </constraint>
+    </table>
+    <table name="sirv_alt_text_cache" resource="default" engine="innodb" comment="Sirv alt text cache">
+        <column xsi:type="varchar" name="path" length="255" nullable="false" default="" comment="Synced image path"/>
+        <column xsi:type="text" name="value" nullable="false" comment="Image alt text"/>
+        <constraint xsi:type="unique" referenceId="SIRV_ALT_TEXT_CACHE_PATH">
+            <column name="path"/>
+        </constraint>
+    </table>
+    <table name="sirv_manually_added_assets" resource="default" engine="innodb" comment="Sirv manually added assets">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true" comment="Primary key"/>
+        <column xsi:type="int" name="product_id" unsigned="true" nullable="false" default="0" comment="Product ID"/>
+        <column xsi:type="varchar" name="path" length="255" nullable="false" default="" comment="Asset path"/>
+        <column xsi:type="int" name="position" unsigned="true" nullable="true" comment="Asset position"/>
+        <column xsi:type="smallint" name="type" unsigned="true" nullable="false" default="0" comment="Asset type"/>
+        <column xsi:type="smallint" name="width" unsigned="true" nullable="false" default="0" comment="Asset width"/>
+        <column xsi:type="smallint" name="height" unsigned="true" nullable="false" default="0" comment="Asset height"/>
+        <column xsi:type="int" name="size" unsigned="true" nullable="true" default="0" comment="Asset size"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="SIRV_MANUALLY_ADDED_ASSETS_PRODUCT_ID_PATH">
+            <column name="product_id"/>
+            <column name="path"/>
+        </constraint>
+    </table>
+</schema>

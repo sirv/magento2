@@ -1,0 +1,74 @@
+{
+    "sirv_config": {
+        "column": {
+            "id": true,
+            "scope": true,
+            "scope_id": true,
+            "name": true,
+            "value": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "SIRV_CONFIG_SCOPE_SCOPE_ID_NAME": true
+        }
+    },
+    "sirv_cache": {
+        "column": {
+            "id": true,
+            "path": true,
+            "path_type": true,
+            "status": true,
+            "attempt": true,
+            "modification_time": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "SIRV_CACHE_PATH": true
+        }
+    },
+    "sirv_assets": {
+        "column": {
+            "product_id": true,
+            "contents": true,
+            "timestamp": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "SIRV_ASSETS_PRODUCT_ID": true
+        }
+    },
+    "sirv_messages": {
+        "column": {
+            "path": true,
+            "message": true
+        },
+        "constraint": {
+            "SIRV_MESSAGES_PATH": true
+        }
+    },
+    "sirv_alt_text_cache": {
+        "column": {
+            "path": true,
+            "value": true
+        },
+        "constraint": {
+            "SIRV_ALT_TEXT_CACHE_PATH": true
+        }
+    },
+    "sirv_manually_added_assets": {
+        "column": {
+            "id": true,
+            "product_id": true,
+            "path": true,
+            "position": true,
+            "type": true,
+            "width": true,
+            "height": true,
+            "size": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "SIRV_MANUALLY_ADDED_ASSETS_PRODUCT_ID_PATH": true
+        }
+    }
+}
