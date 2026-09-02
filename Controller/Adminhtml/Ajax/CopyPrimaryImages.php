@@ -500,7 +500,7 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
 
                     $fileName = $this->getCorrectFileName($fileName);
                     $tmpAbsPath = $mediaDirAbsPath . '/tmp/sirv/' . $fileName;
-                    $url = $baseUrl . '/' . $featuredImage;
+                    $url = $this->getEncodedUrl($baseUrl . '/' . $featuredImage);
 
                     if ($fileContents = file_get_contents($url)) {
                         $bytes = file_put_contents($tmpAbsPath, $fileContents);
@@ -669,6 +669,30 @@ class CopyPrimaryImages extends \Sirv\Magento2\Controller\Adminhtml\Settings
         }
 
         return $dispersionPath;
+    }
+
+    /**
+     * Get URL with encoded path
+     *
+     * @param string $url
+     * @return string
+     */
+    protected function getEncodedUrl($url)
+    {
+        // phpcs:ignore Magento2.Functions.DiscouragedFunction
+        $parts = parse_url($url);
+        if (!is_array($parts) || !isset($parts['host'])) {
+            return $url;
+        }
+
+        $encodedPath = implode('/', array_map(function ($segment) {
+            return rawurlencode(rawurldecode($segment));
+        }, explode('/', $parts['path'] ?? '')));
+
+        return ($parts['scheme'] ?? 'https') . '://' . $parts['host']
+            . (isset($parts['port']) ? ':' . $parts['port'] : '')
+            . $encodedPath
+            . (isset($parts['query']) ? '?' . $parts['query'] : '');
     }
 
     /**
